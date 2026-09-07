@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Sân Bóng Tích Hợp AI - Mini Victory</title>
+    <!-- Favicon Icon Bóng Đá -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- LOGIN INTERFACE OVERLAY -->
+    <div class="login-overlay" id="login-screen">
+        <div class="login-wrapper">
+            <!-- HUSKY AI GUARD MASCOT SVG -->
+            <div class="husky-mascot" id="husky-guard">
+                <svg class="husky-svg" viewBox="0 0 200 180" width="160" height="144">
+                    <defs>
+                        <radialGradient id="huskyGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.4" />
+                            <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                        </radialGradient>
+                        <linearGradient id="huskyEarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8" />
+                            <stop offset="100%" stop-color="#10b981" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="100" cy="90" r="85" fill="url(#huskyGlow)" />
+                    
+                    <!-- Ears -->
+                    <g class="husky-ears">
+                        <polygon points="35,65 15,10 65,40" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                        <polygon points="40,60 25,20 60,42" fill="url(#huskyEarGrad)"/>
+                        <polygon points="165,65 185,10 135,40" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                        <polygon points="160,60 175,20 140,42" fill="url(#huskyEarGrad)"/>
+                    </g>
+                    
+                    <!-- Head Body -->
+                    <ellipse cx="100" cy="95" rx="70" ry="60" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                    <!-- Face Mask White area -->
+                    <path d="M 45,95 C 45,65 65,50 100,60 C 135,50 155,65 155,95 C 155,130 135,145 100,145 C 65,145 45,130 45,95 Z" fill="#f8fafc"/>
+                    
+                    <!-- Forehead Marking -->
+                    <polygon points="100,60 90,80 110,80" fill="#1e293b"/>
+                    
+                    <!-- Eyes White -->
+                    <g class="husky-eyes">
+                        <ellipse cx="72" cy="88" rx="16" ry="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+                        <ellipse cx="128" cy="88" rx="16" ry="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+                        
+                        <!-- Eye Pupils -->
+                        <g class="pupil-group" id="pupil-left">
+                            <circle cx="72" cy="88" r="8" fill="#0f172a"/>
+                            <circle cx="75" cy="85" r="2.5" fill="#ffffff"/>
+                        </g>
+                        <g class="pupil-group" id="pupil-right">
+                            <circle cx="128" cy="88" r="8" fill="#0f172a"/>
+                            <circle cx="131" cy="85" r="2.5" fill="#ffffff"/>
+                        </g>
+                    </g>
+                    
+                    <!-- Snout & Nose -->
+                    <ellipse cx="100" cy="112" rx="22" ry="16" fill="#e2e8f0"/>
+                    <path d="M 90,104 Q 100,98 110,104 Q 105,114 100,114 Q 95,114 90,104 Z" fill="#0f172a"/>
+                    <!-- Mouth -->
+                    <path class="husky-mouth" id="husky-mouth" d="M 92,118 Q 100,125 108,118" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Blushing Cheeks -->
+                    <circle cx="56" cy="105" r="7" fill="#f43f5e" opacity="0.3"/>
+                    <circle cx="144" cy="105" r="7" fill="#f43f5e" opacity="0.3"/>
+                    
+                    <!-- Interactive Paws -->
+                    <g class="husky-paws" id="husky-paws">
+                        <g class="paw paw-left" id="paw-left">
+                            <ellipse cx="50" cy="155" rx="18" ry="14" fill="#334155" stroke="#475569" stroke-width="2"/>
+                            <circle cx="42" cy="152" r="3" fill="#f8fafc"/>
+                            <circle cx="50" cy="150" r="3" fill="#f8fafc"/>
+                            <circle cx="58" cy="152" r="3" fill="#f8fafc"/>
+                        </g>
+                        <g class="paw paw-right" id="paw-right">
+                            <ellipse cx="150" cy="155" rx="18" ry="14" fill="#334155" stroke="#475569" stroke-width="2"/>
+                            <circle cx="142" cy="152" r="3" fill="#f8fafc"/>
+                            <circle cx="150" cy="150" r="3" fill="#f8fafc"/>
+                            <circle cx="158" cy="152" r="3" fill="#f8fafc"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="login-card" id="main-login-card">
+                <div class="login-brand">
+                    <h2>Mini Victory <span class="badge-ai">v2.0</span></h2>
+                    <p id="mascot-status-text">Chào mừng! Linh vật AI đang gác cổng hệ thống.</p>
+                </div>
+
+                <!-- Alert Báo Lỗi -->
+                <div class="auth-alert" id="auth-alert" style="display: none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="auth-alert-msg">Thông tin đăng nhập không chính xác</span>
+                    <button type="button" class="auth-alert-close" onclick="document.getElementById('auth-alert').style.display='none'">&times;</button>
+                </div>
+                
+                <div class="login-tabs">
+                    <button class="login-tab-btn active" id="btn-tab-login">Đăng Nhập</button>
+                    <button class="login-tab-btn" id="btn-tab-register">Đăng Ký</button>
+                </div>
+                
+                <!-- Form Đăng Nhập -->
+                <form id="form-login">
+                    <div class="form-group">
+                        <label>Tên đăng nhập</label>
+                        <input type="text" id="login-username" placeholder="Nhập tên đăng nhập" required autocomplete="username">
+                        <div class="field-error" id="err-login-username"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mật khẩu</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="login-password" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+                            <button type="button" class="btn-toggle-pw" id="btn-toggle-login-pw" title="Ẩn/Hiện mật khẩu">
+                                <i class="fa-regular fa-eye" id="icon-login-pw"></i>
+                            </button>
+                        </div>
+                        <div class="field-error" id="err-login-password"></div>
+                    </div>
+                    
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" id="remember-me-check" checked>
+                            <span>Ghi nhớ đăng nhập</span>
+                        </label>
+                        <a href="javascript:void(0)" class="forgot-pw-link" onclick="showToast('Vui lòng liên hệ Admin để khôi phục mật khẩu!', 'warning')">Quên mật khẩu?</a>
+                    </div>
+
+                    <!-- Nút Submit Cánh Cửa 3D (Door Walkthrough Button) -->
+                    <button type="submit" class="btn btn-primary btn-block doorbtn" id="btn-door-submit">
+                        <span class="doorbtn__label"><i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập</span>
+                        <span class="dooric">
+                            <span class="dooric__glow"></span>
+                            <span class="dooric__frame"></span>
+                            <span class="dooric__panel"></span>
+                            <span class="dooric__person">
+                                <svg viewBox="0 0 24 36" width="16" height="24">
+                                    <circle cx="12" cy="6" r="4" fill="#ffffff"/>
+                                    <line x1="12" y1="10" x2="12" y2="22" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                                    <line class="arm arm--left" x1="12" y1="13" x2="6" y2="19" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                                    <line class="arm arm--right" x1="12" y1="13" x2="18" y2="19" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                                    <line class="leg leg--left" id="leg-left" x1="12" y1="22" x2="6" y2="33" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                                    <line class="leg leg--right" id="leg-right" x1="12" y1="22" x2="18" y2="33" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                        </span>
+                    </button>
+                </form>
+                
+                <!-- Form Đăng Ký (2-Column Grid Format) -->
+                <form id="form-register" style="display: none;">
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label>Tên đăng nhập *</label>
+                            <input type="text" id="reg-username" placeholder="Ví dụ: tuanfc99" required>
+                            <div class="field-error" id="err-reg-username"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Họ và Tên *</label>
+                            <input type="text" id="reg-fullname" placeholder="Nguyễn Văn A" required>
+                            <div class="field-error" id="err-reg-fullname"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mật khẩu *</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="reg-password" placeholder="Ít nhất 6 ký tự" required>
+                                <button type="button" class="btn-toggle-pw" id="btn-toggle-reg-pw">
+                                    <i class="fa-regular fa-eye" id="icon-reg-pw"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength-bar">
+                                <div class="strength-indicator" id="pw-strength-fill"></div>
+                            </div>
+                            <div class="field-error" id="err-reg-password"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Xác nhận mật khẩu *</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="reg-confirm-password" placeholder="Nhập lại mật khẩu" required>
+                            </div>
+                            <div class="field-error" id="err-reg-confirm-password"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại *</label>
+                            <input type="tel" id="reg-phone" placeholder="Ví dụ: 0988123456" required>
+                            <div class="field-error" id="err-reg-phone"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email (Tùy chọn)</label>
+                            <input type="email" id="reg-email" placeholder="email@gmail.com">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">
+                        <i class="fa-solid fa-user-plus"></i> Đăng Ký Tài Khoản
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP INTERFACE (HIDDEN UNTIL AUTHENTICATED) -->
+    <div class="app-container" id="app-interface" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-futbol"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>Mini Victory <span class="badge-ai">v2.0</span></h2>
+                    <p>Nhóm 20 - K23C CNTT</p>
+                </div>
+            </div>
+
+            <!-- User Panel -->
+            <div class="user-panel">
+                <div class="user-avatar">
+                    <i class="fa-solid fa-user-shield" id="user-icon"></i>
+                </div>
+                <div class="user-info">
+                    <h4 id="user-display-name">Họ Tên</h4>
+                    <span class="user-role-badge" id="user-display-role">ADMIN</span>
+                </div>
+                <button class="btn-logout" id="btn-logout" title="Đăng xuất">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="tab-dashboard">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span>Trang Chủ Tổng Quan</span>
+                </button>
+                <button class="nav-item" data-tab="tab-schedule">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span>Lịch Sân Trực Quan</span>
+                </button>
+                <button class="nav-item" data-tab="tab-booking-form">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Đặt Lịch Giữ Sân</span>
+                </button>
+                <button class="nav-item" data-tab="tab-bookings" id="nav-bookings">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Quản Lý Đơn Đặt</span>
+                </button>
+                <button class="nav-item" data-tab="tab-operations" id="nav-operations">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>Vận Hành Check-in/out</span>
+                </button>
+                <button class="nav-item" data-tab="tab-insights" id="nav-insights">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Báo Cáo & AI Insights</span>
+                </button>
+                <button class="nav-item" data-tab="tab-admin" id="nav-admin">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Cấu Hình Hệ Thống</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <small>GVHD: ThS. Nguyễn Tuấn Anh</small>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Topbar Header -->
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h1 id="page-title">Ma Trận Khung Giờ Sân Bóng</h1>
+                    <p id="page-subtitle">Xem chi tiết trạng thái các loại sân trong ngày</p>
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="date-picker-wrapper">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="date" id="query-date-input">
+                    </div>
+                    
+                    <!-- Notification Bell -->
+                    <div class="topbar-notification" title="Thông báo">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="notification-badge">2</span>
+                    </div>
+
+                    <!-- User Profile Quick Info -->
+                    <div class="topbar-user-profile">
+                        <div class="topbar-user-info">
+                            <span class="user-greeting">Xin chào,</span>
+                            <strong class="user-name" id="topbar-user-name">Admin</strong>
+                        </div>
+                        <div class="topbar-avatar">
+                            <i class="fa-solid fa-user" id="topbar-user-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Tab 0: Trang Chủ Tổng Quan (Role-based Dynamic Dashboard) -->
+            <section id="tab-dashboard" class="tab-content active">
+                <!-- 1. CUSTOMER DASHBOARD VIEW -->
+                <div id="dash-view-customer" style="display: none;">
+                    <div class="esports-hero-banner hero-customer">
+                        <div class="hero-content">
+                            <div class="hero-badge"><i class="fa-solid fa-user-shield"></i> PORTAL CẦU THỦ VICTORY ARENA</div>
+                            <h1 class="hero-title">Chào mừng cầu thủ, <span id="cust-greeting-name" class="text-neon">Bạn</span>! ⚽</h1>
+                            <p class="hero-subtitle">Đặt lịch sân bóng nhanh chóng, theo dõi lịch thi đấu cá nhân và nhận tư vấn khung giờ vàng từ AI.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn btn-neon-green" onclick="document.querySelector('[data-tab=tab-booking-form]').click()">
+                                <i class="fa-solid fa-calendar-plus"></i> Đặt Sân Ngay
+                            </button>
+                            <button class="btn btn-neon-cyan" onclick="document.getElementById('chatbot-trigger').click()">
+                                <i class="fa-solid fa-brain"></i> Trợ Lý Tìm Sân AI
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="hud-stat-grid">
+                        <div class="hud-card hud-courts">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-calendar-check"></i> LỊCH ĐÁ CỦA TÔI</span>
+                                <span class="hud-badge">CÁ NHÂN</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-my-bookings">0</h3>
+                                <span class="hud-unit">Trận đấu</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-100"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-bookings">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-star"></i> ĐIỂM UY TÍN</span>
+                                <span class="hud-badge badge-green">TỐT</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-reputation">100</h3>
+                                <span class="hud-unit">/ 100 Điểm</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-green" style="width: 100%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-revenue">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-futbol"></i> SÂN TRỐNG HÔM NAY</span>
+                                <span class="hud-badge badge-cyan">SẴN SÀNG</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-available-courts">5</h3>
+                                <span class="hud-unit">Sân khả dụng</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill" style="width: 100%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-active">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-wallet"></i> TIỀN CỌC ĐÃ THANH TOÁN</span>
+                                <span class="hud-badge badge-gold">VND</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-deposit-paid">0 ₫</h3>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-gold" style="width: 50%;"></div></div>
+                        </div>
+                    </section>
+
+                    <div class="esports-dashboard-grid">
+                        <div class="esports-fixtures-panel">
+                            <div class="panel-header esports-header">
+                                <div class="esports-header-title">
+                                    <i class="fa-solid fa-calendar-day text-neon-green"></i>
+                                    <h3>TRẬN ĐẤU SẮP TỚI CỦA TÔI</h3>
+                                </div>
+                                <span class="hud-tag" id="cust-my-count">0 trận</span>
+                            </div>
+                            <div id="cust-my-bookings-list" class="fixtures-card-list">
+                                <div class="placeholder-text">Đang tải lịch thi đấu của bạn...</div>
+                            </div>
+                        </div>
+
+                        <div class="esports-insights-panel">
+                            <div class="ai-tactical-card">
+                                <div class="ai-tactical-header">
+                                    <i class="fa-solid fa-robot text-neon-cyan"></i>
+                                    <span>AI COPILOT TƯ VẤN ĐẶT SÂN</span>
+                                </div>
+                                <div class="ai-tactical-body">
+                                    <p>⚡ <strong>Gợi ý khung giờ vàng:</strong> Bạn muốn tìm đối thủ giao hữu hoặc tìm sân trống tối nay? Nhấp vào nút "Trợ Lý Tìm Sân AI" ở góc phải để được chatbot tự động ghép sân thích hợp nhất!</p>
+                                </div>
+                            </div>
+
+                            <div class="panel esports-notif-panel">
+                                <div class="panel-header esports-header">
+                                    <div class="esports-header-title">
+                                        <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                        <h3>THÔNG BÁO CỦA TÔI</h3>
+                                    </div>
+                                </div>
+                                <div id="cust-notif-list" class="esports-notif-list">
+                                    <div class="placeholder-text">Không có thông báo mới.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. STAFF DASHBOARD VIEW -->
+                <div id="dash-view-staff" style="display: none;">
+                    <div class="esports-hero-banner hero-staff">
+                        <div class="hero-content">
+                            <div class="hero-badge"><i class="fa-solid fa-clipboard-user"></i> CA TRỰC VẬN HÀNH SÂN BÓNG</div>
+                            <h1 class="hero-title">Chào nhân viên ca trực, <span id="staff-greeting-name" class="text-neon">Staff</span>! 🧢</h1>
+                            <p class="hero-subtitle">Điều hành bàn giao sân bóng, check-in nhận sân, ghi nhận bán dịch vụ nước giải khát & quyết toán check-out.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn btn-neon-green" onclick="document.querySelector('[data-tab=tab-operations]').click()">
+                                <i class="fa-solid fa-right-to-bracket"></i> Check-In Nhanh
+                            </button>
+                            <button class="btn btn-neon-cyan" onclick="document.querySelector('[data-tab=tab-operations]').click()">
+                                <i class="fa-solid fa-bottle-water"></i> Thêm Dịch Vụ
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="hud-stat-grid">
+                        <div class="hud-card hud-courts">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-person-running"></i> SÂN ĐANG CÓ ĐỘI ĐÁ</span>
+                                <span class="hud-badge badge-green">LIVE</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-playing">0</h3>
+                                <span class="hud-unit">Sân</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-green" style="width: 50%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-bookings">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-clock-rotate-left"></i> TRẬN CHỜ CHECK-IN</span>
+                                <span class="hud-badge badge-cyan">HÔM NAY</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-pending">0</h3>
+                                <span class="hud-unit">Trận</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill" style="width: 40%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-revenue">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-bottle-water"></i> DỊCH VỤ ĐÃ BÁN</span>
+                                <span class="hud-badge badge-gold">CA TRỰC</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-services">0</h3>
+                                <span class="hud-unit">Lượt bán</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-gold" style="width: 65%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-active">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-check-double"></i> ĐƠN ĐÃ QUYẾT TOÁN</span>
+                                <span class="hud-badge">CHECK-OUT</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-completed">0</h3>
+                                <span class="hud-unit">Hoàn tất</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-100"></div></div>
+                        </div>
+                    </section>
+
+                    <div class="esports-dashboard-grid">
+                        <div class="esports-fixtures-panel">
+                            <div class="panel-header esports-header">
+                                <div class="esports-header-title">
+                                    <i class="fa-solid fa-clipboard-check text-neon-green"></i>
+                                    <h3>TRẬN ĐẤU CẦN VẬN HÀNH HÔM NAY</h3>
+                                </div>
+                                <span class="hud-tag" id="staff-today-count">0 trận</span>
+                            </div>
+                            <div id="staff-upcoming-list" class="fixtures-card-list">
+                                <div class="placeholder-text">Đang tải lịch thi đấu ca trực...</div>
+                            </div>
+                        </div>
+
+                        <div class="esports-insights-panel">
+                            <div class="ai-tactical-card">
+                                <div class="ai-tactical-header">
+                                    <i class="fa-solid fa-bullhorn text-neon-cyan"></i>
+                                    <span>LƯU Ý VẬN HÀNH CA TRỰC</span>
+                                </div>
+                                <div class="ai-tactical-body">
+                                    <p>⚡ <strong>Nhắc nhở nhân viên:</strong> Vui lòng thu đủ cọc trước khi check-in cho khách vào sân và ghi nhận chính xác số lượng nước uống phát sinh vào mã đơn trước khi tiến hành Check-Out quyết toán.</p>
+                                </div>
+                            </div>
+
+                            <div class="panel esports-notif-panel">
+                                <div class="panel-header esports-header">
+                                    <div class="esports-header-title">
+                                        <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                        <h3>THÔNG BÁO VẬN HÀNH</h3>
+                                    </div>
+                                </div>
+                                <div id="staff-notif-list" class="esports-notif-list">
+                                    <div class="placeholder-text">Không có thông báo mới.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. ADMIN DASHBOARD VIEW (EXECUTIVE COMMAND CENTER) -->
+                <div id="dash-view-admin" style="display: none;">
+                    <div class="esports-ticker-bar">
+                        <div class="ticker-tag"><i class="fa-solid fa-satellite-dish"></i> LIVE ARENA HUD</div>
+                        <div class="ticker-content">
+                            <span class="ticker-item"><i class="fa-solid fa-circle text-success pulse-live"></i> HỆ THỐNG: SẴN SÀNG VẬN HÀNH 5/5 SÂN THỂ THAO MINI VICTORY (SÂN 7 & SÂN 11)</span>
+                            <span class="ticker-item"><i class="fa-solid fa-bolt text-warning"></i> ĐẤU TRƯỜNG: KHU B, C ĐÃ BẬT ĐÈN CAO ÁP CHỜ THI ĐẤU</span>
+                            <span class="ticker-item"><i class="fa-solid fa-brain text-primary"></i> AI COPILOT: ĐANG THEO DÕI LỊCH SÂN VÀ TỰ ĐỘNG CHỐNG TRÙNG LỊCH</span>
+                        </div>
+                    </div>
+
+                    <div class="esports-hero-banner">
+                        <div class="hero-content">
+                            <div class="hero-badge"><i class="fa-solid fa-trophy"></i> VICTORY ARENA COMMAND CENTER</div>
+                            <h1 class="hero-title">Chào mừng đại bản doanh, <span id="dash-greeting-name" class="text-neon">Admin</span>! 👑</h1>
+                            <p class="hero-subtitle">Hệ thống quản lý sân bóng tích hợp AI thế hệ 2.0 — Chuẩn hóa trải nghiệm vận hành & thi đấu eSports.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn btn-neon-green" onclick="document.querySelector('[data-tab=tab-insights]').click()">
+                                <i class="fa-solid fa-chart-pie"></i> Báo Cáo AI
+                            </button>
+                            <button class="btn btn-neon-cyan" onclick="document.querySelector('[data-tab=tab-admin]').click()">
+                                <i class="fa-solid fa-gears"></i> Cấu Hình Hệ Thống
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="hud-stat-grid">
+                        <div class="hud-card hud-courts">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-futbol"></i> TỔNG SỐ SÂN</span>
+                                <span class="hud-badge">ONLINE</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-total-courts">05</h3>
+                                <span class="hud-unit">Sân (Sân 7 & 11)</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-100"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-bookings">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-ticket"></i> TRẬN ĐÃ ĐẶT</span>
+                                <span class="hud-badge badge-cyan">FIXTURES</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-total-bookings">0</h3>
+                                <span class="hud-unit">Trận</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill" id="stat-booking-progress" style="width: 30%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-revenue">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-coins"></i> DOANH THU THU ĐƯỢC</span>
+                                <span class="hud-badge badge-gold">VND</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-total-revenue">0 ₫</h3>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-gold" style="width: 60%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-active">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-signal"></i> SÂN HOẠT ĐỘNG</span>
+                                <span class="hud-badge badge-green">100% READY</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-active-courts">5/5</h3>
+                                <span class="hud-unit">Sẵn sàng</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-green" style="width: 100%;"></div></div>
+                        </div>
+                    </section>
+
+                    <div class="esports-dashboard-grid">
+                        <div class="esports-fixtures-panel">
+                            <div class="panel-header esports-header">
+                                <div class="esports-header-title">
+                                    <i class="fa-solid fa-shield-halved text-neon-green"></i>
+                                    <h3>LỊCH THI ĐẤU TOÀN HỆ THỐNG HÔM NAY</h3>
+                                </div>
+                                <span class="hud-tag" id="dash-today-count">0 trận</span>
+                            </div>
+                            <div id="dash-upcoming-list" class="fixtures-card-list">
+                                <div class="placeholder-text">Đang tải lịch thi đấu hôm nay...</div>
+                            </div>
+                        </div>
+
+                        <div class="esports-insights-panel">
+                            <div class="ai-tactical-card">
+                                <div class="ai-tactical-header">
+                                    <i class="fa-solid fa-brain text-neon-cyan"></i>
+                                    <span>AI TACTICAL ANALYST INSIGHT</span>
+                                </div>
+                                <div class="ai-tactical-body">
+                                    <p id="ai-tactical-text">⚡ <strong>Tải trọng sân bóng:</strong> Các khung giờ tối (17:30 - 20:30) đang có tỷ lệ lấp đầy cao nhất. Hệ thống AI sẵn sàng tự động gợi ý ghép đội và nhắc lịch qua Zalo/Web!</p>
+                                </div>
+                            </div>
+
+                            <div class="panel esports-notif-panel">
+                                <div class="panel-header esports-header">
+                                    <div class="esports-header-title">
+                                        <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                        <h3>THÔNG BÁO ARENA</h3>
+                                    </div>
+                                    <div class="notif-controls">
+                                        <span class="hud-tag" id="dash-notif-count">0</span>
+                                        <button class="btn btn-xs btn-secondary" id="btn-dash-clear-notif">Xóa</button>
+                                    </div>
+                                </div>
+                                <div id="dash-notif-list" class="esports-notif-list">
+                                    <div class="placeholder-text">Không có thông báo mới nào được ghi nhận.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 1: Lịch Sân Trực Quan (Schedule Grid) -->
+            <section id="tab-schedule" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="legend-group">
+                            <span class="legend-item"><span class="legend-color available"></span> Trống (Available)</span>
+                            <span class="legend-item"><span class="legend-color locked"></span> Đang Giữ Chỗ (10m)</span>
+                            <span class="legend-item"><span class="legend-color booked"></span> Đã Có Trận (Booked)</span>
+                            <span class="legend-item"><span class="legend-color maintenance"></span> Đang Bảo Trì (Maint)</span>
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-court-select"></select>
+                            <button class="btn btn-secondary" id="btn-refresh-schedule">
+                                <i class="fa-solid fa-rotate"></i> Làm mới
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Slot Matrix Container -->
+                    <div class="matrix-container" id="schedule-matrix">
+                        <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải ma trận khung giờ...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 2: Đặt Sân (Booking Form) -->
+            <section id="tab-booking-form" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-regular fa-calendar-check text-primary"></i> Đặt Lịch Giữ Sân Bóng</h3>
+                        <p class="text-sm text-muted">Trận đấu sẽ được tạm khóa giữ lịch trong 10 phút chờ thanh toán đặt cọc.</p>
+                    </div>
+                    <form id="form-create-booking">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Chọn Sân Bóng *</label>
+                                <select id="bk-court-id" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Ngày Đá *</label>
+                                <input type="date" id="bk-date" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Giờ Bóng Lăn *</label>
+                                <input type="time" id="bk-start-time" value="18:30" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Giờ Kết Thúc *</label>
+                                <input type="time" id="bk-end-time" value="20:00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tiền Đặt Cọc (VND) - Để trống nếu muốn giữ chỗ 10 phút</label>
+                                <input type="number" id="bk-deposit" value="0" min="0" step="50000">
+                            </div>
+                            <div class="form-group">
+                                <label>Phương Thức Thanh Toán Cọc</label>
+                                <select id="bk-payment-method">
+                                    <option value="tien_mat">Tiền mặt tại quầy</option>
+                                    <option value="chuyen_khoan">Chuyển khoản QR ngân hàng</option>
+                                    <option value="vnpay">Cổng thanh toán VNPAY</option>
+                                    <option value="momo">Ví điện tử MoMo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ghi Chú Đơn Đặt Sân / Tiện Ích Yêu Cầu</label>
+                            <textarea id="bk-note" placeholder="Ví dụ: Mượn 14 áo bib, còi trọng tài, chuẩn bị 2 quả bóng số 5..." rows="2"></textarea>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-check"></i> Xác Nhận Giữ Sân
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Tab 3: Quản Lý Đơn Đặt Sân (Bookings List) -->
+            <section id="tab-bookings" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-receipt"></i> Danh Sách Đơn Đặt Sân</h3>
+                        <button class="btn btn-secondary" id="btn-refresh-bookings">
+                            <i class="fa-solid fa-arrows-rotate"></i> Tải lại
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Đơn</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Sân</th>
+                                    <th>Ngày Đá</th>
+                                    <th>Khung Giờ</th>
+                                    <th>Tiền Cọc</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookings-table-body">
+                                <tr><td colspan="8" class="text-center">Đang tải dữ liệu đơn đặt...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 5: Vận Hành Sân (Check-in / Add Service / Check-out) -->
+            <section id="tab-operations" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-clipboard-list text-primary"></i> Nghiệp Vụ Vận Hành Sân Bóng</h3>
+                    </div>
+                    
+                    <div class="operations-grid">
+                        <!-- Check In Section -->
+                        <div class="op-card">
+                            <h4><i class="fa-solid fa-right-to-bracket text-primary"></i> 1. Check-In Nhận Sân</h4>
+                            <div class="form-group">
+                                <label>Nhập Mã Đơn (Ví dụ: DS20260822-xxxx)</label>
+                                <input type="text" id="op-checkin-madon" placeholder="Mã đơn đặt sân">
+                            </div>
+                            <div class="form-group">
+                                <label>Ghi chú Check-in (Tùy chọn)</label>
+                                <input type="text" id="op-checkin-note" placeholder="Tình trạng nhận bóng, áo bíp...">
+                            </div>
+                            <button class="btn btn-primary btn-block" id="btn-op-checkin">Check-in Vào Sân</button>
+                        </div>
+
+                        <!-- Dịch Vụ Phát Sinh -->
+                        <div class="op-card">
+                            <h4><i class="fa-solid fa-bottle-water text-primary"></i> 2. Sử Dụng Dịch Vụ</h4>
+                            <div class="form-group">
+                                <label>Mã Đơn (Chỉ áp dụng khi Đang đá)</label>
+                                <input type="text" id="op-service-madon" placeholder="Mã đơn đang đá">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Chọn Dịch Vụ</label>
+                                    <select id="op-service-id"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Số lượng</label>
+                                    <input type="number" id="op-service-quantity" value="1" min="1" style="width: 70px;">
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-block" id="btn-op-addservice">Thêm Dịch Vụ</button>
+                            
+                            <div id="service-usage-preview" style="margin-top: 15px; display: none;">
+                                <table class="service-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Dịch vụ</th>
+                                            <th>SL</th>
+                                            <th>Giá</th>
+                                            <th>Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="service-usage-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Check Out & Quyết Toán -->
+                        <div class="op-card">
+                            <h4><i class="fa-solid fa-right-from-bracket text-primary"></i> 3. Check-Out & Quyết Toán</h4>
+                            <div class="form-group">
+                                <label>Mã Đơn Đặt Sân</label>
+                                <input type="text" id="op-checkout-madon" placeholder="Mã đơn đặt sân">
+                            </div>
+                            <div class="form-group">
+                                <label>Hình thức thanh toán tiền mặt/chuyển khoản</label>
+                                <select id="op-checkout-method">
+                                    <option value="tien_mat">Tiền mặt tại quầy</option>
+                                    <option value="chuyen_khoan">Chuyển khoản ngân hàng</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-danger btn-block" id="btn-op-checkout">Check-out & Xuất Hóa Đơn</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 6: Báo Cáo & AI Insights -->
+            <section id="tab-insights" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-chart-line text-primary"></i> AI Phân Tích Hiệu Suất & Đề Xuất Tối Ưu</h3>
+                        <button class="btn btn-primary" id="btn-load-ai-insights">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Phân Tích Doanh Thu AI
+                        </button>
+                    </div>
+
+                    <div class="insight-summary-card" id="ai-insight-summary">
+                        <div class="placeholder-text">Nhấp vào nút phía trên để AI phân tích hiệu suất lấp đầy và đề xuất khuyến mãi giảm giá giờ thấp điểm.</div>
+                    </div>
+
+                    <h4 style="margin-top: 24px; margin-bottom: 12px;">Đề Xuất Chương Trình Giờ Thấp Điểm (Off-Peak Promotion)</h4>
+                    <div class="promotions-grid" id="ai-promotions-list"></div>
+                </div>
+            </section>
+
+            <!-- Tab 7: Cấu Hình Hệ Thống (Admin Only) -->
+            <section id="tab-admin" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-gears text-primary"></i> Cấu Hình Sân Bãi & Bảng Giá (Chỉ ADMIN)</h3>
+                    </div>
+                    
+                    <div class="admin-grid">
+                        <!-- Thêm Sân Mới -->
+                        <div class="admin-card">
+                            <h4><i class="fa-solid fa-square-plus"></i> Thêm Sân Mới</h4>
+                            <form id="form-admin-create-court">
+                                <div class="form-group">
+                                    <label>Mã Sân (Unicode, vd: SAN7-003) *</label>
+                                    <input type="text" id="adm-c-ma" placeholder="Mã định danh sân" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tên Sân Bóng *</label>
+                                    <input type="text" id="adm-c-ten" placeholder="Tên sân hiển thị" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Loại Sân *</label>
+                                        <select id="adm-c-loai" required></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Vị Trí Khu Vực</label>
+                                        <input type="text" id="adm-c-vitri" placeholder="Khu A, Khu B...">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Mô tả ngắn cho AI hiểu cấu hình sân</label>
+                                    <input type="text" id="adm-c-mota" placeholder="Mặt cỏ đạt chuẩn FIFA, dàn đèn 400W...">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Tạo Sân Bóng</button>
+                            </form>
+                        </div>
+
+                        <!-- Cập Nhật Bảng Giá -->
+                        <div class="admin-card">
+                            <h4><i class="fa-solid fa-tags"></i> Thiết Lập Bảng Giá Giờ Vàng</h4>
+                            <form id="form-admin-add-pricing">
+                                <div class="form-group">
+                                    <label>Chọn Sân Bóng *</label>
+                                    <select id="adm-p-san" required></select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Giờ Bắt Đầu *</label>
+                                        <input type="time" id="adm-p-start" value="17:30" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Giờ Kết Thúc *</label>
+                                        <input type="time" id="adm-p-end" value="22:30" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Đơn Giá (VND/Giờ) *</label>
+                                        <input type="number" id="adm-p-gia" value="300000" min="50000" step="10000" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Kiểu Ngày</label>
+                                        <select id="adm-p-loai-ngay">
+                                            <option value="thuong">Ngày thường (T2-T6)</option>
+                                            <option value="cuoi_tuan">Cuối tuần (T7-CN)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-secondary btn-block">Thêm Khung Giá</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Bảng Danh Sách & Quản Lý Sân Hiện Hữu (CRUD Full: Sửa & Xóa) -->
+                    <div style="margin-top: 30px;">
+                        <div class="panel-header" style="padding: 0 0 12px 0;">
+                            <h4><i class="fa-solid fa-list-check text-primary"></i> Danh Sách & Quản Lý Sân Bóng Hiện Hữu</h4>
+                            <button class="btn btn-secondary btn-sm" id="btn-refresh-admin-courts">
+                                <i class="fa-solid fa-arrows-rotate"></i> Làm mới danh sách
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã Sân</th>
+                                        <th>Tên Sân</th>
+                                        <th>Loại Sân</th>
+                                        <th>Vị Trí</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Mô Tả Cấu Hình AI</th>
+                                        <th style="text-align: center;">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-courts-table-body">
+                                    <tr><td colspan="7" class="text-center">Đang tải danh sách sân...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- FLOATING CHATBOT WIDGET -->
+        <div class="chatbot-widget" id="chatbot-widget">
+            <!-- Trigger Bubble -->
+            <button class="chatbot-trigger" id="chatbot-trigger" title="Trợ lý AI tư vấn">
+                <i class="fa-solid fa-robot"></i>
+                <span class="chatbot-pulse"></span>
+            </button>
+            
+            <!-- Chat Container -->
+            <div class="chatbot-container" id="chatbot-container">
+                <!-- Header -->
+                <div class="chatbot-header">
+                    <div class="chatbot-header-info">
+                        <i class="fa-solid fa-robot text-primary" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <h4 style="margin: 0; font-size: 0.9rem;">Trợ Lý AI Mini Victory</h4>
+                            <span class="chatbot-status">Đang online</span>
+                        </div>
+                    </div>
+                    <button class="chatbot-close-btn" id="chatbot-close-btn" title="Thu nhỏ">&times;</button>
+                </div>
+                
+                <!-- Quick Prompts Chips -->
+                <div class="chatbot-quick-prompts">
+                    <button class="chip-prompt" data-text="Tìm sân bóng 7 người tối thứ Sáu khoảng 19h để đá phủi">
+                        ⚽ Sân 7 phủi tối thứ Sáu 19h
+                    </button>
+                    <button class="chip-prompt" data-text="Tìm sân vận động 11 người sáng Chủ Nhật 7h30">
+                        🏟️ Sân 11 sáng CN 7h30
+                    </button>
+                </div>
+
+                <!-- Messages Log -->
+                <div class="chatbot-messages" id="chatbot-messages">
+                    <div class="chatbot-message ai">
+                        <div class="ai-avatar"><i class="fa-solid fa-sparkles"></i></div>
+                        <div class="msg-text">Chào bạn! Mình là Trợ lý AI Mini Victory. Mình có thể giúp gì cho đội bóng của bạn hôm nay? Bạn có thể hỏi mình tìm sân trống nhé! ⚽🏟️</div>
+                    </div>
+                </div>
+                
+                <!-- Form Input -->
+                <div class="chatbot-input-area">
+                    <textarea id="chatbot-user-input" placeholder="Nhập nhu cầu tìm sân..." rows="1"></textarea>
+                    <button id="btn-chatbot-send" title="Gửi"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HÓA ĐƠN CHI TIẾT CHECKOUT -->
+    <div class="modal-overlay" id="modal-invoice">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-invoice-dollar text-primary"></i> Hóa Đơn Quyết Toán Trận Đấu</h3>
+                <button class="modal-close" id="btn-close-invoice-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="invoice-box" id="invoice-details-content">
+                    <!-- Chi tiết hóa đơn nạp tự động qua JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-block" id="btn-invoice-done">Xác Nhận & Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AI SINH THÔNG BÁO / NHẮC LỊCH -->
+    <div class="modal-overlay" id="modal-ai-notification">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Trợ Lý AI Sinh Thông Báo Nhắc Lịch</h3>
+                <button class="modal-close" id="btn-close-notif-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="notif-template-group">
+                    <label><i class="fa-solid fa-comment-dots text-primary"></i> Mẫu Tin Nhắn Gửi Đội Bóng (Zalo/SMS):</label>
+                    <div class="code-box" id="ai-zalo-text" style="white-space: pre-wrap; font-family: inherit;">Đang tạo...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btn-copy-zalo">
+                    <i class="fa-regular fa-copy"></i> Sao Chép Tin Nhắn
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-close-notif-action">Đóng</button>
+            </div>
+        </div>
+    <!-- MODAL CHỈNH SỬA SÂN BÓNG (CRUD EDIT MODAL) -->
+    <div class="modal-overlay" id="modal-edit-court" style="display: none;">
+        <div class="modal-card" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square text-primary"></i> Chỉnh Sửa Sân Bóng</h3>
+                <button class="modal-close" id="btn-close-edit-court-modal">&times;</button>
+            </div>
+            <form id="form-edit-court">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Mã Sân (Cố định, không thể sửa)</label>
+                        <input type="text" id="edit-c-ma" disabled style="background: rgba(255,255,255,0.05); color: #94a3b8; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Sân Bóng *</label>
+                        <input type="text" id="edit-c-ten" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Loại Sân *</label>
+                            <select id="edit-c-loai" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng Thái *</label>
+                            <select id="edit-c-trang-thai" required>
+                                <option value="active">🟢 Đang hoạt động (Active)</option>
+                                <option value="maintenance">🟡 Đang bảo trì (Maintenance)</option>
+                                <option value="inactive">🔴 Tạm ngưng hoạt động (Inactive)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Vị Trí Khu Vực</label>
+                        <input type="text" id="edit-c-vitri" placeholder="Khu A, Khu B...">
+                    </div>
+                    <div class="form-group">
+                        <label>Mô Tả Cấu Hình AI</label>
+                        <textarea id="edit-c-mota" rows="2" placeholder="Đặc điểm mặt cỏ, hệ thống chiếu sáng..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-edit-court">Hủy</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
