@@ -15,31 +15,46 @@ from app.config import get_settings
 class DatSanService:
     @staticmethod
     def calculate_price(db: Session, san_id: str, ngay_da: date, gio_bat_dau: time, gio_ket_thuc: time) -> int:
-        # Xác định loại ngày
+        """
+        Tính giá thuê sân:
+        - Giờ cao điểm (16:00 - 20:00): 350.000 VNĐ / giờ
+        - Các khung giờ còn lại: 300.000 VNĐ / giờ
+        Hỗ trợ tính tỷ lệ chính xác theo thời lượng nếu khung giờ vắt qua mốc 16:00 hoặc 20:00.
+        """
         weekday = ngay_da.weekday()
         loai_ngay = 'cuoi_tuan' if weekday >= 5 else 'thuong'
         
-        # Tìm bảng giá phù hợp nhất
-        pricing = db.query(BangGia).filter(
-            BangGia.san_id == san_id,
-            BangGia.loai_ngay == loai_ngay,
-            BangGia.gio_bat_dau <= gio_bat_dau,
-            BangGia.gio_ket_thuc >= gio_ket_thuc
-        ).first()
-        
-        if pricing:
-            don_gia = pricing.don_gia
-        else:
-            # Fallback sang bảng giá bất kỳ của sân hoặc giá mặc định
-            pricing = db.query(BangGia).filter(BangGia.san_id == san_id).first()
-            don_gia = pricing.don_gia if pricing else 200000
-            
-        # Tính thời gian (giờ)
+        # Mốc giờ cao điểm cố định 16:00 - 20:00
         dt_start = datetime.combine(date.min, gio_bat_dau)
         dt_end = datetime.combine(date.min, gio_ket_thuc)
-        duration_hours = (dt_end - dt_start).total_seconds() / 3600.0
+        peak_start = datetime.combine(date.min, time(16, 0))
+        peak_end = datetime.combine(date.min, time(20, 0))
         
-        return int(round(duration_hours * don_gia))
+        # Lấy giá từ DB nếu có cấu hình riêng, fallback chuẩn: 350k cao điểm, 300k giờ thường
+        p_peak = db.query(BangGia).filter(
+            BangGia.san_id == san_id,
+            BangGia.loai_ngay == loai_ngay,
+            BangGia.gio_bat_dau >= time(16, 0),
+            BangGia.gio_ket_thuc <= time(20, 0)
+        ).first()
+        price_peak = p_peak.don_gia if p_peak else 350000
+        
+        p_normal = db.query(BangGia).filter(
+            BangGia.san_id == san_id,
+            BangGia.loai_ngay == loai_ngay,
+            BangGia.gio_bat_dau < time(16, 0)
+        ).first()
+        price_normal = p_normal.don_gia if p_normal else 300000
+        
+        # Tính số giờ ngoài cao điểm trước 16:00
+        hours_before_peak = max(0.0, (min(dt_end, peak_start) - dt_start).total_seconds() / 3600.0)
+        # Tính số giờ trong cao điểm (16:00 - 20:00)
+        hours_in_peak = max(0.0, (min(dt_end, peak_end) - max(dt_start, peak_start)).total_seconds() / 3600.0)
+        # Tính số giờ ngoài cao điểm sau 20:00
+        hours_after_peak = max(0.0, (dt_end - max(dt_start, peak_end)).total_seconds() / 3600.0)
+        
+        total_price = (hours_before_peak * price_normal) + (hours_in_peak * price_peak) + (hours_after_peak * price_normal)
+        return int(round(total_price))
 
     @staticmethod
     def check_conflict(db: Session, san_id: str, ngay_da: date, gio_bat_dau: time, gio_ket_thuc: time, exclude_ma_don: str = None) -> bool:
@@ -109,8 +124,8 @@ class DatSanService:
         # Tính toán tiền thuê sân ước tính
         tien_san_est = DatSanService.calculate_price(db, data.ma_san, data.ngay_da, data.gio_bat_dau, data.gio_ket_thuc)
         
-        # Tiền cọc tối thiểu theo quy định: 30% tiền thuê sân, tối thiểu 100.000 VNĐ
-        min_deposit = max(100000, int(round(tien_san_est * 0.3, -3)))
+        # Tiền cọc cố định theo quy định mới của hệ thống: 100.000 VNĐ / đơn
+        min_deposit = 100000
         
         # Khắc phục lỗ hổng kinh tế:
         # Khách hàng (CUSTOMER) KHÔNG THỂ tự động kích hoạt đơn 'da_xac_nhan'.
@@ -123,7 +138,7 @@ class DatSanService:
         else:
             trang_thai = 'cho_coc'
             lock_expires_at = datetime.utcnow() + timedelta(minutes=settings.lock_expiry_minutes)
-            tien_coc_ghi_nhan = min_deposit
+            tien_coc_ghi_nhan = 100000
             
         new_booking = DatSan(
             ma_don=ma_don,

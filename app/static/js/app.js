@@ -1091,6 +1091,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('bk-start-time').value = start;
         document.getElementById('bk-end-time').value = end;
         document.getElementById('bk-date').value = currentSelectedDate;
+        const depositInp = document.getElementById('bk-deposit');
+        if (depositInp) depositInp.value = 100000;
         
         // Switch tab to booking form
         document.querySelector('[data-tab="tab-booking-form"]').click();

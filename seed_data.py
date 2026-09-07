@@ -150,23 +150,15 @@ def seed_database():
         db.add_all([s7a, s7b, s7c, s11a, s11b])
         db.flush()
         
-        # 5. Seed BangGia
-        prices = [
-            # Sân 7
-            BangGia(san_id=s7a.ma, gio_bat_dau=time(6,0), gio_ket_thuc=time(17,30), don_gia=400000, loai_ngay=LoaiNgay.THUONG.value),
-            BangGia(san_id=s7a.ma, gio_bat_dau=time(17,30), gio_ket_thuc=time(23,0), don_gia=600000, loai_ngay=LoaiNgay.THUONG.value),
-            BangGia(san_id=s7a.ma, gio_bat_dau=time(6,0), gio_ket_thuc=time(23,0), don_gia=650000, loai_ngay=LoaiNgay.CUOI_TUAN.value),
-            
-            BangGia(san_id=s7b.ma, gio_bat_dau=time(6,0), gio_ket_thuc=time(17,30), don_gia=400000, loai_ngay=LoaiNgay.THUONG.value),
-            BangGia(san_id=s7b.ma, gio_bat_dau=time(17,30), gio_ket_thuc=time(23,0), don_gia=600000, loai_ngay=LoaiNgay.THUONG.value),
-            
-            BangGia(san_id=s7c.ma, gio_bat_dau=time(6,0), gio_ket_thuc=time(23,0), don_gia=500000, loai_ngay=LoaiNgay.THUONG.value),
-            
-            # Sân 11
-            BangGia(san_id=s11a.ma, gio_bat_dau=time(6,0), gio_ket_thuc=time(17,30), don_gia=800000, loai_ngay=LoaiNgay.THUONG.value),
-            BangGia(san_id=s11a.ma, gio_bat_dau=time(17,30), gio_ket_thuc=time(23,0), don_gia=1200000, loai_ngay=LoaiNgay.THUONG.value),
-            BangGia(san_id=s11b.ma, gio_bat_dau=time(6,0), gio_ket_thuc=time(23,0), don_gia=1000000, loai_ngay=LoaiNgay.THUONG.value),
-        ]
+        # 5. Seed BangGia (Giờ cao điểm 16:00-20:00: 350.000 VNĐ/h, giờ thường: 300.000 VNĐ/h)
+        prices = []
+        for c_item in [s7a, s7b, s7c, s11a, s11b]:
+            for l_day in [LoaiNgay.THUONG.value, LoaiNgay.CUOI_TUAN.value]:
+                prices.extend([
+                    BangGia(san_id=c_item.ma, gio_bat_dau=time(6, 0), gio_ket_thuc=time(16, 0), don_gia=300000, loai_ngay=l_day),
+                    BangGia(san_id=c_item.ma, gio_bat_dau=time(16, 0), gio_ket_thuc=time(20, 0), don_gia=350000, loai_ngay=l_day),
+                    BangGia(san_id=c_item.ma, gio_bat_dau=time(20, 0), gio_ket_thuc=time(23, 0), don_gia=300000, loai_ngay=l_day),
+                ])
         db.add_all(prices)
         db.flush()
         
