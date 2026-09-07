@@ -13,7 +13,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=2.2.0">
 </head>
 <body>
     <!-- LOGIN INTERFACE OVERLAY -->
@@ -253,7 +253,12 @@
                 </button>
                 <button class="nav-item" data-tab="tab-bookings" id="nav-bookings">
                     <i class="fa-solid fa-list-check"></i>
-                    <span>Quản Lý Đơn Đặt</span>
+                    <span id="nav-bookings-label">Sân Đã Đặt</span>
+                    <span class="badge badge-primary" id="badge-active-bookings" style="margin-left: auto; font-size: 11px; padding: 2px 7px; border-radius: 10px; display: none;">0</span>
+                </button>
+                <button class="nav-item" data-tab="tab-booking-history" id="nav-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Lịch Sử Đặt Sân</span>
                 </button>
                 <button class="nav-item" data-tab="tab-operations" id="nav-operations">
                     <i class="fa-solid fa-clipboard-check"></i>
@@ -735,11 +740,14 @@
                 </div>
             </section>
 
-            <!-- Tab 3: Quản Lý Đơn Đặt Sân (Bookings List) -->
+            <!-- Tab 3: Quản Lý Sân Đã Đặt (Active Bookings List) -->
             <section id="tab-bookings" class="tab-content">
                 <div class="panel">
                     <div class="panel-header">
-                        <h3><i class="fa-solid fa-receipt"></i> Danh Sách Đơn Đặt Sân</h3>
+                        <div>
+                            <h3 id="bookings-panel-title"><i class="fa-solid fa-calendar-check text-primary"></i> Quản Lý Sân Đã Đặt</h3>
+                            <p class="text-sm text-muted" id="bookings-panel-subtitle">Danh sách các trận đấu đang chờ đặt cọc, đã xác nhận và sắp thi đấu</p>
+                        </div>
                         <button class="btn btn-secondary" id="btn-refresh-bookings">
                             <i class="fa-solid fa-arrows-rotate"></i> Tải lại
                         </button>
@@ -761,6 +769,44 @@
                             </thead>
                             <tbody id="bookings-table-body">
                                 <tr><td colspan="8" class="text-center">Đang tải dữ liệu đơn đặt...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 4: Lịch Sử Đặt Sân & Hóa Đơn Cũ (History & Finished/Cancelled Bookings) -->
+            <section id="tab-booking-history" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fa-solid fa-clock-rotate-left text-primary"></i> Lịch Sử Đặt Sân & Hóa Đơn</h3>
+                            <p class="text-sm text-muted">Toàn bộ hồ sơ các trận đấu đã hoàn tất hoặc đã hủy trên hệ thống</p>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="history-search-input" placeholder="Tìm mã đơn, tên sân..." style="padding: 7px 12px; font-size: 0.85rem; border-radius: var(--radius-md); background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); color: #fff;">
+                            <button class="btn btn-secondary" id="btn-refresh-history">
+                                <i class="fa-solid fa-arrows-rotate"></i> Tải lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Đơn</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Sân</th>
+                                    <th>Ngày Đá</th>
+                                    <th>Khung Giờ</th>
+                                    <th>Tiền Cọc</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Hóa Đơn / Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <tr><td colspan="8" class="text-center">Đang tải lịch sử đặt sân...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1057,7 +1103,7 @@
     </div>
 
     <!-- MODAL: MÃ QR THANH TOÁN TIỀN CỌC / QUYẾT TOÁN HÓA ĐƠN -->
-    <div class="modal-overlay" id="modal-qr-payment" style="display: none;">
+    <div class="modal-overlay" id="modal-qr-payment">
         <div class="modal-card" style="max-width: 580px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-qrcode text-primary"></i> <span id="qr-modal-title">Quét Mã QR Thanh Toán</span></h3>
@@ -1191,6 +1237,6 @@
     <div id="toast-container"></div>
 
     <!-- Scripts -->
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.js?v=2.2.0"></script>
 </body>
 </html>

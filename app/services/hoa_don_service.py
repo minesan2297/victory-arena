@@ -3,6 +3,7 @@ from sqlalchemy import func
 from fastapi import HTTPException, status
 from datetime import datetime
 import random
+import urllib.parse
 from app.models.dat_san import DatSan
 from app.models.hoa_don import HoaDon, CheckIn, ThanhToan
 from app.models.dich_vu import SuDungDichVu, DanhMucDichVu
@@ -185,11 +186,15 @@ class HoaDonService:
         bank_id = "MB"
         account_name = "SAN BONG VICTORY ARENA"
         
-        vietqr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={amount}&addInfo={memo}&accountName={account_name.replace(' ', '%20')}"
+        enc_memo = urllib.parse.quote(memo)
+        enc_name = urllib.parse.quote(account_name)
+        vietqr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={amount}&addInfo={enc_memo}&accountName={enc_name}"
+        
         momo_data = f"2|99|{account_no}|{account_name}|sanbongvictory@gmail.com|0|0|{amount}|{memo}|transfer_myqr"
-        momo_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={momo_data}"
+        momo_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={urllib.parse.quote(momo_data)}"
+        
         vnpay_data = f"VNPAYQR://pay?merchant=VICTORYARENA&amount={amount}&orderId={invoice.ma_hoa_don}&desc={memo}"
-        vnpay_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={vnpay_data}"
+        vnpay_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={urllib.parse.quote(vnpay_data)}"
         
         return {
             "ma_hoa_don": invoice.ma_hoa_don,

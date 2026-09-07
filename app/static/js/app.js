@@ -78,23 +78,39 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Dynamic tabs visibility based on roles
         const navBookings = document.getElementById('nav-bookings');
+        const navHistory = document.getElementById('nav-history');
         const navOps = document.getElementById('nav-operations');
         const navInsights = document.getElementById('nav-insights');
         const navAdmin = document.getElementById('nav-admin');
+        const navBookingsLabel = document.getElementById('nav-bookings-label');
+        const bookingsTitle = document.getElementById('bookings-panel-title');
+        const bookingsSubtitle = document.getElementById('bookings-panel-subtitle');
         
         if (currentUser.vai_tro === 'CUSTOMER') {
-            if (navBookings) navBookings.style.display = 'none';
+            if (navBookings) navBookings.style.display = 'flex';
+            if (navBookingsLabel) navBookingsLabel.innerText = 'Sân Đã Đặt';
+            if (bookingsTitle) bookingsTitle.innerHTML = '<i class="fa-solid fa-calendar-check text-primary"></i> Sân Đã Đặt Của Bạn';
+            if (bookingsSubtitle) bookingsSubtitle.innerText = 'Các trận đấu đang giữ chỗ (chờ cọc), đã xác nhận và sắp diễn ra';
+            if (navHistory) navHistory.style.display = 'flex';
             if (navOps) navOps.style.display = 'none';
             if (navInsights) navInsights.style.display = 'none';
             if (navAdmin) navAdmin.style.display = 'none';
         } else if (currentUser.vai_tro === 'STAFF') {
             if (navBookings) navBookings.style.display = 'flex';
+            if (navBookingsLabel) navBookingsLabel.innerText = 'Quản Lý Đơn Đặt';
+            if (bookingsTitle) bookingsTitle.innerHTML = '<i class="fa-solid fa-calendar-check text-primary"></i> Quản Lý Sân Đã Đặt (Active)';
+            if (bookingsSubtitle) bookingsSubtitle.innerText = 'Danh sách các trận đấu đang chờ đặt cọc, đã xác nhận và sắp thi đấu';
+            if (navHistory) navHistory.style.display = 'flex';
             if (navOps) navOps.style.display = 'flex';
             if (navInsights) navInsights.style.display = 'flex';
             if (navAdmin) navAdmin.style.display = 'none';
         } else {
             // ADMIN
             if (navBookings) navBookings.style.display = 'flex';
+            if (navBookingsLabel) navBookingsLabel.innerText = 'Quản Lý Đơn Đặt';
+            if (bookingsTitle) bookingsTitle.innerHTML = '<i class="fa-solid fa-calendar-check text-primary"></i> Quản Lý Sân Đã Đặt (Active)';
+            if (bookingsSubtitle) bookingsSubtitle.innerText = 'Danh sách các trận đấu đang chờ đặt cọc, đã xác nhận và sắp thi đấu';
+            if (navHistory) navHistory.style.display = 'flex';
             if (navOps) navOps.style.display = 'flex';
             if (navInsights) navInsights.style.display = 'flex';
             if (navAdmin) navAdmin.style.display = 'flex';
@@ -451,7 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     'tab-dashboard': { title: 'Trang Chủ Tổng Quan', subtitle: 'Tổng quan tình hình hoạt động và thông báo mới' },
                     'tab-schedule': { title: 'Lịch Sân Trực Quan', subtitle: 'Tình trạng chi tiết các loại sân' },
                     'tab-booking-form': { title: 'Đặt Sân Mới', subtitle: 'Tạo đơn đặt giữ chỗ sân bóng' },
-                    'tab-bookings': { title: 'Quản Lý Đơn Đặt Sân', subtitle: 'Chi tiết lịch sử đặt sân của hệ thống' },
+                    'tab-bookings': { title: 'Quản Lý Sân Đã Đặt', subtitle: 'Các trận đấu đang giữ chỗ (chờ cọc), đã xác nhận và sắp diễn ra' },
+                    'tab-booking-history': { title: 'Lịch Sử Đặt Sân', subtitle: 'Hồ sơ các trận đấu đã hoàn tất, đã hủy và hóa đơn cũ' },
                     'tab-operations': { title: 'Nghiệp Vụ Vận Hành', subtitle: 'Bàn giao sân, sử dụng dịch vụ nước ngọt, thanh toán' },
                     'tab-insights': { title: 'Báo Cáo & AI Insights', subtitle: 'Phân tích doanh thu và đề xuất khuyến mại' },
                     'tab-admin': { title: 'Cấu Hình Hệ Thống', subtitle: 'Quản lý thông tin sân bãi và bảng giá' }
@@ -464,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetTab === 'tab-dashboard') fetchDashboardData();
                 if (targetTab === 'tab-schedule') fetchSchedule();
                 if (targetTab === 'tab-bookings') fetchBookings();
+                if (targetTab === 'tab-booking-history') fetchBookingHistory();
                 if (targetTab === 'tab-operations') fetchOperationsData();
                 if (targetTab === 'tab-insights') fetchStatsSummary();
                 if (targetTab === 'tab-admin') loadAdminCourtsTable();
@@ -477,6 +495,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('btn-refresh-schedule').onclick = () => fetchSchedule();
         document.getElementById('btn-refresh-bookings').onclick = () => fetchBookings();
+        
+        const btnRefreshHistory = document.getElementById('btn-refresh-history');
+        if (btnRefreshHistory) btnRefreshHistory.onclick = () => fetchBookingHistory();
+        
+        const historySearchInput = document.getElementById('history-search-input');
+        if (historySearchInput) {
+            historySearchInput.oninput = (e) => {
+                const keyword = e.target.value.toLowerCase().trim();
+                renderFilteredBookingHistory(keyword);
+            };
+        }
         
         // Forms Submits
         document.getElementById('form-create-booking').onsubmit = handleCreateBooking;
@@ -689,9 +718,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (b.trang_thai === 'dang_da') {
                                 badgeClass = 'badge-playing';
                                 stateText = '🔴 ĐANG ĐÁ';
-                            } else if (b.trang_thai === 'cho_coc') {
-                                badgeClass = 'badge-confirmed';
-                                stateText = 'GIỮ CHỖ (10P)';
+                            }
+                            let actionBtnHtml = '';
+                            if (b.trang_thai === 'cho_coc') {
+                                badgeClass = 'badge-pending';
+                                stateText = 'CHỜ CỌC (10P)';
+                                actionBtnHtml = `
+                                    <button class="btn btn-xs btn-success" style="margin-top: 6px;" onclick="window.showQrPaymentModal('${b.ma_don}', ${b.tien_coc}, 'deposit')">
+                                        <i class="fa-solid fa-qrcode"></i> Trả Cọc QR
+                                    </button>
+                                `;
                             }
                             
                             const pitchName = b.san ? b.san.ten_san : b.ma_san;
@@ -707,9 +743,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="fixture-right">
+                                    <div class="fixture-right" style="display: flex; flex-direction: column; align-items: flex-end;">
                                         <span class="fixture-status-badge ${badgeClass}">${stateText}</span>
                                         <span class="fixture-code">${b.ma_don}</span>
+                                        ${actionBtnHtml}
                                     </div>
                                 </div>
                             `;
@@ -1045,9 +1082,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast("Đã chọn sân và khung giờ đá!");
     };
     
+    let cachedHistoryBookings = [];
+
     async function fetchBookings() {
         const tableBody = document.getElementById('bookings-table-body');
-        tableBody.innerHTML = `<tr><td colspan="8" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải danh sách đơn đặt...</td></tr>`;
+        const badgeCount = document.getElementById('badge-active-bookings');
+        tableBody.innerHTML = `<tr><td colspan="8" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải danh sách sân đã đặt...</td></tr>`;
         
         try {
             const res = await fetch('/api/dat-san/bookings', {
@@ -1055,20 +1095,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const bookings = await res.json();
             
-            if (bookings.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">Chưa có đơn đặt sân nào trên hệ thống.</td></tr>`;
+            // Lọc các đơn active: chờ cọc, đã xác nhận, đang đá
+            const activeBookings = bookings.filter(b => ['cho_coc', 'da_xac_nhan', 'dang_da'].includes(b.trang_thai));
+            
+            // Cập nhật badge số lượng sân active
+            if (badgeCount) {
+                if (activeBookings.length > 0) {
+                    badgeCount.textContent = activeBookings.length;
+                    badgeCount.style.display = 'inline-block';
+                } else {
+                    badgeCount.style.display = 'none';
+                }
+            }
+
+            if (activeBookings.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted" style="padding: 24px;">
+                            <i class="fa-solid fa-calendar-xmark" style="font-size: 2rem; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                            Hiện không có đơn đặt sân nào đang hoạt động. Bạn có thể chuyển sang tab <strong>"Lịch Sử Đặt Sân"</strong> để xem các đơn cũ hoặc bấm <strong>"Đặt Lịch Giữ Sân"</strong>.
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             
             let html = "";
-            bookings.forEach(b => {
+            activeBookings.forEach(b => {
                 // Trạng thái badge
                 let statusBadge = "";
-                if (b.trang_thai === 'cho_coc') statusBadge = `<span class="badge badge-warning">Chờ cọc</span>`;
-                else if (b.trang_thai === 'da_xac_nhan') statusBadge = `<span class="badge badge-success">Đã xác nhận</span>`;
-                else if (b.trang_thai === 'dang_da') statusBadge = `<span class="badge badge-primary">Đang thi đấu</span>`;
-                else if (b.trang_thai === 'hoan_tat') statusBadge = `<span class="badge badge-secondary">Hoàn tất</span>`;
-                else if (b.trang_thai === 'da_huy') statusBadge = `<span class="badge badge-danger">Đã hủy</span>`;
+                if (b.trang_thai === 'cho_coc') statusBadge = `<span class="badge badge-warning"><i class="fa-regular fa-clock"></i> Chờ cọc</span>`;
+                else if (b.trang_thai === 'da_xac_nhan') statusBadge = `<span class="badge badge-success"><i class="fa-solid fa-check"></i> Đã xác nhận</span>`;
+                else if (b.trang_thai === 'dang_da') statusBadge = `<span class="badge badge-primary"><i class="fa-solid fa-person-running"></i> Đang thi đấu</span>`;
                 
                 // Hạn giữ chỗ
                 let expTimer = "";
@@ -1077,9 +1135,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (diffMs > 0) {
                         const mins = Math.floor(diffMs / 60000);
                         const secs = Math.floor((diffMs % 60000) / 1000);
-                        expTimer = `<div class="lock-timer" style="color: #ef4444; font-size: 11px; font-weight: 600;">Còn lại ${mins}m ${secs}s</div>`;
+                        expTimer = `<div class="lock-timer" style="color: #ef4444; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-stopwatch"></i> Còn ${mins}m ${secs}s</div>`;
                     } else {
-                        expTimer = `<div class="lock-timer" style="color: #6b7280; font-size: 11px;">Hết hạn lock</div>`;
+                        expTimer = `<div class="lock-timer" style="color: #6b7280; font-size: 11px;"><i class="fa-solid fa-triangle-exclamation"></i> Hết hạn lock</div>`;
                     }
                 }
                 
@@ -1091,18 +1149,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (currentUser.vai_tro !== 'CUSTOMER') {
                     if (b.trang_thai === 'cho_coc') {
-                        actions += `<button class="btn btn-xs btn-primary btn-action" onclick="window.confirmDepositPrompt('${b.ma_don}', ${b.tien_coc})">Xác nhận cọc</button> `;
+                        actions += `<button class="btn btn-xs btn-primary btn-action" onclick="window.confirmDepositPrompt('${b.ma_don}', ${b.tien_coc})"><i class="fa-solid fa-circle-check"></i> Duyệt cọc</button> `;
                     }
                     if (b.trang_thai === 'da_xac_nhan') {
-                        actions += `<button class="btn btn-xs btn-secondary btn-action" onclick="window.triggerReminder('${b.ma_don}')">AI nhắc lịch</button> `;
+                        actions += `<button class="btn btn-xs btn-secondary btn-action" onclick="window.triggerReminder('${b.ma_don}')"><i class="fa-solid fa-robot"></i> AI nhắc lịch</button> `;
                     }
                 }
                 
                 if (b.trang_thai === 'cho_coc' || b.trang_thai === 'da_xac_nhan') {
-                    actions += `<button class="btn btn-xs btn-danger btn-action" onclick="window.cancelBookingPrompt('${b.ma_don}')">Hủy đơn</button>`;
+                    actions += `<button class="btn btn-xs btn-danger btn-action" onclick="window.cancelBookingPrompt('${b.ma_don}')"><i class="fa-solid fa-xmark"></i> Hủy đơn</button>`;
                 }
                 
-                if (actions === "") actions = `<span class="text-muted">Không có</span>`;
+                if (actions === "") actions = `<span class="text-muted">Đang đá</span>`;
                 
                 const timeStr = `${b.gio_bat_dau.substring(0, 5)} - ${b.gio_ket_thuc.substring(0, 5)}`;
                 
@@ -1121,9 +1179,111 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             tableBody.innerHTML = html;
         } catch (e) {
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Lỗi tải danh sách đơn đặt.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Lỗi tải danh sách sân đã đặt.</td></tr>`;
         }
     }
+
+    async function fetchBookingHistory() {
+        const tableBody = document.getElementById('history-table-body');
+        if (!tableBody) return;
+        tableBody.innerHTML = `<tr><td colspan="8" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải lịch sử đặt sân...</td></tr>`;
+
+        try {
+            const res = await fetch('/api/dat-san/bookings', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const bookings = await res.json();
+            
+            // Lịch sử: các đơn đã hoàn tất hoặc đã hủy
+            cachedHistoryBookings = bookings.filter(b => ['hoan_tat', 'da_huy'].includes(b.trang_thai));
+            // Sắp xếp đơn mới nhất lên đầu
+            cachedHistoryBookings.sort((a, b) => new Date(b.ngay_tao || b.ngay_da) - new Date(a.ngay_tao || a.ngay_da));
+
+            renderFilteredBookingHistory("");
+        } catch (e) {
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Lỗi tải dữ liệu lịch sử đặt sân.</td></tr>`;
+        }
+    }
+
+    function renderFilteredBookingHistory(keyword = "") {
+        const tableBody = document.getElementById('history-table-body');
+        if (!tableBody) return;
+
+        let filtered = cachedHistoryBookings;
+        if (keyword) {
+            filtered = cachedHistoryBookings.filter(b => 
+                (b.ma_don && b.ma_don.toLowerCase().includes(keyword)) ||
+                (b.ma_san && b.ma_san.toLowerCase().includes(keyword)) ||
+                (b.san && b.san.ten_san && b.san.ten_san.toLowerCase().includes(keyword)) ||
+                (b.khach_hang_ten && b.khach_hang_ten.toLowerCase().includes(keyword))
+            );
+        }
+
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted" style="padding: 24px;">
+                        <i class="fa-solid fa-box-archive" style="font-size: 2rem; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                        ${keyword ? 'Không tìm thấy kết quả phù hợp với từ khóa.' : 'Chưa có dữ liệu lịch sử đơn đặt sân nào.'}
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = "";
+        filtered.forEach(b => {
+            let statusBadge = "";
+            let actionBtn = "";
+
+            if (b.trang_thai === 'hoan_tat') {
+                statusBadge = `<span class="badge badge-secondary"><i class="fa-solid fa-circle-check"></i> Hoàn tất</span>`;
+                actionBtn = `
+                    <button class="btn btn-xs btn-outline btn-action" onclick="window.showPastInvoice('${b.ma_don}')" title="Xem lại hóa đơn chi tiết">
+                        <i class="fa-solid fa-file-invoice"></i> Xem hóa đơn
+                    </button>
+                `;
+            } else if (b.trang_thai === 'da_huy') {
+                statusBadge = `<span class="badge badge-danger"><i class="fa-solid fa-ban"></i> Đã hủy</span>`;
+                actionBtn = `<span class="text-muted" style="font-size: 0.82rem;">Đơn đã hủy</span>`;
+            }
+
+            const timeStr = `${b.gio_bat_dau.substring(0, 5)} - ${b.gio_ket_thuc.substring(0, 5)}`;
+
+            html += `
+                <tr>
+                    <td><strong>${b.ma_don}</strong></td>
+                    <td>${b.khach_hang_ten || 'N/A'}</td>
+                    <td>${b.san ? b.san.ten_san : b.ma_san}</td>
+                    <td>${formatDateString(b.ngay_da)}</td>
+                    <td>${timeStr}</td>
+                    <td>${b.tien_coc.toLocaleString()} ₫</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
+                </tr>
+            `;
+        });
+
+        tableBody.innerHTML = html;
+    }
+
+    window.showPastInvoice = async (maDon) => {
+        showToast("Đang tải thông tin hóa đơn...");
+        try {
+            const res = await fetch(`/api/van-hanh/invoice/${maDon}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const invoice = await res.json();
+                showInvoiceModal(invoice);
+            } else {
+                const err = await res.json();
+                showToast(err.detail || "Không tìm thấy hóa đơn của đơn này", "error");
+            }
+        } catch (e) {
+            showToast("Lỗi kết nối khi lấy hóa đơn", "error");
+        }
+    };
     
     // Globals for action triggers
     window.confirmDepositPrompt = async (maDon, currentDeposit) => {

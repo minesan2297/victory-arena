@@ -55,6 +55,27 @@ def get_checkout_qr(
 ):
     return HoaDonService.generate_checkout_qr(db, ma_don, phuong_thuc)
 
+@router.get("/invoice/{ma_don}", response_model=HoaDonResponse)
+def get_invoice_by_booking(
+    ma_don: str,
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(get_current_user)
+):
+    from app.models.hoa_don import HoaDon
+    from app.models.dat_san import DatSan
+    from fastapi import HTTPException
+    
+    booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
+    if current_user.vai_tro.ten_vai_tro == "CUSTOMER" and booking.ma_khach_hang != current_user.tai_khoan_id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem hóa đơn của người khác")
+        
+    invoice = db.query(HoaDon).filter(HoaDon.ma_don == ma_don).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Đơn đặt sân này chưa có hóa đơn")
+    return invoice
+
 
 from app.models.ai_models import ThongBao
 from app.auth.dependencies import get_current_user
