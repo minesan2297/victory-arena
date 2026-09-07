@@ -5,8 +5,12 @@ from app.database import get_db
 from app.schemas.hoa_don_schema import CheckInRequest, CheckOutRequest, HoaDonResponse
 from app.schemas.dich_vu_schema import SuDungDVCreate, SuDungDVResponse
 from app.services.hoa_don_service import HoaDonService
-from app.auth.dependencies import require_staff_or_admin
+from app.auth.dependencies import require_staff_or_admin, get_current_user
 from app.models.tai_khoan import TaiKhoan
+from app.models.hoa_don import HoaDon
+from app.models.dat_san import DatSan
+from app.models.ai_models import ThongBao
+from fastapi import HTTPException
 
 router = APIRouter(prefix="/api/van-hanh", tags=["Vận hành sân"])
 
@@ -61,10 +65,6 @@ def get_invoice_by_booking(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
-    from app.models.hoa_don import HoaDon
-    from app.models.dat_san import DatSan
-    from fastapi import HTTPException
-    
     booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
     if not booking:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
@@ -75,10 +75,6 @@ def get_invoice_by_booking(
     if not invoice:
         raise HTTPException(status_code=404, detail="Đơn đặt sân này chưa có hóa đơn")
     return invoice
-
-
-from app.models.ai_models import ThongBao
-from app.auth.dependencies import get_current_user
 
 @router.get("/notifications")
 def get_notifications(
