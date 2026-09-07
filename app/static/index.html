@@ -703,18 +703,22 @@
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Tiền Đặt Cọc (VND) - Để trống nếu muốn giữ chỗ 10 phút</label>
-                                <input type="number" id="bk-deposit" value="0" min="0" step="50000">
+                                <label>Tiền Đặt Cọc (VND) <span class="text-sm text-muted" id="bk-deposit-rule">(Hệ thống tự tính 30% tiền sân, tối thiểu 100.000 ₫)</span></label>
+                                <input type="number" id="bk-deposit" value="100000" min="0" step="50000" placeholder="Hệ thống tự động tính 30%">
                             </div>
                             <div class="form-group">
                                 <label>Phương Thức Thanh Toán Cọc</label>
                                 <select id="bk-payment-method">
+                                    <option value="chuyen_khoan">Chuyển khoản QR ngân hàng (VietQR / QRPay)</option>
+                                    <option value="momo">Ví điện tử MoMo (Quét mã QR)</option>
+                                    <option value="vnpay">Cổng thanh toán VNPAY-QR</option>
                                     <option value="tien_mat">Tiền mặt tại quầy</option>
-                                    <option value="chuyen_khoan">Chuyển khoản QR ngân hàng</option>
-                                    <option value="vnpay">Cổng thanh toán VNPAY</option>
-                                    <option value="momo">Ví điện tử MoMo</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; font-size: 0.85rem; padding: 10px 14px; border-radius: var(--radius-md); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); color: #93c5fd;">
+                            <i class="fa-solid fa-circle-info"></i> <strong>Chính sách đặt cọc:</strong> Sau khi bấm "Xác Nhận Giữ Sân", hệ thống sẽ tự động bật <strong>Mã QR ảo (VietQR/MoMo/VNPAY)</strong> kèm thời gian đếm ngược 10 phút để bạn quét thanh toán giữ chỗ an toàn.
                         </div>
 
                         <div class="form-group">
@@ -1050,6 +1054,91 @@
                 <button type="button" class="btn btn-secondary" id="btn-close-notif-action">Đóng</button>
             </div>
         </div>
+    </div>
+
+    <!-- MODAL: MÃ QR THANH TOÁN TIỀN CỌC / QUYẾT TOÁN HÓA ĐƠN -->
+    <div class="modal-overlay" id="modal-qr-payment" style="display: none;">
+        <div class="modal-card" style="max-width: 580px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-qrcode text-primary"></i> <span id="qr-modal-title">Quét Mã QR Thanh Toán</span></h3>
+                <button class="modal-close" id="btn-close-qr-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding-top: 15px;">
+                <!-- Phương thức Tabs -->
+                <div class="qr-method-tabs" style="display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <button type="button" class="btn btn-sm btn-primary qr-tab-btn active" data-method="vietqr" id="tab-qr-vietqr">
+                        <i class="fa-solid fa-building-columns"></i> VietQR Ngân Hàng
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary qr-tab-btn" data-method="momo" id="tab-qr-momo">
+                        <i class="fa-solid fa-wallet"></i> Ví MoMo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary qr-tab-btn" data-method="vnpay" id="tab-qr-vnpay">
+                        <i class="fa-solid fa-qrcode"></i> VNPAY-QR
+                    </button>
+                </div>
+
+                <!-- Đồng hồ đếm ngược -->
+                <div id="qr-timer-box" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 8px 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 0.85rem; color: #fca5a5;"><i class="fa-regular fa-clock"></i> Thời gian giữ chỗ (Lock):</span>
+                    <strong id="qr-countdown" style="font-size: 1.1rem; color: #ef4444; font-family: monospace;">10:00</strong>
+                </div>
+
+                <!-- Khu vực hiển thị mã QR -->
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; padding: 16px; border-radius: var(--radius-lg); margin-bottom: 16px;">
+                    <img id="qr-image-display" src="" alt="Mã QR Thanh Toán" style="width: 240px; height: 240px; object-fit: contain; display: block; border-radius: 8px;">
+                    <div id="qr-badge-method" style="margin-top: 8px; font-size: 0.78rem; font-weight: 700; color: #1e293b; background: #e2e8f0; padding: 4px 10px; border-radius: 20px;">
+                        Quét mã bằng app ngân hàng bất kỳ (VietQR 24/7)
+                    </div>
+                </div>
+
+                <!-- Chi tiết thanh toán -->
+                <div class="qr-details" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Số tiền thanh toán:</span>
+                        <strong id="qr-display-amount" class="text-primary" style="font-size: 1.25rem;">0 ₫</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Ngân hàng thụ hưởng:</span>
+                        <span style="font-weight: 600;" id="qr-display-bank">MBBank (Quân Đội)</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Số tài khoản / SĐT:</span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <strong id="qr-display-account" style="font-family: monospace; letter-spacing: 1px;">0988123456</strong>
+                            <button type="button" class="btn btn-xs btn-outline" id="btn-copy-account" title="Sao chép số tài khoản"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Chủ tài khoản:</span>
+                        <span style="font-weight: 600;" id="qr-display-name">SAN BONG VICTORY ARENA</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Nội dung chuyển khoản:</span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <strong id="qr-display-memo" class="text-warning" style="font-family: monospace; font-size: 1rem;">COC DS...</strong>
+                            <button type="button" class="btn btn-xs btn-outline" id="btn-copy-memo" title="Sao chép nội dung"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                    <i class="fa-solid fa-shield-halved text-success"></i> <strong>Chính sách kinh tế:</strong> Khách hàng sau khi chuyển khoản, đơn sẽ ở trạng thái <em>Chờ cọc</em> để nhân viên đối soát sao kê ngân hàng rồi duyệt đơn.
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <button type="button" class="btn btn-success" id="btn-sandbox-qr-pay" title="Dùng cho chấm bài & kiểm thử đồ án">
+                        <i class="fa-solid fa-bolt"></i> Giả Lập Quét Thành Công (Sandbox Test)
+                    </button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" id="btn-done-qr-pay">Tôi Đã Chuyển Khoản</button>
+                    <button type="button" class="btn btn-outline" id="btn-close-qr-action">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL CHỈNH SỬA SÂN BÓNG (CRUD EDIT MODAL) -->
     <div class="modal-overlay" id="modal-edit-court" style="display: none;">
         <div class="modal-card" style="max-width: 550px;">

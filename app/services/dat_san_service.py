@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from fastapi import HTTPException, status
 from datetime import datetime, date, time, timedelta
 import random
@@ -6,6 +7,7 @@ from app.models.dat_san import DatSan, LichDat
 from app.models.san import San, BangGia
 from app.models.tai_khoan import TaiKhoan
 from app.models.hoa_don import ThanhToan
+from app.models.ai_models import ThongBao
 from app.schemas.dat_san_schema import DatSanCreate, DoiLichRequest, LichSanResponse, SlotInfo
 from app.config import get_settings
 
@@ -99,13 +101,28 @@ class DatSanService:
                 
         settings = get_settings()
         
-        # Xác định trạng thái ban đầu dựa vào cọc
-        if data.tien_coc > 0:
+        # Kiểm tra vai trò của người đặt đơn
+        user = db.query(TaiKhoan).filter(TaiKhoan.tai_khoan_id == current_user_id).first()
+        is_staff_or_admin = bool(user and user.vai_tro and user.vai_tro.ten_vai_tro in ['STAFF', 'ADMIN'])
+        
+        # Tính toán tiền thuê sân ước tính
+        tien_san_est = DatSanService.calculate_price(db, data.ma_san, data.ngay_da, data.gio_bat_dau, data.gio_ket_thuc)
+        
+        # Tiền cọc tối thiểu theo quy định: 30% tiền thuê sân, tối thiểu 100.000 VNĐ
+        min_deposit = max(100000, int(round(tien_san_est * 0.3, -3)))
+        
+        # Khắc phục lỗ hổng kinh tế:
+        # Khách hàng (CUSTOMER) KHÔNG THỂ tự động kích hoạt đơn 'da_xac_nhan'.
+        # Đơn luôn ở trạng thái 'cho_coc' với khóa 10 phút để chờ thanh toán cọc và duyệt bill.
+        # Chỉ Staff hoặc Admin tại quầy mới được phép thu cọc trực tiếp và kích hoạt 'da_xac_nhan' ngay.
+        if is_staff_or_admin and data.tien_coc >= min_deposit:
             trang_thai = 'da_xac_nhan'
             lock_expires_at = None
+            tien_coc_ghi_nhan = int(data.tien_coc)
         else:
             trang_thai = 'cho_coc'
             lock_expires_at = datetime.utcnow() + timedelta(minutes=settings.lock_expiry_minutes)
+            tien_coc_ghi_nhan = min_deposit
             
         new_booking = DatSan(
             ma_don=ma_don,
@@ -114,7 +131,7 @@ class DatSanService:
             ngay_da=data.ngay_da,
             gio_bat_dau=data.gio_bat_dau,
             gio_ket_thuc=data.gio_ket_thuc,
-            tien_coc=data.tien_coc,
+            tien_coc=tien_coc_ghi_nhan,
             trang_thai=trang_thai,
             lock_expires_at=lock_expires_at,
             ghi_chu=data.ghi_chu,
@@ -135,11 +152,11 @@ class DatSanService:
         )
         db.add(new_lich)
         
-        # Tạo ThanhToan nếu có cọc
-        if data.tien_coc > 0:
+        # Chỉ tạo bản ghi ThanhToan thành công nếu là nhân viên/admin trực tiếp thu tiền tại quầy
+        if is_staff_or_admin and data.tien_coc >= min_deposit:
             new_payment = ThanhToan(
                 ma_don=ma_don,
-                so_tien=data.tien_coc,
+                so_tien=int(data.tien_coc),
                 phuong_thuc=data.phuong_thuc_thanh_toan,
                 loai_giao_dich='dat_coc',
                 trang_thai='thanh_cong',
@@ -166,7 +183,15 @@ class DatSanService:
             db.commit()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Giờ giữ chỗ (lock 10 phút) đã hết hạn")
             
-        booking.tien_coc = so_tien
+        # Tính tiền sân để kiểm tra cận trên/dưới cọc hợp lý
+        tien_san_est = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
+        if so_tien <= 0 or so_tien > tien_san_est:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Số tiền cọc không hợp lệ (phải từ 1đ đến tối đa {tien_san_est:,}đ)"
+            )
+            
+        booking.tien_coc = int(so_tien)
         booking.trang_thai = 'da_xac_nhan'
         booking.lock_expires_at = None
         booking.ngay_cap_nhat = datetime.utcnow()
@@ -174,13 +199,25 @@ class DatSanService:
         # Thêm ThanhToan cọc
         new_payment = ThanhToan(
             ma_don=ma_don,
-            so_tien=so_tien,
+            so_tien=int(so_tien),
             phuong_thuc=phuong_thuc,
             loai_giao_dich='dat_coc',
             trang_thai='thanh_cong',
             thoi_gian=datetime.utcnow()
         )
         db.add(new_payment)
+        
+        # Tạo thông báo xác nhận cọc
+        notif = ThongBao(
+            tai_khoan_id=booking.ma_khach_hang,
+            ma_don=ma_don,
+            noi_dung=f"Đơn đặt sân {ma_don} đã được xác nhận đặt cọc thành công số tiền {int(so_tien):,} ₫ qua {phuong_thuc}!",
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            ngay_gui=datetime.utcnow()
+        )
+        db.add(notif)
+        
         db.commit()
         db.refresh(booking)
         return booking
@@ -234,23 +271,36 @@ class DatSanService:
         if booking.trang_thai not in ['cho_coc', 'da_xac_nhan']:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể hủy đơn ở trạng thái hiện tại")
             
-        # Kiểm tra điều kiện hoàn cọc (trước 24h)
+        # Kiểm tra tổng tiền cọc thực tế đã thanh toán thành công trong bảng ThanhToan
+        tong_coc_thuc_te = db.query(func.sum(ThanhToan.so_tien)).filter(
+            ThanhToan.ma_don == ma_don,
+            ThanhToan.loai_giao_dich == 'dat_coc',
+            ThanhToan.trang_thai == 'thanh_cong'
+        ).scalar() or 0
+        
+        da_hoan = db.query(func.sum(ThanhToan.so_tien)).filter(
+            ThanhToan.ma_don == ma_don,
+            ThanhToan.loai_giao_dich == 'hoan_coc'
+        ).scalar() or 0
+        
+        # Điều kiện hoàn cọc: Chỉ hoàn nếu đơn đã xác nhận, thực tế đã có tiền cọc đóng thành công và chưa hoàn lần nào
         booking_time = datetime.combine(booking.ngay_da, booking.gio_bat_dau)
-        if booking.trang_thai == 'da_xac_nhan' and booking.tien_coc > 0:
+        if booking.trang_thai == 'da_xac_nhan' and tong_coc_thuc_te > 0 and da_hoan == 0:
             if booking_time - datetime.utcnow() >= timedelta(hours=24):
-                # Hoàn cọc
+                # Hoàn cọc số tiền thực tế khách đã nộp
+                so_tien_hoan = int(tong_coc_thuc_te)
                 new_payment = ThanhToan(
                     ma_don=ma_don,
-                    so_tien=-booking.tien_coc, # Phản ánh số tiền hoàn
+                    so_tien=-so_tien_hoan,
                     phuong_thuc='chuyen_khoan',
                     loai_giao_dich='hoan_coc',
                     trang_thai='thanh_cong',
                     thoi_gian=datetime.utcnow()
                 )
                 db.add(new_payment)
-                booking.ghi_chu = (booking.ghi_chu or "") + " [Đã hoàn cọc do hủy trước 24h]"
+                booking.ghi_chu = (booking.ghi_chu or "") + f" [Đã hoàn cọc {so_tien_hoan:,}đ do hủy trước 24h]"
             else:
-                booking.ghi_chu = (booking.ghi_chu or "") + " [Không được hoàn cọc do hủy trễ]"
+                booking.ghi_chu = (booking.ghi_chu or "") + " [Không được hoàn cọc do hủy trễ < 24h]"
                 
         # Cập nhật trạng thái
         booking.trang_thai = 'da_huy'
@@ -259,6 +309,101 @@ class DatSanService:
         
         # Xóa khỏi LichDat để giải phóng lịch sân
         db.query(LichDat).filter(LichDat.ma_don == ma_don).delete()
+        
+        db.commit()
+        db.refresh(booking)
+        return booking
+
+    @staticmethod
+    def generate_deposit_qr(db: Session, ma_don: str, phuong_thuc: str = 'chuyen_khoan') -> dict:
+        booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
+        if not booking:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Đơn đặt sân không tồn tại")
+            
+        amount = int(booking.tien_coc)
+        if amount <= 0:
+            tien_san = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
+            amount = max(100000, int(round(tien_san * 0.3, -3)))
+            booking.tien_coc = amount
+            db.commit()
+            
+        memo = f"COC {ma_don}"
+        account_no = "0988123456"
+        bank_id = "MB"
+        account_name = "SAN BONG VICTORY ARENA"
+        
+        vietqr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={amount}&addInfo={memo}&accountName={account_name.replace(' ', '%20')}"
+        momo_data = f"2|99|{account_no}|{account_name}|sanbongvictory@gmail.com|0|0|{amount}|{memo}|transfer_myqr"
+        momo_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={momo_data}"
+        vnpay_data = f"VNPAYQR://pay?merchant=VICTORYARENA&amount={amount}&orderId={ma_don}&desc={memo}"
+        vnpay_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={vnpay_data}"
+        
+        con_lai_giay = 0
+        if booking.lock_expires_at:
+            diff = (booking.lock_expires_at - datetime.utcnow()).total_seconds()
+            con_lai_giay = max(0, int(diff))
+            
+        return {
+            "ma_don": ma_don,
+            "so_tien": amount,
+            "noi_dung": memo,
+            "ngan_hang": "MBBank (Ngân hàng Quân Đội)",
+            "so_tai_khoan": account_no,
+            "chu_tai_khoan": account_name,
+            "vietqr_url": vietqr_url,
+            "momo_qr_url": momo_qr_url,
+            "vnpay_qr_url": vnpay_qr_url,
+            "phuong_thuc": phuong_thuc,
+            "loai_thanh_toan": "dat_coc",
+            "lock_expires_at": booking.lock_expires_at,
+            "con_lai_giay": con_lai_giay
+        }
+
+    @staticmethod
+    def sandbox_qr_pay(db: Session, ma_don: str, phuong_thuc: str = 'chuyen_khoan') -> DatSan:
+        booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
+        if not booking:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Đơn đặt sân không tồn tại")
+            
+        if booking.trang_thai != 'cho_coc':
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Đơn đặt sân không ở trạng thái Chờ cọc")
+            
+        if booking.lock_expires_at and datetime.utcnow() > booking.lock_expires_at:
+            booking.trang_thai = 'da_huy'
+            db.commit()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thời hạn 10 phút giữ sân đã hết hạn")
+            
+        amount = int(booking.tien_coc)
+        if amount <= 0:
+            tien_san = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
+            amount = max(100000, int(round(tien_san * 0.3, -3)))
+            booking.tien_coc = amount
+            
+        booking.trang_thai = 'da_xac_nhan'
+        booking.lock_expires_at = None
+        booking.ngay_cap_nhat = datetime.utcnow()
+        
+        # Thêm ThanhToan cọc
+        new_payment = ThanhToan(
+            ma_don=ma_don,
+            so_tien=amount,
+            phuong_thuc=phuong_thuc,
+            loai_giao_dich='dat_coc',
+            trang_thai='thanh_cong',
+            thoi_gian=datetime.utcnow()
+        )
+        db.add(new_payment)
+        
+        # Tạo thông báo
+        notif = ThongBao(
+            tai_khoan_id=booking.ma_khach_hang,
+            ma_don=ma_don,
+            noi_dung=f"[Sandbox/QR] Thanh toán cọc {amount:,} ₫ qua {phuong_thuc} thành công! Đơn {ma_don} đã được duyệt tự động.",
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            ngay_gui=datetime.utcnow()
+        )
+        db.add(notif)
         
         db.commit()
         db.refresh(booking)

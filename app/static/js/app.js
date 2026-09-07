@@ -546,6 +546,36 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-invoice-done').onclick = () => document.getElementById('modal-invoice').classList.remove('active');
         document.getElementById('btn-close-notif-modal').onclick = () => document.getElementById('modal-ai-notification').classList.remove('active');
         document.getElementById('btn-close-notif-action').onclick = () => document.getElementById('modal-ai-notification').classList.remove('active');
+
+        // QR Modal listeners
+        const btnCloseQr = document.getElementById('btn-close-qr-modal');
+        if (btnCloseQr) btnCloseQr.onclick = window.closeQrModal;
+        const btnCloseQrAct = document.getElementById('btn-close-qr-action');
+        if (btnCloseQrAct) btnCloseQrAct.onclick = window.closeQrModal;
+
+        const tabVietQr = document.getElementById('tab-qr-vietqr');
+        if (tabVietQr) tabVietQr.onclick = () => selectQrMethod('vietqr');
+        const tabMoMo = document.getElementById('tab-qr-momo');
+        if (tabMoMo) tabMoMo.onclick = () => selectQrMethod('momo');
+        const tabVnPay = document.getElementById('tab-qr-vnpay');
+        if (tabVnPay) tabVnPay.onclick = () => selectQrMethod('vnpay');
+
+        const btnCopyAcc = document.getElementById('btn-copy-account');
+        if (btnCopyAcc) btnCopyAcc.onclick = window.copyQrAccount;
+        const btnCopyMemo = document.getElementById('btn-copy-memo');
+        if (btnCopyMemo) btnCopyMemo.onclick = window.copyQrMemo;
+
+        const btnDoneQr = document.getElementById('btn-done-qr-pay');
+        if (btnDoneQr) {
+            btnDoneQr.onclick = () => {
+                showToast("Cảm ơn bạn! Đơn sẽ được nhân viên kiểm tra giao dịch tài khoản để duyệt.", "info");
+                window.closeQrModal();
+                fetchBookings();
+            };
+        }
+
+        const btnSandboxQr = document.getElementById('btn-sandbox-qr-pay');
+        if (btnSandboxQr) btnSandboxQr.onclick = handleSandboxQrPay;
         
         document.getElementById('btn-copy-zalo').onclick = () => {
             const txt = document.getElementById('ai-zalo-text').innerText;
@@ -1055,17 +1085,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Nút thao tác
                 let actions = "";
+                if (b.trang_thai === 'cho_coc') {
+                    actions += `<button class="btn btn-xs btn-success btn-action" onclick="window.showQrPaymentModal('${b.ma_don}', ${b.tien_coc}, 'deposit')" title="Xem mã QR thanh toán cọc"><i class="fa-solid fa-qrcode"></i> Thanh toán QR</button> `;
+                }
+
                 if (currentUser.vai_tro !== 'CUSTOMER') {
                     if (b.trang_thai === 'cho_coc') {
-                        actions += `<button class="btn btn-xs btn-primary btn-action" onclick="window.confirmDepositPrompt('${b.ma_don}', ${b.tien_coc})">Xác nhận cọc</button>`;
+                        actions += `<button class="btn btn-xs btn-primary btn-action" onclick="window.confirmDepositPrompt('${b.ma_don}', ${b.tien_coc})">Xác nhận cọc</button> `;
                     }
                     if (b.trang_thai === 'da_xac_nhan') {
-                        actions += `<button class="btn btn-xs btn-secondary btn-action" onclick="window.triggerReminder('${b.ma_don}')">AI nhắc lịch</button>`;
+                        actions += `<button class="btn btn-xs btn-secondary btn-action" onclick="window.triggerReminder('${b.ma_don}')">AI nhắc lịch</button> `;
                     }
                 }
                 
                 if (b.trang_thai === 'cho_coc' || b.trang_thai === 'da_xac_nhan') {
-                    actions += ` <button class="btn btn-xs btn-danger btn-action" onclick="window.cancelBookingPrompt('${b.ma_don}')">Hủy đơn</button>`;
+                    actions += `<button class="btn btn-xs btn-danger btn-action" onclick="window.cancelBookingPrompt('${b.ma_don}')">Hủy đơn</button>`;
                 }
                 
                 if (actions === "") actions = `<span class="text-muted">Không có</span>`;
@@ -1236,11 +1270,18 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`Giữ sân thành công! Mã đơn: ${booking.ma_don}`);
             
             // Reset form
-            document.getElementById('bk-deposit').value = 0;
+            document.getElementById('bk-deposit').value = 100000;
             document.getElementById('bk-note').value = "";
             
             // Switch tab to Bookings
             document.querySelector('[data-tab="tab-bookings"]').click();
+            
+            // Tự động mở Modal QR thanh toán cọc
+            if (booking.trang_thai === 'cho_coc') {
+                setTimeout(() => {
+                    window.showQrPaymentModal(booking.ma_don, booking.tien_coc, 'deposit');
+                }, 300);
+            }
         } catch (e) {
             showToast("Lỗi kết nối đến máy chủ", "error");
         }
@@ -1512,6 +1553,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             
             <div class="invoice-footer-text">Cảm ơn anh/chị đã tin tưởng dịch vụ. Chúc anh/chị luôn giữ vững đam mê bóng đá phủi! ⚽</div>
+            
+            ${inv.tong_thanh_toan > 0 ? `
+            <div style="text-align: center; margin-top: 14px;">
+                <button type="button" class="btn btn-sm btn-success" onclick="window.showQrPaymentModal('${inv.ma_don}', ${inv.tong_thanh_toan}, 'checkout')">
+                    <i class="fa-solid fa-qrcode"></i> Quét Mã QR Quyết Toán Hóa Đơn
+                </button>
+            </div>
+            ` : ''}
         `;
         
         container.innerHTML = html;
@@ -1786,6 +1835,204 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Lỗi kết nối máy chủ", "error");
         }
     };
+
+    // ==========================================
+    // Virtual QR Code Payment Modal System
+    // ==========================================
+    let qrCountdownInterval = null;
+    let currentQrInfo = null;
+    let currentQrMethod = 'vietqr';
+
+    window.showQrPaymentModal = async (maDon, amount = 0, type = 'deposit') => {
+        const modal = document.getElementById('modal-qr-payment');
+        if (!modal) return;
+
+        // Reset display
+        document.getElementById('qr-modal-title').innerText = type === 'deposit' 
+            ? `Quét Mã QR Đặt Cọc Sân (${maDon})` 
+            : `Quét Mã QR Quyết Toán Hóa Đơn (${maDon})`;
+        document.getElementById('qr-display-amount').innerText = `${amount.toLocaleString()} ₫`;
+        document.getElementById('qr-display-memo').innerText = type === 'deposit' ? `COC ${maDon}` : `HD ${maDon}`;
+        
+        try {
+            let res;
+            if (type === 'deposit') {
+                res = await fetch(`/api/dat-san/booking/${maDon}/qr-deposit`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } else {
+                res = await fetch(`/api/van-hanh/invoice/${maDon}/qr-checkout`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            }
+
+            if (res.ok) {
+                currentQrInfo = await res.json();
+            } else {
+                const memo = type === 'deposit' ? `COC ${maDon}` : `HD ${maDon}`;
+                currentQrInfo = {
+                    ma_don: maDon,
+                    so_tien: amount,
+                    noi_dung: memo,
+                    ngan_hang: 'MBBank (Ngân Hàng Quân Đội)',
+                    so_tai_khoan: '0988123456',
+                    chu_tai_khoan: 'SAN BONG VICTORY ARENA',
+                    vietqr_url: `https://img.vietqr.io/image/MB-0988123456-compact2.png?amount=${amount}&addInfo=${memo}&accountName=SAN%20BONG%20VICTORY%20ARENA`,
+                    momo_qr_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=2|99|0988123456|SAN%20BONG%20VICTORY%20ARENA|sanbongvictory@gmail.com|0|0|${amount}|${memo}|transfer_myqr`,
+                    vnpay_qr_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=VNPAYQR://pay?merchant=VICTORYARENA&amount=${amount}&orderId=${maDon}&desc=${memo}`,
+                    con_lai_giay: 600
+                };
+            }
+        } catch (e) {
+            console.error("Lỗi lấy thông tin QR:", e);
+        }
+
+        // Cập nhật thông tin chi tiết vào Modal
+        if (currentQrInfo) {
+            document.getElementById('qr-display-amount').innerText = `${currentQrInfo.so_tien.toLocaleString()} ₫`;
+            document.getElementById('qr-display-bank').innerText = currentQrInfo.ngan_hang || 'MBBank';
+            document.getElementById('qr-display-account').innerText = currentQrInfo.so_tai_khoan || '0988123456';
+            document.getElementById('qr-display-name').innerText = currentQrInfo.chu_tai_khoan || 'SAN BONG VICTORY ARENA';
+            document.getElementById('qr-display-memo').innerText = currentQrInfo.noi_dung || (type === 'deposit' ? `COC ${maDon}` : `HD ${maDon}`);
+
+            // Chọn tab mặc định VietQR
+            selectQrMethod('vietqr');
+
+            // Xử lý countdown lock 10 phút
+            const timerBox = document.getElementById('qr-timer-box');
+            if (type === 'deposit' && currentQrInfo.con_lai_giay > 0) {
+                timerBox.style.display = 'flex';
+                let remaining = currentQrInfo.con_lai_giay;
+                if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+                
+                const updateTimerDisplay = () => {
+                    if (remaining <= 0) {
+                        clearInterval(qrCountdownInterval);
+                        document.getElementById('qr-countdown').innerText = '00:00 (Hết hạn)';
+                        showToast('Đã hết hạn 10 phút giữ chỗ. Đơn đặt sân có thể bị hủy!', 'warning');
+                        return;
+                    }
+                    const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+                    const s = String(remaining % 60).padStart(2, '0');
+                    document.getElementById('qr-countdown').innerText = `${m}:${s}`;
+                    remaining--;
+                };
+                updateTimerDisplay();
+                qrCountdownInterval = setInterval(updateTimerDisplay, 1000);
+            } else {
+                timerBox.style.display = 'none';
+                if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+            }
+        }
+
+        // Hiện modal
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    };
+
+    function selectQrMethod(method) {
+        currentQrMethod = method;
+        document.querySelectorAll('.qr-tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-secondary');
+        });
+
+        const activeBtn = document.getElementById(`tab-qr-${method}`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.classList.add('btn-primary');
+            activeBtn.classList.remove('btn-secondary');
+        }
+
+        const imgEl = document.getElementById('qr-image-display');
+        const badgeEl = document.getElementById('qr-badge-method');
+        const bankLabel = document.getElementById('qr-display-bank');
+
+        if (!currentQrInfo) return;
+
+        if (method === 'vietqr') {
+            imgEl.src = currentQrInfo.vietqr_url;
+            badgeEl.innerText = 'Quét mã bằng App ngân hàng bất kỳ (VietQR Napas 24/7)';
+            badgeEl.style.color = '#1e293b';
+            badgeEl.style.background = '#e2e8f0';
+            bankLabel.innerText = 'MBBank (Quân Đội)';
+        } else if (method === 'momo') {
+            imgEl.src = currentQrInfo.momo_qr_url;
+            badgeEl.innerText = 'Mở Ví MoMo quét mã QR thanh toán';
+            badgeEl.style.color = '#ffffff';
+            badgeEl.style.background = '#d82d8b';
+            bankLabel.innerText = 'Ví Điện Tử MoMo';
+        } else if (method === 'vnpay') {
+            imgEl.src = currentQrInfo.vnpay_qr_url;
+            badgeEl.innerText = 'Mở App Ngân hàng hoặc Ví VNPAY quét mã VNPAY-QR';
+            badgeEl.style.color = '#ffffff';
+            badgeEl.style.background = '#005baa';
+            bankLabel.innerText = 'Cổng Thanh Toán VNPAY';
+        }
+    }
+
+    window.closeQrModal = () => {
+        const modal = document.getElementById('modal-qr-payment');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('active');
+        }
+        if (qrCountdownInterval) {
+            clearInterval(qrCountdownInterval);
+            qrCountdownInterval = null;
+        }
+    };
+
+    window.copyQrAccount = () => {
+        const acc = document.getElementById('qr-display-account').innerText;
+        navigator.clipboard.writeText(acc).then(() => {
+            showToast(`Đã sao chép số tài khoản: ${acc}`);
+        }).catch(() => {
+            showToast(`Số tài khoản: ${acc}`);
+        });
+    };
+
+    window.copyQrMemo = () => {
+        const memo = document.getElementById('qr-display-memo').innerText;
+        navigator.clipboard.writeText(memo).then(() => {
+            showToast(`Đã sao chép nội dung: ${memo}`);
+        }).catch(() => {
+            showToast(`Nội dung: ${memo}`);
+        });
+    };
+
+    async function handleSandboxQrPay() {
+        if (!currentQrInfo || !currentQrInfo.ma_don) {
+            showToast("Không tìm thấy thông tin đơn đặt sân!", "error");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/dat-san/booking/sandbox-qr-pay', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    ma_don: currentQrInfo.ma_don,
+                    phuong_thuc: currentQrMethod === 'momo' ? 'momo' : (currentQrMethod === 'vnpay' ? 'vnpay' : 'chuyen_khoan')
+                })
+            });
+
+            if (res.ok) {
+                showToast(`⚡ [Sandbox Test] Đã thanh toán cọc ${currentQrInfo.so_tien.toLocaleString()} ₫ thành công! Đơn đã được xác nhận.`);
+                window.closeQrModal();
+                fetchBookings();
+            } else {
+                const err = await res.json();
+                showToast(err.detail || "Lỗi thanh toán sandbox", "error");
+            }
+        } catch (e) {
+            showToast("Lỗi kết nối", "error");
+        }
+    }
 
     // ==========================================
     // Utility Helpers

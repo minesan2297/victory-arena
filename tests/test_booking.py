@@ -83,7 +83,7 @@ def test_auth_registration(db_session):
     assert user.vai_role_name_check_val() == "CUSTOMER"
 
 def test_create_booking_success(db_session):
-    """Kiểm tra đặt sân thành công khi khung giờ trống."""
+    """Kiểm tra đặt sân thành công: Khách tạo đơn ở trạng thái cho_coc, sau đó được duyệt da_xac_nhan."""
     customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
     
     booking_in = DatSanCreate(
@@ -95,10 +95,18 @@ def test_create_booking_success(db_session):
         phuong_thuc_thanh_toan="tien_mat"
     )
     
+    # Khách đặt đơn: Phải ở trạng thái cho_coc (chờ cọc) với khóa giữ chỗ 10 phút
     booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
     assert booking.ma_don is not None
-    assert booking.trang_thai == "da_xac_nhan"
-    assert booking.tien_coc == 100000.0
+    assert booking.trang_thai == "cho_coc"
+    assert booking.lock_expires_at is not None
+    assert booking.tien_coc >= 100000
+    
+    # Nhân viên duyệt / xác nhận cọc -> chuyển sang da_xac_nhan
+    confirmed = DatSanService.xac_nhan_coc(db_session, booking.ma_don, 100000, "chuyen_khoan")
+    assert confirmed.trang_thai == "da_xac_nhan"
+    assert confirmed.lock_expires_at is None
+    assert confirmed.tien_coc == 100000
 
 def test_anti_overbooking_overlap(db_session):
     """Kiểm tra ngăn chặn đặt trùng giờ (Interval Overlap)."""
@@ -155,7 +163,7 @@ def test_booking_maintenance_lock(db_session):
     assert exc_info.value.status_code == 400
 
 def test_booking_cancellation_refund(db_session):
-    """Kiểm tra chính sách hủy đơn và hoàn cọc tự động."""
+    """Kiểm tra chính sách hủy đơn và hoàn cọc tự động: Chỉ hoàn cọc khi đã nộp cọc thành công và hủy trước 24h."""
     customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
     
     # Đặt đơn thi đấu vào 3 ngày tới (> 24 giờ trước)
@@ -169,6 +177,9 @@ def test_booking_cancellation_refund(db_session):
     )
     booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
     
+    # Nhân viên xác nhận cọc thành công (để có giao dịch cọc thật trong CSDL)
+    DatSanService.xac_nhan_coc(db_session, booking.ma_don, 100000, "chuyen_khoan")
+    
     # Hủy đơn
     cancelled = DatSanService.huy_lich(db_session, booking.ma_don)
     assert cancelled.trang_thai == "da_huy"
@@ -180,6 +191,68 @@ def test_booking_cancellation_refund(db_session):
     ).first()
     assert refund is not None
     assert refund.so_tien == -100000.0 # Hoàn cọc âm
+
+def test_unpaid_booking_cancellation_no_phantom_refund(db_session):
+    """Kiểm tra chống lỗ hổng hoàn cọc ảo: Hủy đơn chưa cọc (cho_coc) thì không được sinh giao dịch hoàn tiền âm."""
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    
+    future_date = date.today() + timedelta(days=3)
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=future_date,
+        gio_bat_dau=time(14, 0),
+        gio_ket_thuc=time(15, 30),
+        tien_coc=100000.0
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+    assert booking.trang_thai == "cho_coc"
+    
+    # Khách hủy đơn khi chưa đóng cọc thật
+    cancelled = DatSanService.huy_lich(db_session, booking.ma_don)
+    assert cancelled.trang_thai == "da_huy"
+    
+    # Chắc chắn KHÔNG có giao dịch hoàn cọc ảo nào sinh ra
+    refund = db_session.query(ThanhToan).filter(
+        ThanhToan.ma_don == booking.ma_don,
+        ThanhToan.loai_giao_dich == "hoan_coc"
+    ).first()
+    assert refund is None
+
+def test_qr_deposit_generation_and_sandbox(db_session):
+    """Kiểm tra sinh mã QR ảo (VietQR, MoMo, VNPAY) và giả lập thanh toán Sandbox."""
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=date(2026, 9, 2),
+        gio_bat_dau=time(19, 0),
+        gio_ket_thuc=time(20, 30),
+        tien_coc=100000.0
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+    
+    # 1. Sinh QR cọc
+    qr_info = DatSanService.generate_deposit_qr(db_session, booking.ma_don, "chuyen_khoan")
+    assert "vietqr.io" in qr_info["vietqr_url"]
+    assert "MB" in qr_info["vietqr_url"]
+    assert qr_info["noi_dung"] == f"COC {booking.ma_don}"
+    assert qr_info["so_tien"] >= 100000
+    assert "momo_qr_url" in qr_info
+    assert "vnpay_qr_url" in qr_info
+    
+    # 2. Giả lập thanh toán Sandbox QR
+    paid_booking = DatSanService.sandbox_qr_pay(db_session, booking.ma_don, "chuyen_khoan")
+    assert paid_booking.trang_thai == "da_xac_nhan"
+    assert paid_booking.lock_expires_at is None
+    
+    # Kiểm tra có bản ghi thanh toán cọc thành công
+    payment = db_session.query(ThanhToan).filter(
+        ThanhToan.ma_don == booking.ma_don,
+        ThanhToan.loai_giao_dich == "dat_coc"
+    ).first()
+    assert payment is not None
+    assert payment.trang_thai == "thanh_cong"
+
 
 def test_court_crud_operations(db_session):
     """Kiểm tra đầy đủ chức năng CRUD sân bóng: Tạo mới, Xem, Sửa thông tin và Xóa."""

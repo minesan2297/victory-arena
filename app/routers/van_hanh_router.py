@@ -46,6 +46,16 @@ def check_out(
 ):
     return HoaDonService.check_out_and_pay(db, data.ma_don, phuong_thuc)
 
+@router.get("/invoice/{ma_don}/qr-checkout")
+def get_checkout_qr(
+    ma_don: str,
+    phuong_thuc: str = Query('chuyen_khoan'),
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(require_staff_or_admin)
+):
+    return HoaDonService.generate_checkout_qr(db, ma_don, phuong_thuc)
+
+
 from app.models.ai_models import ThongBao
 from app.auth.dependencies import get_current_user
 

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from fastapi import HTTPException, status
 from datetime import datetime
 import random
@@ -45,6 +46,14 @@ class HoaDonService:
             if not db.query(HoaDon).filter(HoaDon.ma_hoa_don == ma_hoa_don).first():
                 break
                 
+        # Khắc phục lỗ hổng kinh tế: Chỉ trừ tiền cọc thực tế đã thanh toán thành công
+        tong_coc_thuc_te = db.query(func.sum(ThanhToan.so_tien)).filter(
+            ThanhToan.ma_don == ma_don,
+            ThanhToan.loai_giao_dich == 'dat_coc',
+            ThanhToan.trang_thai == 'thanh_cong'
+        ).scalar() or 0
+        tien_coc_da_tru = int(tong_coc_thuc_te)
+        
         # Tạo HoaDon
         new_invoice = HoaDon(
             ma_hoa_don=ma_hoa_don,
@@ -52,8 +61,8 @@ class HoaDonService:
             check_in_thuc_te=datetime.utcnow(),
             tien_san=tien_san,
             tong_dich_vu=0,
-            tien_coc_da_tru=int(booking.tien_coc),
-            tong_thanh_toan=max(0, tien_san - int(booking.tien_coc)),
+            tien_coc_da_tru=tien_coc_da_tru,
+            tong_thanh_toan=max(0, tien_san - tien_coc_da_tru),
             trang_thai='chua_thanh_toan',
             ngay_tao=datetime.utcnow()
         )
@@ -163,3 +172,37 @@ class HoaDonService:
         db.commit()
         db.refresh(invoice)
         return invoice
+
+    @staticmethod
+    def generate_checkout_qr(db: Session, ma_don: str, phuong_thuc: str = 'chuyen_khoan') -> dict:
+        invoice = db.query(HoaDon).filter(HoaDon.ma_don == ma_don).first()
+        if not invoice:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hóa đơn của đơn đặt sân")
+            
+        amount = int(invoice.tong_thanh_toan)
+        memo = f"HD {invoice.ma_hoa_don}"
+        account_no = "0988123456"
+        bank_id = "MB"
+        account_name = "SAN BONG VICTORY ARENA"
+        
+        vietqr_url = f"https://img.vietqr.io/image/{bank_id}-{account_no}-compact2.png?amount={amount}&addInfo={memo}&accountName={account_name.replace(' ', '%20')}"
+        momo_data = f"2|99|{account_no}|{account_name}|sanbongvictory@gmail.com|0|0|{amount}|{memo}|transfer_myqr"
+        momo_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={momo_data}"
+        vnpay_data = f"VNPAYQR://pay?merchant=VICTORYARENA&amount={amount}&orderId={invoice.ma_hoa_don}&desc={memo}"
+        vnpay_qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={vnpay_data}"
+        
+        return {
+            "ma_hoa_don": invoice.ma_hoa_don,
+            "ma_don": ma_don,
+            "so_tien": amount,
+            "noi_dung": memo,
+            "ngan_hang": "MBBank (Ngân hàng Quân Đội)",
+            "so_tai_khoan": account_no,
+            "chu_tai_khoan": account_name,
+            "vietqr_url": vietqr_url,
+            "momo_qr_url": momo_qr_url,
+            "vnpay_qr_url": vnpay_qr_url,
+            "phuong_thuc": phuong_thuc,
+            "loai_thanh_toan": "thanh_toan_het"
+        }
+

@@ -4,7 +4,8 @@ from datetime import date
 from typing import List
 from app.database import get_db
 from app.schemas.dat_san_schema import (
-    DatSanCreate, DatSanResponse, XacNhanCocRequest, DoiLichRequest, LichSanResponse
+    DatSanCreate, DatSanResponse, XacNhanCocRequest, DoiLichRequest, LichSanResponse,
+    QRPaymentInfo, SandboxQRPayRequest
 )
 from app.services.dat_san_service import DatSanService
 from app.auth.dependencies import get_current_user, require_staff_or_admin
@@ -101,3 +102,32 @@ def cancel_booking(
         
     cancelled = DatSanService.huy_lich(db, ma_don)
     return to_booking_response(cancelled)
+
+@router.get("/booking/{ma_don}/qr-deposit", response_model=QRPaymentInfo)
+def get_deposit_qr(
+    ma_don: str,
+    phuong_thuc: str = Query('chuyen_khoan'),
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(get_current_user)
+):
+    booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
+    if current_user.vai_tro.ten_vai_tro == "CUSTOMER" and booking.ma_khach_hang != current_user.tai_khoan_id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem thông tin thanh toán của người khác")
+    return DatSanService.generate_deposit_qr(db, ma_don, phuong_thuc)
+
+@router.post("/booking/sandbox-qr-pay", response_model=DatSanResponse)
+def sandbox_qr_pay(
+    data: SandboxQRPayRequest,
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(get_current_user)
+):
+    booking = db.query(DatSan).filter(DatSan.ma_don == data.ma_don).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
+    if current_user.vai_tro.ten_vai_tro == "CUSTOMER" and booking.ma_khach_hang != current_user.tai_khoan_id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền thanh toán cho đơn của người khác")
+    updated = DatSanService.sandbox_qr_pay(db, data.ma_don, data.phuong_thuc)
+    return to_booking_response(updated)
+

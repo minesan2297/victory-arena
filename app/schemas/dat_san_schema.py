@@ -56,3 +56,23 @@ class LichSanResponse(BaseModel):
     ngay: date
     tong_san: int
     slots: List[SlotInfo]
+
+class QRPaymentInfo(BaseModel):
+    ma_don: str
+    so_tien: int
+    noi_dung: str
+    ngan_hang: str = "MBBank"
+    so_tai_khoan: str = "0988123456"
+    chu_tai_khoan: str = "SAN BONG VICTORY ARENA"
+    vietqr_url: str
+    momo_qr_url: str
+    vnpay_qr_url: str
+    phuong_thuc: str = "chuyen_khoan"
+    loai_thanh_toan: str = "dat_coc"
+    lock_expires_at: Optional[datetime] = None
+    con_lai_giay: Optional[int] = None
+
+class SandboxQRPayRequest(BaseModel):
+    ma_don: str
+    phuong_thuc: str = "chuyen_khoan"
+
