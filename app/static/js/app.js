@@ -484,7 +484,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetTab === 'tab-booking-history') fetchBookingHistory();
                 if (targetTab === 'tab-operations') fetchOperationsData();
                 if (targetTab === 'tab-insights') fetchStatsSummary();
-                if (targetTab === 'tab-admin') loadAdminCourtsTable();
+                if (targetTab === 'tab-admin') {
+                    loadAdminCourtsTable();
+                    loadAdminUsersTable();
+                }
             };
         });
         
@@ -569,6 +572,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const btnCancelEditModal = document.getElementById('btn-cancel-edit-court');
         if (btnCancelEditModal) btnCancelEditModal.onclick = closeEditCourtModal;
+
+        // Admin Users Triggers
+        const btnRefreshUsers = document.getElementById('btn-refresh-admin-users');
+        if (btnRefreshUsers) btnRefreshUsers.onclick = loadAdminUsersTable;
+
+        const adminUserSearch = document.getElementById('admin-user-search');
+        if (adminUserSearch) {
+            adminUserSearch.oninput = (e) => {
+                const q = e.target.value.toLowerCase().trim();
+                renderFilteredAdminUsers(q);
+            };
+        }
         
         // Modals close
         document.getElementById('btn-close-invoice-modal').onclick = () => document.getElementById('modal-invoice').classList.remove('active');
@@ -1995,6 +2010,71 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Lỗi kết nối máy chủ", "error");
         }
     };
+
+    // ==========================================
+    // Admin User Management
+    // ==========================================
+    let cachedAdminUsers = [];
+
+    async function loadAdminUsersTable() {
+        const tbody = document.getElementById('admin-users-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải danh sách tài khoản...</td></tr>';
+
+        try {
+            const res = await fetch('/api/khach-hang', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error("Không thể tải danh sách tài khoản");
+            cachedAdminUsers = await res.json();
+            renderFilteredAdminUsers("");
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Lỗi khi tải danh sách người dùng.</td></tr>';
+        }
+    }
+
+    function renderFilteredAdminUsers(keyword = "") {
+        const tbody = document.getElementById('admin-users-table-body');
+        if (!tbody) return;
+
+        let filtered = cachedAdminUsers;
+        if (keyword) {
+            filtered = cachedAdminUsers.filter(u =>
+                (u.ten_dang_nhap && u.ten_dang_nhap.toLowerCase().includes(keyword)) ||
+                (u.ho_ten && u.ho_ten.toLowerCase().includes(keyword)) ||
+                (u.so_dien_thoai && u.so_dien_thoai.toLowerCase().includes(keyword)) ||
+                (u.email && u.email.toLowerCase().includes(keyword))
+            );
+        }
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">${keyword ? 'Không tìm thấy tài khoản phù hợp.' : 'Chưa có tài khoản nào.'}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(u => {
+            let roleBadge = '<span class="badge badge-primary">Khách hàng</span>';
+            if (u.vai_tro === 'ADMIN') roleBadge = '<span class="badge badge-danger">Quản trị viên</span>';
+            else if (u.vai_tro === 'STAFF') roleBadge = '<span class="badge badge-warning">Nhân viên</span>';
+
+            let statusBadge = u.trang_thai === 'active' 
+                ? '<span class="badge badge-success">🟢 Hoạt động</span>' 
+                : '<span class="badge badge-danger">🔴 Bị khóa</span>';
+
+            return `
+                <tr>
+                    <td><strong>#${u.tai_khoan_id}</strong></td>
+                    <td><strong style="color: var(--color-primary);">${u.ten_dang_nhap}</strong></td>
+                    <td>${u.ho_ten}</td>
+                    <td>${u.so_dien_thoai}</td>
+                    <td>${u.email || '—'}</td>
+                    <td>${roleBadge}</td>
+                    <td><strong>${u.diem_uy_tin || 100}</strong> / 100</td>
+                    <td>${statusBadge}</td>
+                </tr>
+            `;
+        }).join('');
+    }
 
     // ==========================================
     // Virtual QR Code Payment Modal System
