@@ -1,59 +1,67 @@
-# HƯỚNG DẪN CHẠY HỆ THỐNG VICTORY ARENA v2.0
-**Nhóm 20 — K23C CNTT | GVHD: ThS. Nguyễn Tuấn Anh**
+# HƯỚNG DẪN VẬN HÀNH HỆ THỐNG VICTORY ARENA v2.0
+**Nhóm 20 — Lớp K23C CNTT | GVHD: ThS. Nguyễn Tuấn Anh**
 
-Thư mục này chứa **toàn bộ mã nguồn và dữ liệu độc lập** để chạy hệ thống Quản lý Sân thể thao cho thuê tích hợp AI.
-
----
-
-## 🚀 Cách 1: Chạy nhanh bằng 1-Click (Khuyên dùng trên Windows)
-- Nhấp đúp chuột vào file: **`CHAY_HE_THONG.bat`**
-- File này sẽ tự động:
-  1. Kiểm tra và cài đặt thư viện cần thiết.
-  2. Nạp dữ liệu CSDL chuẩn 5 sân (3 Sân 7, 2 Sân 11).
-  3. Khởi động máy chủ uvicorn tại địa chỉ: `http://127.0.0.1:8000`.
+Hệ thống được thiết kế theo kiến trúc phân tách chuyên nghiệp (**Decoupled Architecture**):
+- **Phân hệ Backend (FastAPI RESTful API):** Cổng `8000` (Tài liệu OpenAPI tại `/docs`)
+- **Phân hệ Frontend (Single Page Application):** Cổng `3000`
 
 ---
 
-## 💻 Cách 2: Chạy thủ công qua Terminal (PowerShell / Command Prompt)
+## 🚀 Cách 1: Khởi động 1-Click Toàn bộ Hệ thống (Khuyên dùng)
 
-1. **Di chuyển vào thư mục này:**
-   ```bash
-   cd "C:\Users\ADMIN\.gemini\antigravity\scratch\sports_court_ai_mgmt\chuong_trinh_he_thong"
-   ```
-
-2. **Cài đặt thư viện phụ thuộc:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Nạp dữ liệu mẫu ban đầu:**
-   ```bash
-   python seed_data.py
-   ```
-
-4. **Khởi chạy Server FastAPI:**
-   ```bash
-   python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-   ```
-
-5. **Mở trình duyệt Web:**
-   - Truy cập giao diện ứng dụng: [http://127.0.0.1:8000](http://127.0.0.1:8000)
-   - Xem tài liệu Swagger API: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- Bấm đúp chuột vào file: **`CHAY_HE_THONG.bat`** (tại thư mục gốc).
+- Kịch bản sẽ tự động:
+  1. Kiểm tra môi trường Python và cài đặt thư viện phụ thuộc.
+  2. Nạp dữ liệu cơ sở dữ liệu (5 sân bóng tiêu chuẩn, biểu giá và các tài khoản mẫu).
+  3. Khởi động song song 2 cửa sổ tiến trình:
+     - **Backend Server:** `http://127.0.0.1:8000`
+     - **Frontend Web:** `http://127.0.0.1:3000`
+  4. Tự động mở trình duyệt web tại `http://127.0.0.1:3000`.
 
 ---
 
-## 🔑 Tài khoản mẫu có sẵn trong hệ thống:
-| Vai trò | Tên đăng nhập | Mật khẩu | Chức năng chính |
+## 💻 Cách 2: Khởi động Độc lập Từng Phân hệ
+
+### 1. Khởi động Phân hệ Backend:
+- **Tự động:** Bấm đúp vào `backend/chay_backend.bat`.
+- **Thủ công qua Terminal:**
+  ```powershell
+  cd backend
+  python -m pip install -r requirements.txt
+  python seed_data.py
+  python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+  ```
+- **Tài liệu API Backend:**
+  - Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+  - ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+### 2. Khởi động Phân hệ Frontend:
+- **Tự động:** Bấm đúp vào `frontend/chay_frontend.bat`.
+- **Thủ công qua Terminal:**
+  ```powershell
+  cd frontend
+  python -m http.server 3000 --bind 127.0.0.1
+  # Hoặc dùng NodeJS: npm start
+  ```
+- **Giao diện Web:** [http://127.0.0.1:3000](http://127.0.0.1:3000)
+
+---
+
+## 🔑 Danh sách Tài khoản Kiểm thử Hệ thống
+
+| Vai trò | Tên đăng nhập | Mật khẩu | Phạm vi chức năng chính |
 |---|---|---|---|
-| **Quản trị viên (ADMIN)** | `admin` | `admin123` | Cấu hình sân bãi, giá, dịch vụ, xem báo cáo doanh thu & AI |
-| **Nhân viên sân (STAFF)** | `staff` | `staff123` | Check-in, bán nước/áo bib, Check-out quyết toán POS |
-| **Khách hàng 1** | `tuan_fc` | `tuan123` | Đặt lịch, giữ chỗ 10p, xem lịch sử đặt của mình |
-| **Khách hàng 2** | `hai_nam` | `hai123` | Đặt lịch, tư vấn tìm sân qua AI Copilot |
+| **Quản trị viên (ADMIN)** | `admin` | `admin123` | Quản trị sân bãi, biểu giá cao điểm/thường, quản lý người dùng, xem báo cáo doanh thu & AI |
+| **Nhân viên sân (STAFF)** | `staff` | `staff123` | Check-in bàn giao sân, thêm dịch vụ nước uống/áo bib, quyết toán trả sân xuất hóa đơn |
+| **Khách hàng mẫu (CUSTOMER)** | `tuanfc` | `tuan123` | Đặt lịch sân bóng, nhận mã VietQR thanh toán cọc, xem tab Sân đã đặt và Lịch sử |
+| **Tài khoản cá nhân test** | `test01` | `123456` | Kiểm tra luồng đặt sân, tra cứu lịch thi đấu |
 
 ---
 
-## 🧪 Chạy bộ kiểm thử tự động (Pytest):
-```bash
-pytest -v
+## 🧪 Chạy Bộ Kiểm thử Tự động (Unit Tests)
+
+```powershell
+cd backend
+python -m pytest -v
 ```
-*(Hiện có 9/9 ca kiểm thử chuyên sâu về Auth, Booking, Chống trùng lịch, Khóa 10p, Hoàn cọc, AI và CRUD Sân bãi đạt 100% Passed).*
+*(Toàn bộ 11/11 ca kiểm thử chuyên sâu về Auth, Booking, Chống trùng lịch Overlap toán học, Giữ chỗ 10 phút, Hoàn tiền cọc và AI đều PASS 100%).*

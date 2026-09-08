@@ -21,29 +21,45 @@ Tại các cụm sân bóng đá cỏ nhân tạo và sân lớn tiêu chuẩn, 
 
 ---
 
-## 2. CẤU TRÚC HỆ THỐNG VÀ PHÂN TẦNG KIẾN TRÚC
+## 2. CẤU TRÚC HỆ THỐNG VÀ KIẾN TRÚC PHÂN TÁCH (DECOUPLED ARCHITECTURE)
 
-Hệ thống áp dụng kiến trúc phân tầng chuẩn (**Layered Architecture**):
+Hệ thống được thiết kế theo kiến trúc tách biệt độc lập giữa tầng Giao diện (Frontend Client) và tầng Dịch vụ dữ liệu (Backend REST API):
 
 ```text
-chuong_trinh_he_thong/
-├── app/
-│   ├── main.py                  # Entry point FastAPI, CORS & Static Files & Favicon
-│   ├── config.py                # Cấu hình Pydantic Settings (.env)
-│   ├── database.py              # SQLite SQLAlchemy Engine (PRAGMA foreign_keys=ON)
-│   ├── models/                  # 8 file ORM Database Models chuẩn 3NF (16 bảng)
-│   ├── schemas/                 # 7 file Pydantic Schemas (Validation & Serialization)
-│   ├── services/                # 8 file Business Logic (Đặt sân, Vận hành, AI, Task ngầm)
-│   ├── routers/                 # 9 file RESTful API Endpoints
-│   ├── auth/                    # Bảo mật JWT, băm mật khẩu Bcrypt & Dependencies RBAC
-│   └── static/                  # Single Page Application Frontend (HTML5, Cyber CSS, JS)
-├── tests/                       # Test suite tự động với Pytest (9 ca kiểm thử)
-├── seed_data.py                 # Script nạp dữ liệu mẫu ban đầu (5 sân chuẩn)
-├── requirements.txt             # Danh sách thư viện phụ thuộc
-├── .env.example                 # Mẫu cấu hình môi trường
-├── sports_court.db              # File cơ sở dữ liệu SQLite
-├── CHAY_HE_THONG.bat            # File 1-Click: Bấm đúp chạy server ngay lập tức
-└── README.md                    # Tài liệu hướng dẫn sử dụng và kiểm thử
+victory-arena/
+├── backend/                         # PHÂN HỆ BACKEND RESTFUL API (PORT 8000)
+│   ├── app/
+│   │   ├── auth/                    # Bảo mật JWT, Bcrypt & Dependencies RBAC
+│   │   ├── models/                  # 8 file ORM Database Models chuẩn 3NF (16 bảng)
+│   │   ├── schemas/                 # 7 file Pydantic v2 Schemas (Validation)
+│   │   ├── services/                # 8 file Business Logic (Đặt sân, Vận hành, AI)
+│   │   ├── routers/                 # 8 file RESTful API Endpoints
+│   │   ├── config.py                # Cấu hình Pydantic BaseSettings (.env)
+│   │   ├── database.py              # SQLite SQLAlchemy Engine (PRAGMA foreign_keys=ON)
+│   │   ├── main.py                  # Entrypoint FastAPI, CORS Middleware & OpenAPI
+│   │   └── __init__.py
+│   ├── tests/                       # Test suite tự động với Pytest (11 ca kiểm thử)
+│   ├── seed_data.py                 # Script nạp dữ liệu mẫu ban đầu (5 sân chuẩn)
+│   ├── requirements.txt             # Danh sách thư viện phụ thuộc Python
+│   ├── .env.example                 # Mẫu cấu hình môi trường
+│   ├── mini_victory.db              # CSDL SQLite chính thức
+│   ├── sports_court.db              # CSDL SQLite kiểm thử
+│   ├── chay_backend.bat             # File 1-Click chạy riêng Backend (Port 8000)
+│   └── README.md                    # Tài liệu kỹ thuật Backend & Swagger API
+├── frontend/                        # PHÂN HỆ FRONTEND WEB CLIENT (PORT 3000)
+│   ├── css/
+│   │   └── style.css                # Giao diện Cyberpunk Glassmorphism & Keyframes
+│   ├── js/
+│   │   ├── config.js                # Cấu hình API Base URL & Fetch URL Interceptor
+│   │   └── app.js                   # Logic SPA, Quản lý State & UI Guard
+│   ├── index.html                   # Single Page Application Shell
+│   ├── package.json                 # Cấu hình NPM scripts (start, dev, serve)
+│   ├── chay_frontend.bat            # File 1-Click chạy riêng Frontend (Port 3000)
+│   └── README.md                    # Tài liệu kỹ thuật Frontend
+├── CHAY_HE_THONG.bat                # File 1-Click: Tự động chạy song song cả 2 server
+├── HUONG_DAN_CHAY.md                # Sổ tay hướng dẫn chạy chi tiết
+├── README.md                        # Giới thiệu tổng quan hệ thống Full-stack
+└── .gitignore                       # Cấu hình bỏ qua tệp tin rác
 ```
 
 ---

@@ -2,8 +2,7 @@ from contextlib import asynccontextmanager
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response
 
 from app.config import get_settings
 from app.database import engine, Base
@@ -40,15 +39,21 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    description="Hệ thống Quản lý Sân Thể thao Cho thuê Tích hợp Trí tuệ Nhân tạo (AI) - Nhóm 20",
+    description="Hệ thống Quản lý Sân Thể thao Cho thuê Tích hợp Trí tuệ Nhân tạo (AI) - RESTful API Backend - Nhóm 20",
     version="2.0.0",
     lifespan=lifespan
 )
 
-# Cấu hình CORS
+# Cấu hình CORS - Cho phép kết nối từ Frontend (Port 3000) và các client khác
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,13 +69,19 @@ app.include_router(khach_hang_router)
 app.include_router(ai_router)
 app.include_router(bao_cao_router)
 
-# Mount thư mục tĩnh giao diện Web (CSS, JS, v.v.)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-@app.get("/", tags=["Frontend"])
-async def serve_index():
-    """Phục vụ trang chủ Single Page Application (SPA)."""
-    return FileResponse("app/static/index.html")
+@app.get("/", tags=["System"])
+async def api_root():
+    """Endpoint gốc kiểm tra trạng thái sức khỏe và tài liệu API Backend."""
+    return {
+        "system": "Victory Arena v2.0 - Sports Court Management API",
+        "status": "online",
+        "version": "2.0.0",
+        "environment": settings.app_env,
+        "docs_url": "/docs",
+        "redoc_url": "/redoc",
+        "team": "Nhóm 20 - K23C CNTT",
+        "instructor": "ThS. Nguyễn Tuấn Anh"
+    }
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def get_favicon():

@@ -37,7 +37,12 @@ htmlcov/
 *.swp
 *.swo
 
+# Node
+node_modules/
+npm-debug.log*
+
 # OS Generated
 .DS_Store
 Thumbs.db
 desktop.ini
+
