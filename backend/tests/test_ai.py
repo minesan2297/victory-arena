@@ -110,3 +110,51 @@ def test_ai_promotions_insight(db_session):
     assert insights.ty_le_lap_day >= 0
     assert len(insights.tom_tat) > 0
     assert len(insights.de_xuat) > 0
+
+def test_ai_consult_rejects_off_topic_prompts(db_session):
+    """Kiểm tra AI từ chối các câu hỏi linh tinh, bừa bãi, không liên quan đến sân bóng."""
+    EXPECTED_REJECTION = "Xin lỗi! Điều này không nằm trọng phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
+
+    off_topic_queries = [
+        "Thời tiết hôm nay thế nào bạn ơi?",
+        "Hãy viết code python kết nối cơ sở dữ liệu SQLite",
+        "Công thức nấu món canh chua cá lóc miền Tây",
+        "Bạn có người yêu chưa?",
+        "Kể cho tôi nghe một câu chuyện cười",
+        "Giải giúp tôi phương trình bậc hai 2x^2 + 5x - 3 = 0",
+        "Tổng thống Mỹ hiện tại là ai?",
+        "Viết cho tôi một bài thơ tình lãng mạn",
+        "asdfghjkl12345",
+        "1 + 1 bằng mấy?",
+        "Dịch câu này sang tiếng Anh giúp tôi",
+        "Có nên đầu tư mua bitcoin lúc này không?",
+        "Hôm nay ăn gì ngon bổ rẻ?"
+    ]
+
+    for prompt in off_topic_queries:
+        res = AIService.consult_pitch(db_session, user_prompt=prompt)
+        assert res.assistant_message == EXPECTED_REJECTION, f"Failed on prompt: {prompt}"
+        assert res.co_san_phu_hop is False
+        assert len(res.recommended_slots) == 0
+        assert res.analyzed_intent.get("intent") == "out_of_scope"
+
+def test_ai_consult_service_and_policy_inquiries(db_session):
+    """Kiểm tra AI phản hồi đúng nghiệp vụ khi hỏi về dịch vụ và chính sách sân bóng."""
+    # 1. Hỏi về dịch vụ nước uống, trang thiết bị
+    res_service = AIService.consult_pitch(db_session, user_prompt="Sân mình có bán nước uống Revive hay cho thuê áo bít không?")
+    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res_service.assistant_message
+    assert "Victory Arena" in res_service.assistant_message
+    assert res_service.analyzed_intent.get("intent") == "court_service"
+
+    # 2. Hỏi về quy định tiền cọc và hủy lịch
+    res_policy = AIService.consult_pitch(db_session, user_prompt="Quy định đặt cọc và chính sách hủy sân hoàn tiền như thế nào?")
+    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res_policy.assistant_message
+    assert "10 phút" in res_policy.assistant_message or "cọc" in res_policy.assistant_message
+    assert res_policy.analyzed_intent.get("intent") == "court_policy_info"
+
+    # 3. Chào hỏi ban đầu
+    res_greeting = AIService.consult_pitch(db_session, user_prompt="Xin chào, hỗ trợ tư vấn giúp em với")
+    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res_greeting.assistant_message
+    assert "Victory Arena" in res_greeting.assistant_message
+    assert res_greeting.analyzed_intent.get("intent") == "general_greeting"
+
