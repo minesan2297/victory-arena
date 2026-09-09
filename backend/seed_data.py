@@ -286,6 +286,15 @@ def seed_database():
                 )
                 db.add(pay)
 
+        # 11. Seed dịch vụ đã đặt mẫu cho đơn DS20260909-001 (Sân 7A - Phủi Pro)
+        db.add_all([
+            SuDungDichVu(ma_don="DS20260909-001", dich_vu_id=dv1.dich_vu_id, so_luong=6, don_gia_tai_ban=dv1.don_gia, thanh_tien=6*dv1.don_gia),
+            SuDungDichVu(ma_don="DS20260909-001", dich_vu_id=dv2.dich_vu_id, so_luong=4, don_gia_tai_ban=dv2.don_gia, thanh_tien=4*dv2.don_gia),
+            SuDungDichVu(ma_don="DS20260909-001", dich_vu_id=dv3.dich_vu_id, so_luong=1, don_gia_tai_ban=dv3.don_gia, thanh_tien=1*dv3.don_gia),
+            SuDungDichVu(ma_don="DS20260909-001", dich_vu_id=dv4.dich_vu_id, so_luong=1, don_gia_tai_ban=dv4.don_gia, thanh_tien=1*dv4.don_gia),
+            SuDungDichVu(ma_don="DS20260909-004", dich_vu_id=dv1.dich_vu_id, so_luong=12, don_gia_tai_ban=dv1.don_gia, thanh_tien=12*dv1.don_gia)
+        ])
+
         db.commit()
         print("✅ Đã nạp thành công CSDL mẫu chỉ chứa Sân 7 & Sân 11 kèm các lịch đá 09-11/09/2026!")
     except Exception as e:

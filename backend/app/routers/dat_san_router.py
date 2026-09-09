@@ -4,7 +4,8 @@ from datetime import date
 from typing import List
 from app.database import get_db
 from app.schemas.dat_san_schema import (
-    DatSanCreate, DatSanResponse, XacNhanCocRequest, DoiLichRequest, LichSanResponse,
+    DatSanCreate, DatSanResponse, DatSanDetailResponse, DichVuItemDetail,
+    XacNhanCocRequest, DoiLichRequest, LichSanResponse,
     QRPaymentInfo, SandboxQRPayRequest
 )
 from app.services.dat_san_service import DatSanService
@@ -130,4 +131,83 @@ def sandbox_qr_pay(
         raise HTTPException(status_code=403, detail="Bạn không có quyền thanh toán cho đơn của người khác")
     updated = DatSanService.sandbox_qr_pay(db, data.ma_don, data.phuong_thuc)
     return to_booking_response(updated)
+
+@router.get("/booking/{ma_don}/detail", response_model=DatSanDetailResponse)
+def get_booking_detail(
+    ma_don: str,
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(get_current_user)
+):
+    booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
+    if current_user.vai_tro.ten_vai_tro == "CUSTOMER" and booking.ma_khach_hang != current_user.tai_khoan_id:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xem thông tin đơn này")
+    
+    # Lấy thông tin hóa đơn nếu có
+    tien_san = 0
+    tong_dich_vu = 0
+    tien_coc_da_tru = booking.tien_coc
+    tong_thanh_toan = 0
+    check_in_thuc_te = None
+    check_out_thuc_te = None
+    
+    if booking.hoa_don:
+        tien_san = booking.hoa_don.tien_san
+        tong_dich_vu = booking.hoa_don.tong_dich_vu
+        tien_coc_da_tru = booking.hoa_don.tien_coc_da_tru
+        tong_thanh_toan = booking.hoa_don.tong_thanh_toan
+        check_in_thuc_te = booking.hoa_don.check_in_thuc_te
+        check_out_thuc_te = booking.hoa_don.check_out_thuc_te
+    else:
+        tien_san = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
+        tong_thanh_toan = max(0, tien_san - booking.tien_coc)
+        
+    # Lấy danh sách dịch vụ
+    dich_vus = []
+    for s in booking.su_dung_dich_vus:
+        dich_vus.append(DichVuItemDetail(
+            su_dung_id=s.su_dung_id,
+            dich_vu_id=s.dich_vu_id,
+            ten_dich_vu=s.dich_vu.ten_dich_vu if s.dich_vu else "Dịch vụ",
+            don_vi_tinh=s.dich_vu.don_vi_tinh if s.dich_vu else "Phần",
+            danh_muc=s.dich_vu.danh_muc if s.dich_vu else "KHAC",
+            don_gia=s.don_gia_tai_ban,
+            so_luong=s.so_luong,
+            thanh_tien=s.thanh_tien
+        ))
+        
+    # Lấy phương thức cọc
+    phuong_thuc_coc = None
+    deposit_pay = [p for p in booking.thanh_toans if p.loai_giao_dich == 'dat_coc' and p.trang_thai == 'thanh_cong']
+    if deposit_pay:
+        phuong_thuc_coc = deposit_pay[0].phuong_thuc
+        
+    return DatSanDetailResponse(
+        ma_don=booking.ma_don,
+        ma_khach_hang=booking.ma_khach_hang,
+        khach_hang_ten=booking.khach_hang.ho_ten if booking.khach_hang else "Khách vãng lai",
+        khach_hang_sdt=booking.khach_hang.so_dien_thoai if booking.khach_hang else None,
+        ma_san=booking.ma_san,
+        ten_san=booking.san.ten_san if booking.san else booking.ma_san,
+        loai_san=booking.san.loai_san.ten_loai if (booking.san and booking.san.loai_san) else "Sân bóng",
+        vi_tri=booking.san.vi_tri if booking.san else None,
+        ngay_da=booking.ngay_da,
+        gio_bat_dau=booking.gio_bat_dau,
+        gio_ket_thuc=booking.gio_ket_thuc,
+        tien_coc=booking.tien_coc,
+        trang_thai=booking.trang_thai,
+        lock_expires_at=booking.lock_expires_at,
+        ghi_chu=booking.ghi_chu,
+        ngay_tao=booking.ngay_tao,
+        tien_san=tien_san,
+        tong_dich_vu=tong_dich_vu,
+        tien_coc_da_tru=tien_coc_da_tru,
+        tong_thanh_toan=tong_thanh_toan,
+        check_in_thuc_te=check_in_thuc_te,
+        check_out_thuc_te=check_out_thuc_te,
+        dich_vus=dich_vus,
+        phuong_thuc_coc=phuong_thuc_coc
+    )
+
 

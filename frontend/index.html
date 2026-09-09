@@ -1305,6 +1305,150 @@
         </div>
     </div>
 
+    <!-- MODAL CHI TIẾT ĐẶT SÂN & DỊCH VỤ ĐÃ ĐẶT -->
+    <div class="modal-overlay" id="modal-booking-detail" style="display: none;">
+        <div class="modal-card modal-lg" style="max-width: 820px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="modal-icon-badge" style="width: 42px; height: 42px; border-radius: 12px; background: rgba(0, 240, 255, 0.15); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                        <i class="fa-solid fa-futbol"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-bright);" id="bdetail-title">Sân 7A – Phủi Pro</h3>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+                            <span class="fixture-code" id="bdetail-code" style="font-size: 0.8rem; letter-spacing: 0.5px; color: var(--primary);">DS20260909-001</span>
+                            <span class="fixture-status-badge" id="bdetail-badge" style="font-size: 0.75rem;">• ĐÃ XÁC NHẬN</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="modal-close" id="btn-close-bdetail-modal" title="Đóng">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 20px 0;">
+                <!-- 2-column info grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px;">
+                    <!-- Cột 1: Thông tin sân & thời gian -->
+                    <div class="detail-info-card" style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-calendar-check"></i> Thông Tin Thi Đấu & Sân Bãi
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Loại sân:</span>
+                            <strong id="bdetail-pitch-type" style="color: var(--text-bright);">Sân 7 người</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Vị trí:</span>
+                            <strong id="bdetail-pitch-location" style="color: var(--text-bright);">Khu A - Khán đài chính</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Ngày đá:</span>
+                            <strong id="bdetail-match-date" style="color: var(--text-bright);">09/09/2026</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Khung giờ:</span>
+                            <strong id="bdetail-match-time" style="color: var(--neon-green); font-size: 0.95rem;">17:30 - 19:00</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span class="text-muted">Ghi chú:</span>
+                            <span id="bdetail-note" style="color: var(--text-main); font-style: italic; max-width: 60%; text-align: right;">Giao lưu bóng đá</span>
+                        </div>
+                    </div>
+
+                    <!-- Cột 2: Khách hàng & Tài chính -->
+                    <div class="detail-info-card" style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-receipt"></i> Khách Hàng & Thanh Toán
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Người đặt:</span>
+                            <strong id="bdetail-client-name" style="color: var(--text-bright);">Đức Anh (FC Thanh Niên)</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Số điện thoại:</span>
+                            <strong id="bdetail-client-phone" style="color: var(--text-bright);">0912345678</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Tiền thuê sân:</span>
+                            <strong id="bdetail-pitch-price" style="color: var(--text-bright);">450.000đ</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Tiền cọc đã trả:</span>
+                            <strong id="bdetail-deposit-paid" style="color: var(--neon-cyan);">200.000đ (Chuyển khoản)</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span class="text-muted">Còn lại cần thanh toán:</span>
+                            <strong id="bdetail-remaining-price" style="color: #ffb800; font-size: 1rem;">250.000đ</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng Dịch Vụ Đã Đặt / Phát Sinh -->
+                <div class="detail-services-section" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-bright); text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-bottle-water text-primary"></i> Danh Mục Dịch Vụ Đã Đặt Kèm
+                            <span class="badge badge-primary" id="bdetail-service-count" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 10px;">0 món</span>
+                        </div>
+                        <button class="btn btn-xs btn-outline-cyan" id="btn-quick-add-service" style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-plus"></i> Thêm Nước / Dịch Vụ
+                        </button>
+                    </div>
+
+                    <!-- Table container -->
+                    <div style="overflow-x: auto;">
+                        <table class="esports-table" style="width: 100%; font-size: 0.88rem; margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">STT</th>
+                                    <th>Tên Dịch Vụ</th>
+                                    <th>Phân Loại</th>
+                                    <th>Đơn Vị</th>
+                                    <th style="text-align: right;">Đơn Giá</th>
+                                    <th style="text-align: center;">SL</th>
+                                    <th style="text-align: right;">Thành Tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bdetail-services-tbody">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                            <tfoot id="bdetail-services-tfoot">
+                                <tr style="background: rgba(0, 240, 255, 0.05); font-weight: 700;">
+                                    <td colspan="6" style="text-align: right; color: var(--text-bright);">Tổng Tiền Dịch Vụ:</td>
+                                    <td style="text-align: right; color: var(--primary); font-size: 0.95rem;" id="bdetail-services-total">0đ</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty message if no services -->
+                    <div id="bdetail-services-empty" style="display: none; padding: 24px; text-align: center; color: var(--text-muted);">
+                        <i class="fa-solid fa-mug-hot" style="font-size: 1.8rem; margin-bottom: 8px; opacity: 0.4;"></i>
+                        <p style="margin: 0; font-size: 0.88rem;">Chưa có dịch vụ phát sinh nào được ghi nhận cho trận đấu này.</p>
+                        <p style="margin: 4px 0 0; font-size: 0.78rem; opacity: 0.7;">Bấm "Thêm Nước / Dịch Vụ" ở trên để ghi nhận nước uống, áo bít hoặc bóng thi đấu.</p>
+                    </div>
+                </div>
+
+                <!-- Tổng thanh toán dự kiến (Sân + Dịch vụ - Cọc) -->
+                <div style="margin-top: 16px; background: rgba(0, 240, 255, 0.06); border: 1px dashed rgba(0, 240, 255, 0.3); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Tổng cộng thanh toán (Sân + Dịch vụ - Cọc đã trừ):</span>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); opacity: 0.8;">Sẽ được tất toán chính xác khi bàn giao/trả sân tại quầy</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 1.25rem; font-weight: 800; color: var(--primary);" id="bdetail-grand-total">0đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div id="bdetail-dynamic-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <!-- Dynamic action buttons injected based on state and role -->
+                </div>
+                <button type="button" class="btn btn-secondary" id="btn-close-bdetail-footer">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 

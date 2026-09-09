@@ -591,6 +591,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-close-notif-modal').onclick = () => document.getElementById('modal-ai-notification').classList.remove('active');
         document.getElementById('btn-close-notif-action').onclick = () => document.getElementById('modal-ai-notification').classList.remove('active');
 
+        // Booking Detail Modal listeners
+        const btnCloseBDetail = document.getElementById('btn-close-bdetail-modal');
+        if (btnCloseBDetail) btnCloseBDetail.onclick = () => window.closeBookingDetailModal();
+        const btnCloseBDetailFooter = document.getElementById('btn-close-bdetail-footer');
+        if (btnCloseBDetailFooter) btnCloseBDetailFooter.onclick = () => window.closeBookingDetailModal();
+        const modalBDetail = document.getElementById('modal-booking-detail');
+        if (modalBDetail) {
+            modalBDetail.onclick = (e) => {
+                if (e.target === modalBDetail) window.closeBookingDetailModal();
+            };
+        }
+
         // QR Modal listeners
         const btnCloseQr = document.getElementById('btn-close-qr-modal');
         if (btnCloseQr) btnCloseQr.onclick = window.closeQrModal;
@@ -770,11 +782,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             const pitchName = b.san ? b.san.ten_san : b.ma_san;
                             return `
-                                <div class="fixture-match-card">
+                                <div class="fixture-match-card clickable-card" onclick="window.showBookingDetailModal('${b.ma_don}')" title="Nhấp để xem chi tiết sân & dịch vụ đã đặt">
                                     <div class="fixture-left">
                                         <div class="fixture-icon"><i class="fa-solid fa-futbol"></i></div>
                                         <div class="fixture-details">
-                                            <h4>${pitchName}</h4>
+                                            <h4>${pitchName} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.72rem; color: var(--primary); margin-left: 6px; opacity: 0.7;"></i></h4>
                                             <div class="fixture-meta">
                                                 <span><i class="fa-regular fa-calendar text-neon"></i> ${b.ngay_da}</span>
                                                 <span><i class="fa-regular fa-clock text-neon"></i> ${b.gio_bat_dau.slice(0, 5)} - ${b.gio_ket_thuc.slice(0, 5)}</span>
@@ -784,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div class="fixture-right" style="display: flex; flex-direction: column; align-items: flex-end;">
                                         <span class="fixture-status-badge ${badgeClass}">${stateText}</span>
                                         <span class="fixture-code">${b.ma_don}</span>
-                                        ${actionBtnHtml}
+                                        <div onclick="event.stopPropagation()">${actionBtnHtml}</div>
                                     </div>
                                 </div>
                             `;
@@ -850,11 +862,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             const clientName = b.khach_hang_ten || 'Đội Đăng Ký';
                             
                             return `
-                                <div class="fixture-match-card">
+                                <div class="fixture-match-card clickable-card" onclick="window.showBookingDetailModal('${b.ma_don}')" title="Nhấp để xem chi tiết sân & dịch vụ đã đặt">
                                     <div class="fixture-left">
                                         <div class="fixture-icon"><i class="fa-solid fa-user-gear"></i></div>
                                         <div class="fixture-details">
-                                            <h4>${pitchName} - <small style="color:var(--text-muted);">${clientName}</small></h4>
+                                            <h4>${pitchName} - <small style="color:var(--text-muted);">${clientName}</small> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.72rem; color: var(--primary); margin-left: 6px; opacity: 0.7;"></i></h4>
                                             <div class="fixture-meta">
                                                 <span><i class="fa-regular fa-clock text-neon"></i> ${b.gio_bat_dau.slice(0, 5)} - ${b.gio_ket_thuc.slice(0, 5)}</span>
                                                 <span><i class="fa-solid fa-barcode text-neon"></i> ${b.ma_don}</span>
@@ -863,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                     <div class="fixture-right">
                                         <span class="fixture-status-badge ${badgeClass}">${stateText}</span>
-                                        <div style="margin-top: 4px;">${actionBtn}</div>
+                                        <div style="margin-top: 4px;" onclick="event.stopPropagation()">${actionBtn}</div>
                                     </div>
                                 </div>
                             `;
@@ -935,11 +947,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             const clientName = b.khach_hang_ten || 'Đội Bóng Đăng Ký';
                             
                             return `
-                                <div class="fixture-match-card">
+                                <div class="fixture-match-card clickable-card" onclick="window.showBookingDetailModal('${b.ma_don}')" title="Nhấp để xem chi tiết sân & dịch vụ đã đặt">
                                     <div class="fixture-left">
                                         <div class="fixture-icon"><i class="fa-solid fa-futbol"></i></div>
                                         <div class="fixture-details">
-                                            <h4>${pitchName}</h4>
+                                            <h4>${pitchName} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.72rem; color: var(--primary); margin-left: 6px; opacity: 0.7;"></i></h4>
                                             <div class="fixture-meta">
                                                 <span><i class="fa-regular fa-clock text-neon"></i> ${b.gio_bat_dau.slice(0, 5)} - ${b.gio_ket_thuc.slice(0, 5)}</span>
                                                 <span><i class="fa-solid fa-user-shield text-neon"></i> ${clientName}</span>
@@ -978,6 +990,238 @@ document.addEventListener('DOMContentLoaded', () => {
         if (checkoutInput) {
             checkoutInput.value = maDon;
             checkoutInput.focus();
+        }
+    };
+
+    // ==========================================
+    // Booking & Services Detail Modal Controller
+    // ==========================================
+    window.closeBookingDetailModal = () => {
+        const modal = document.getElementById('modal-booking-detail');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.showBookingDetailModal = async (maDon) => {
+        const modal = document.getElementById('modal-booking-detail');
+        if (!modal) return;
+
+        // Reset and show modal with loading state
+        modal.classList.add('active');
+        document.getElementById('bdetail-madon').textContent = maDon;
+        document.getElementById('bdetail-pitch-name').textContent = "Đang tải dữ liệu...";
+        document.getElementById('bdetail-client-name').textContent = "Đang tải...";
+        document.getElementById('bdetail-client-phone').textContent = "Đang tải...";
+        document.getElementById('bdetail-services-tbody').innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 20px;"><i class="fa-solid fa-circle-notch fa-spin text-primary"></i> Đang tải thông tin sân và dịch vụ...</td></tr>`;
+        document.getElementById('bdetail-services-empty').style.display = 'none';
+        document.getElementById('bdetail-services-tfoot').style.display = 'table-footer-group';
+        document.getElementById('bdetail-dynamic-actions').innerHTML = '';
+
+        try {
+            const res = await fetch(`/api/dat-san/booking/${encodeURIComponent(maDon)}/detail`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Lỗi tải chi tiết đơn (${res.status})`);
+            }
+
+            const data = await res.json();
+
+            // Populate Header & Status
+            document.getElementById('bdetail-madon').textContent = data.ma_don;
+            const statusBadgeEl = document.getElementById('bdetail-status-badge');
+            let statusText = 'ĐÃ XÁC NHẬN';
+            let badgeClass = 'badge-confirmed';
+            let statusIcon = '<i class="fa-solid fa-circle-check"></i>';
+
+            if (data.trang_thai === 'cho_coc') {
+                statusText = 'CHỜ ĐẶT CỌC (10P)';
+                badgeClass = 'badge-pending';
+                statusIcon = '<i class="fa-solid fa-clock-rotate-left"></i>';
+            } else if (data.trang_thai === 'dang_da') {
+                statusText = 'ĐANG THI ĐẤU';
+                badgeClass = 'badge-playing';
+                statusIcon = '<i class="fa-solid fa-circle pulse-live text-danger"></i>';
+            } else if (data.trang_thai === 'hoan_tat') {
+                statusText = 'HOÀN TẤT & ĐÃ TRẢ SÂN';
+                badgeClass = 'badge-confirmed';
+                statusIcon = '<i class="fa-solid fa-flag-checkered"></i>';
+            } else if (data.trang_thai === 'da_huy') {
+                statusText = 'ĐÃ HỦY ĐƠN';
+                badgeClass = 'badge-danger';
+                statusIcon = '<i class="fa-solid fa-ban"></i>';
+            }
+            statusBadgeEl.className = `fixture-status-badge ${badgeClass}`;
+            statusBadgeEl.innerHTML = `${statusIcon} ${statusText}`;
+
+            // Pitch Info
+            document.getElementById('bdetail-pitch-name').textContent = data.san ? data.san.ten_san : data.ma_san;
+            document.getElementById('bdetail-court-type').textContent = data.san && data.san.loai_san ? (data.san.loai_san.ten_loai || formatCourtType(data.san.loai_san)) : 'Sân bóng đá';
+            document.getElementById('bdetail-pitch-location').textContent = (data.san && data.san.vi_tri) ? data.san.vi_tri : 'Khu vực chính';
+            document.getElementById('bdetail-match-date').textContent = formatDateString(data.ngay_da);
+            document.getElementById('bdetail-match-time').textContent = `${data.gio_bat_dau.slice(0, 5)} - ${data.gio_ket_thuc.slice(0, 5)}`;
+            document.getElementById('bdetail-note').textContent = data.ghi_chu || 'Không có ghi chú thêm';
+
+            // Customer & Financial Info
+            document.getElementById('bdetail-client-name').textContent = data.khach_hang_ten || 'Khách hàng vãng lai';
+            document.getElementById('bdetail-client-phone').textContent = data.khach_hang_sdt || 'Chưa cung cấp';
+            document.getElementById('bdetail-pitch-price').textContent = `${Number(data.tien_san || 0).toLocaleString()}đ`;
+
+            // Deposit formatted
+            let pMethodStr = 'Chưa nạp';
+            if (data.phuong_thuc_coc) {
+                const methodMap = {
+                    'chuyen_khoan': 'Chuyển khoản QR',
+                    'vnpay': 'VNPAY-QR',
+                    'momo': 'Ví MoMo',
+                    'tien_mat': 'Tiền mặt tại quầy'
+                };
+                pMethodStr = methodMap[data.phuong_thuc_coc] || data.phuong_thuc_coc;
+            }
+            const depositText = data.tien_coc > 0 
+                ? `${Number(data.tien_coc).toLocaleString()}đ (${pMethodStr})`
+                : 'Chưa đặt cọc (0đ)';
+            document.getElementById('bdetail-deposit-paid').textContent = depositText;
+
+            // Remaining balance for pitch
+            const pitchBalance = Math.max(0, (data.tien_san || 0) - (data.tien_coc || 0));
+            document.getElementById('bdetail-remaining-price').textContent = `${pitchBalance.toLocaleString()}đ`;
+
+            // Services Table
+            const services = data.dich_vus || [];
+            document.getElementById('bdetail-service-count').textContent = `${services.length} món`;
+            const tbody = document.getElementById('bdetail-services-tbody');
+            const emptyEl = document.getElementById('bdetail-services-empty');
+            const tfoot = document.getElementById('bdetail-services-tfoot');
+
+            if (services.length === 0) {
+                tbody.innerHTML = '';
+                emptyEl.style.display = 'block';
+                tfoot.style.display = 'none';
+            } else {
+                emptyEl.style.display = 'none';
+                tfoot.style.display = 'table-footer-group';
+                
+                const categoryLabels = {
+                    'NUOC_UONG': '<span class="badge badge-xs badge-info" style="background: rgba(0,240,255,0.15); color: var(--primary);">Nước giải khát</span>',
+                    'TRANG_BI': '<span class="badge badge-xs badge-warning" style="background: rgba(255,184,0,0.15); color: #ffb800;">Thiết bị & Bóng</span>',
+                    'KHAC': '<span class="badge badge-xs badge-secondary">Khác</span>'
+                };
+
+                tbody.innerHTML = services.map((s, idx) => {
+                    const catBadge = categoryLabels[s.danh_muc] || `<span class="badge badge-xs">${s.danh_muc || 'Dịch vụ'}</span>`;
+                    return `
+                        <tr>
+                            <td style="text-align: center; color: var(--text-muted); font-weight: 600;">${idx + 1}</td>
+                            <td><strong style="color: var(--text-bright);">${s.ten_dich_vu}</strong></td>
+                            <td>${catBadge}</td>
+                            <td style="color: var(--text-muted);">${s.don_vi_tinh || 'Lượt'}</td>
+                            <td style="text-align: right; color: var(--text-main);">${Number(s.don_gia_tai_ban).toLocaleString()}đ</td>
+                            <td style="text-align: center;"><span class="badge badge-secondary" style="font-size: 0.85rem; font-weight: 700; padding: 2px 8px;">x${s.so_luong}</span></td>
+                            <td style="text-align: right; font-weight: 700; color: var(--primary);">${Number(s.thanh_tien).toLocaleString()}đ</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('bdetail-services-total').textContent = `${Number(data.tong_dich_vu || 0).toLocaleString()}đ`;
+            document.getElementById('bdetail-grand-total').textContent = `${Number(data.tong_thanh_toan || 0).toLocaleString()}đ`;
+
+            // Quick Add Service Button Handler
+            const btnQuickAddService = document.getElementById('btn-quick-add-service');
+            if (btnQuickAddService) {
+                if (currentUser.vai_tro === 'CUSTOMER') {
+                    // Customers can view services or request via AI chat
+                    btnQuickAddService.innerHTML = `<i class="fa-solid fa-headset"></i> Đặt thêm qua Trợ Lý AI`;
+                    btnQuickAddService.onclick = () => {
+                        window.closeBookingDetailModal();
+                        const chatInput = document.getElementById('ai-chat-input');
+                        const aiTab = document.querySelector('[data-tab=tab-ai-consult]');
+                        if (aiTab) aiTab.click();
+                        if (chatInput) {
+                            chatInput.value = `Tôi muốn đặt thêm dịch vụ nước uống / áo thi đấu cho mã đơn ${data.ma_don}`;
+                            chatInput.focus();
+                        }
+                    };
+                } else {
+                    // Staff or Admin can jump directly to tab Operations and prefill booking code
+                    btnQuickAddService.innerHTML = `<i class="fa-solid fa-plus"></i> Thêm Nước / Dịch Vụ`;
+                    btnQuickAddService.onclick = () => {
+                        window.closeBookingDetailModal();
+                        const opTab = document.querySelector('[data-tab=tab-operations]');
+                        if (opTab) opTab.click();
+                        const madonInput = document.getElementById('op-service-madon');
+                        if (madonInput) {
+                            madonInput.value = data.ma_don;
+                            madonInput.focus();
+                        }
+                    };
+                }
+            }
+
+            // Dynamic Action Buttons in Modal Footer
+            const actionsContainer = document.getElementById('bdetail-dynamic-actions');
+            actionsContainer.innerHTML = '';
+
+            if (data.trang_thai === 'cho_coc') {
+                actionsContainer.innerHTML += `
+                    <button class="btn btn-sm btn-success" onclick="window.closeBookingDetailModal(); window.showQrPaymentModal('${data.ma_don}', ${data.tien_coc}, 'deposit');">
+                        <i class="fa-solid fa-qrcode"></i> Thanh Toán Cọc QR
+                    </button>
+                `;
+                if (currentUser.vai_tro !== 'CUSTOMER') {
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-sm btn-primary" onclick="window.closeBookingDetailModal(); window.confirmDepositPrompt('${data.ma_don}', ${data.tien_coc});">
+                            <i class="fa-solid fa-circle-check"></i> Duyệt Tiền Cọc
+                        </button>
+                    `;
+                }
+                actionsContainer.innerHTML += `
+                    <button class="btn btn-sm btn-danger" onclick="window.closeBookingDetailModal(); window.cancelBookingPrompt('${data.ma_don}');">
+                        <i class="fa-solid fa-xmark"></i> Hủy Đơn
+                    </button>
+                `;
+            } else if (data.trang_thai === 'da_xac_nhan') {
+                if (currentUser.vai_tro !== 'CUSTOMER') {
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-sm btn-primary" onclick="window.closeBookingDetailModal(); quickCheckIn('${data.ma_don}');">
+                            <i class="fa-solid fa-right-to-bracket"></i> Check-in Bàn Giao Sân
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="window.closeBookingDetailModal(); window.triggerReminder('${data.ma_don}');">
+                            <i class="fa-solid fa-robot"></i> Gửi Tin AI Nhắc Lịch
+                        </button>
+                    `;
+                }
+                actionsContainer.innerHTML += `
+                    <button class="btn btn-sm btn-danger" onclick="window.closeBookingDetailModal(); window.cancelBookingPrompt('${data.ma_don}');">
+                        <i class="fa-solid fa-xmark"></i> Hủy Đơn
+                    </button>
+                `;
+            } else if (data.trang_thai === 'dang_da') {
+                if (currentUser.vai_tro !== 'CUSTOMER') {
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-sm btn-danger" onclick="window.closeBookingDetailModal(); quickCheckOut('${data.ma_don}');">
+                            <i class="fa-solid fa-right-from-bracket"></i> Check-out & Tính Tiền
+                        </button>
+                    `;
+                }
+            } else if (data.trang_thai === 'hoan_tat') {
+                actionsContainer.innerHTML += `
+                    <button class="btn btn-sm btn-outline-cyan" onclick="window.closeBookingDetailModal(); window.showPastInvoice('${data.ma_don}');">
+                        <i class="fa-solid fa-file-invoice"></i> Xem Lại Hóa Đơn
+                    </button>
+                `;
+            }
+
+        } catch (err) {
+            console.error("Lỗi showBookingDetailModal:", err);
+            document.getElementById('bdetail-services-tbody').innerHTML = `
+                <tr><td colspan="7" class="text-center text-danger" style="padding: 24px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Không thể tải chi tiết đơn: ${err.message}
+                </td></tr>
+            `;
+            showToast(err.message, 'error');
         }
     };
     
@@ -1367,9 +1611,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const timeStr = `${b.gio_bat_dau.substring(0, 5)} - ${b.gio_ket_thuc.substring(0, 5)}`;
                 
+                // Add detail button
+                actions = `<button class="btn btn-xs btn-outline-cyan btn-action" onclick="window.showBookingDetailModal('${b.ma_don}')" title="Xem chi tiết sân & dịch vụ"><i class="fa-solid fa-eye"></i> Chi tiết</button> ` + actions;
+                
                 html += `
                     <tr>
-                        <td><strong>${b.ma_don}</strong>${expTimer}</td>
+                        <td><a href="javascript:void(0)" onclick="window.showBookingDetailModal('${b.ma_don}')" style="color: var(--primary); text-decoration: none; font-weight: 700;" title="Nhấp xem chi tiết sân & dịch vụ"><i class="fa-solid fa-circle-info" style="font-size: 0.8rem; margin-right: 4px;"></i>${b.ma_don}</a>${expTimer}</td>
                         <td>${b.khach_hang_ten || 'N/A'}</td>
                         <td>${b.san ? b.san.ten_san : b.ma_san}</td>
                         <td>${formatDateString(b.ngay_da)}</td>
@@ -1453,16 +1700,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const timeStr = `${b.gio_bat_dau.substring(0, 5)} - ${b.gio_ket_thuc.substring(0, 5)}`;
 
+            const detailBtn = `
+                <button class="btn btn-xs btn-outline-cyan btn-action" onclick="window.showBookingDetailModal('${b.ma_don}')" title="Xem chi tiết sân & dịch vụ đã dùng">
+                    <i class="fa-solid fa-eye"></i> Chi tiết
+                </button>
+            `;
+
             html += `
                 <tr>
-                    <td><strong>${b.ma_don}</strong></td>
+                    <td><a href="javascript:void(0)" onclick="window.showBookingDetailModal('${b.ma_don}')" style="color: var(--primary); text-decoration: none; font-weight: 700;" title="Nhấp xem chi tiết sân & dịch vụ"><i class="fa-solid fa-circle-info" style="font-size: 0.8rem; margin-right: 4px;"></i>${b.ma_don}</a></td>
                     <td>${b.khach_hang_ten || 'N/A'}</td>
                     <td>${b.san ? b.san.ten_san : b.ma_san}</td>
                     <td>${formatDateString(b.ngay_da)}</td>
                     <td>${timeStr}</td>
                     <td>${b.tien_coc.toLocaleString()} ₫</td>
                     <td>${statusBadge}</td>
-                    <td>${actionBtn}</td>
+                    <td>${detailBtn} ${actionBtn}</td>
                 </tr>
             `;
         });

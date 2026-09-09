@@ -2543,13 +2543,27 @@ input.input-invalid {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
 }
 
 .fixture-match-card:hover {
-    background: var(--bg-card-hover);
-    border-color: rgba(16, 185, 129, 0.3);
-    transform: translateX(4px);
+    background: rgba(30, 41, 59, 0.85);
+    border-color: var(--primary);
+    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.18);
+    transform: translateY(-2px);
+}
+
+.fixture-match-card:hover .fixture-icon {
+    background: rgba(0, 240, 255, 0.25);
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.08);
+}
+
+.fixture-match-card:hover h4 {
+    color: var(--primary) !important;
 }
 
 .fixture-left {

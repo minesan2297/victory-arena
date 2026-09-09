@@ -76,3 +76,47 @@ class SandboxQRPayRequest(BaseModel):
     ma_don: str
     phuong_thuc: str = "chuyen_khoan"
 
+class DichVuItemDetail(BaseModel):
+    su_dung_id: int
+    dich_vu_id: int
+    ten_dich_vu: str
+    don_vi_tinh: str
+    danh_muc: str
+    don_gia: int
+    so_luong: int
+    thanh_tien: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class DatSanDetailResponse(BaseModel):
+    ma_don: str
+    ma_khach_hang: int
+    khach_hang_ten: str
+    khach_hang_sdt: Optional[str] = None
+    ma_san: str
+    ten_san: str
+    loai_san: str
+    vi_tri: Optional[str] = None
+    ngay_da: date
+    gio_bat_dau: time
+    gio_ket_thuc: time
+    tien_coc: int
+    trang_thai: str
+    lock_expires_at: Optional[datetime] = None
+    ghi_chu: Optional[str] = None
+    ngay_tao: datetime
+    # Thông tin tài chính & hóa đơn
+    tien_san: int = 0
+    tong_dich_vu: int = 0
+    tien_coc_da_tru: int = 0
+    tong_thanh_toan: int = 0
+    check_in_thuc_te: Optional[datetime] = None
+    check_out_thuc_te: Optional[datetime] = None
+    # Danh sách dịch vụ đi kèm
+    dich_vus: List[DichVuItemDetail] = []
+    # Phương thức thanh toán cọc nếu có
+    phuong_thuc_coc: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+

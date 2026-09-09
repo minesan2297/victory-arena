@@ -16,6 +16,8 @@ from .san_schema import (
 from .dat_san_schema import (
     DatSanCreate,
     DatSanResponse,
+    DatSanDetailResponse,
+    DichVuItemDetail,
     XacNhanCocRequest,
     DoiLichRequest,
     SlotInfo,

@@ -335,3 +335,70 @@ def test_notification_flow(db_session):
     notifs_after_cancel = db_session.query(ThongBao).filter(ThongBao.tai_khoan_id == cust.tai_khoan_id).all()
     assert any("HỦY LỊCH ĐẶT SÂN" in n.noi_dung for n in notifs_after_cancel)
 
+def test_booking_detail_with_services(db_session):
+    """Kiểm tra API lấy chi tiết đơn đặt sân bao gồm thông tin sân, cọc, và danh sách dịch vụ đã đặt."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.database import get_db
+    from app.models.dich_vu import DanhMucDichVu, SuDungDichVu
+    from app.auth.security import create_access_token
+
+    app.dependency_overrides[get_db] = lambda: db_session
+    client = TestClient(app)
+
+    try:
+        # 1. Tạo dịch vụ mẫu trong DB
+        dv = DanhMucDichVu(
+            ten_dich_vu="Nước bù khoáng Revive",
+            don_vi_tinh="Chai",
+            don_gia=15000,
+            danh_muc="NUOC_UONG",
+            trang_thai="active"
+        )
+        db_session.add(dv)
+        db_session.flush()
+
+        cust = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+
+        # 2. Tạo đơn đặt sân
+        booking_in = DatSanCreate(
+            ma_san="SAN5-001",
+            ngay_da=date.today() + timedelta(days=2),
+            gio_bat_dau=time(17, 30),
+            gio_ket_thuc=time(19, 0),
+            tien_coc=150000.0,
+            ghi_chu="Trận derby phủi"
+        )
+        booking = DatSanService.create_booking(db_session, booking_in, cust.tai_khoan_id)
+
+        # 3. Gắn dịch vụ vào đơn
+        sddv = SuDungDichVu(
+            ma_don=booking.ma_don,
+            dich_vu_id=dv.dich_vu_id,
+            so_luong=5,
+            don_gia_tai_ban=15000,
+            thanh_tien=75000
+        )
+        db_session.add(sddv)
+        db_session.commit()
+
+        # 4. Gọi API endpoint GET /api/dat-san/booking/{ma_don}/detail với token Khách hàng sở hữu đơn
+        token = create_access_token({"sub": str(cust.tai_khoan_id)})
+        
+        response = client.get(
+            f"/api/dat-san/booking/{booking.ma_don}/detail",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["ma_don"] == booking.ma_don
+        assert data["ten_san"] == "Sân Test 5 Pro"
+        assert data["khach_hang_ten"] == cust.ho_ten
+        assert len(data["dich_vus"]) == 1
+        assert data["dich_vus"][0]["ten_dich_vu"] == "Nước bù khoáng Revive"
+        assert data["dich_vus"][0]["so_luong"] == 5
+        assert data["dich_vus"][0]["thanh_tien"] == 75000
+    finally:
+        app.dependency_overrides.clear()
+
+
