@@ -7,6 +7,7 @@ import urllib.parse
 from app.models.dat_san import DatSan
 from app.models.hoa_don import HoaDon, CheckIn, ThanhToan
 from app.models.dich_vu import SuDungDichVu, DanhMucDichVu
+from app.models.ai_models import ThongBao
 from app.services.dat_san_service import DatSanService
 
 class HoaDonService:
@@ -68,6 +69,19 @@ class HoaDonService:
             ngay_tao=datetime.utcnow()
         )
         db.add(new_invoice)
+        
+        # Tạo thông báo check-in cho khách hàng
+        notif_ci = ThongBao(
+            tai_khoan_id=booking.ma_khach_hang,
+            ma_don=ma_don,
+            noi_dung=f"🏟️ [CHECK-IN NHẬN SÂN] Đội bóng đã check-in nhận sân {booking.ma_san} thành công. Chúc quý khách có một trận đấu cuồng nhiệt!",
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            da_doc=False,
+            ngay_gui=datetime.utcnow()
+        )
+        db.add(notif_ci)
+        
         db.commit()
         db.refresh(new_invoice)
         return new_invoice
@@ -169,6 +183,18 @@ class HoaDonService:
                 thoi_gian=datetime.utcnow()
             )
             db.add(payment)
+            
+        # Tạo thông báo hoàn tất thanh toán hóa đơn
+        notif_co = ThongBao(
+            tai_khoan_id=booking.ma_khach_hang,
+            ma_don=ma_don,
+            noi_dung=f"🏁 [QUYẾT TOÁN TRẢ SÂN] Trận đấu {ma_don} đã hoàn tất. Hóa đơn {invoice.ma_hoa_don}: Tổng thanh toán {invoice.tong_thanh_toan:,.0f} ₫ qua {phuong_thuc}. Cảm ơn quý khách đã thi đấu tại Victory Arena!",
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            da_doc=False,
+            ngay_gui=datetime.utcnow()
+        )
+        db.add(notif_co)
             
         db.commit()
         db.refresh(invoice)

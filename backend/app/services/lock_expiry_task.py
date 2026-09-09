@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.dat_san import DatSan, LichDat
+from app.models.ai_models import ThongBao
 
 def check_and_expire_bookings(db: Session):
     """Quét và hủy các đơn giữ chỗ đã hết hạn 10 phút chưa thanh toán cọc."""
@@ -24,6 +25,18 @@ def check_and_expire_bookings(db: Session):
         
         # Giải phóng lịch sân
         db.query(LichDat).filter(LichDat.ma_don == booking.ma_don).delete()
+        
+        # Tạo thông báo hết hạn gửi khách hàng
+        notif_exp = ThongBao(
+            tai_khoan_id=booking.ma_khach_hang,
+            ma_don=booking.ma_don,
+            noi_dung=f"⏰ [HẾT HẠN GIỮ CHỖ] Đơn đặt sân {booking.ma_don} đã bị tự động hủy do quá thời gian giữ chỗ 10 phút chưa thanh toán cọc.",
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            da_doc=False,
+            ngay_gui=now
+        )
+        db.add(notif_exp)
         
     db.commit()
 

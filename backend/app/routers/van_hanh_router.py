@@ -81,10 +81,10 @@ def get_notifications(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
-    # Lấy 15 thông báo mới nhất cho tài khoản
+    # Lấy 25 thông báo mới nhất cho tài khoản
     notifications = db.query(ThongBao).filter(
         (ThongBao.tai_khoan_id == current_user.tai_khoan_id) | (ThongBao.tai_khoan_id == None)
-    ).order_by(ThongBao.ngay_gui.desc()).limit(15).all()
+    ).order_by(ThongBao.ngay_gui.desc()).limit(25).all()
     
     return [
         {
@@ -93,10 +93,25 @@ def get_notifications(
             "noi_dung": n.noi_dung,
             "kenh_gui": n.kenh_gui,
             "trang_thai_gui": n.trang_thai_gui,
+            "da_doc": bool(n.da_doc),
             "ngay_gui": n.ngay_gui.isoformat() if n.ngay_gui else None
         }
         for n in notifications
     ]
+
+@router.post("/notifications/mark-read")
+def mark_notifications_as_read(
+    thong_bao_id: int = Query(None),
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(get_current_user)
+):
+    """Đánh dấu một hoặc toàn bộ thông báo của người dùng là đã đọc."""
+    query = db.query(ThongBao).filter(ThongBao.tai_khoan_id == current_user.tai_khoan_id)
+    if thong_bao_id is not None:
+        query = query.filter(ThongBao.thong_bao_id == thong_bao_id)
+    query.update({ThongBao.da_doc: True}, synchronize_session=False)
+    db.commit()
+    return {"status": "success", "message": "Đã cập nhật trạng thái đã đọc"}
 
 @router.post("/notifications/clear")
 def clear_notifications(
@@ -106,3 +121,4 @@ def clear_notifications(
     db.query(ThongBao).filter(ThongBao.tai_khoan_id == current_user.tai_khoan_id).delete()
     db.commit()
     return {"status": "success"}
+

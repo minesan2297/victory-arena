@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 from app.database import Base
 from app.models import VaiTro, TaiKhoan, LoaiSan, San, BangGia, DatSan, LichDat, ThanhToan
+from app.models.ai_models import ThongBao
 from app.models.enums import VaiTroEnum, TrangThaiDatSan
 from app.schemas.auth_schema import RegisterRequest
 from app.schemas.san_schema import SanCreate, BangGiaCreate, BaoTriCreate
@@ -295,3 +296,42 @@ def check_role_helper(user: TaiKhoan) -> str:
     return user.vai_tro.ten_vai_tro
 
 TaiKhoan.vai_role_name_check_val = check_role_helper
+
+def test_notification_flow(db_session):
+    """Kiểm tra toàn bộ luồng thông báo: Đặt sân -> Tạo thông báo -> Cọc -> Đổi lịch -> Đánh dấu đã đọc -> Xóa."""
+    cust = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    
+    # 1. Đặt sân: phải tự động sinh thông báo cho khách hàng
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=date.today() + timedelta(days=5),
+        gio_bat_dau=time(8, 0),
+        gio_ket_thuc=time(9, 30),
+        tien_coc=100000.0,
+        phuong_thuc_thanh_toan="chuyen_khoan"
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, cust.tai_khoan_id)
+    
+    notifs = db_session.query(ThongBao).filter(ThongBao.tai_khoan_id == cust.tai_khoan_id).all()
+    assert len(notifs) >= 1
+    latest_notif = notifs[-1]
+    assert booking.ma_don in latest_notif.noi_dung
+    assert latest_notif.da_doc == False
+    
+    # 2. Xác nhận cọc: sinh thêm thông báo xác nhận cọc
+    DatSanService.xac_nhan_coc(db_session, booking.ma_don, 100000.0, "chuyen_khoan")
+    notifs = db_session.query(ThongBao).filter(ThongBao.tai_khoan_id == cust.tai_khoan_id).all()
+    assert len(notifs) >= 2
+    assert any("xác nhận đặt cọc thành công" in n.noi_dung for n in notifs)
+    
+    # 3. Đánh dấu đã đọc
+    db_session.query(ThongBao).filter(ThongBao.thong_bao_id == latest_notif.thong_bao_id).update({ThongBao.da_doc: True})
+    db_session.commit()
+    check_notif = db_session.query(ThongBao).filter(ThongBao.thong_bao_id == latest_notif.thong_bao_id).first()
+    assert check_notif.da_doc == True
+    
+    # 4. Hủy đơn: sinh thêm thông báo hủy lịch
+    DatSanService.huy_lich(db_session, booking.ma_don)
+    notifs_after_cancel = db_session.query(ThongBao).filter(ThongBao.tai_khoan_id == cust.tai_khoan_id).all()
+    assert any("HỦY LỊCH ĐẶT SÂN" in n.noi_dung for n in notifs_after_cancel)
+

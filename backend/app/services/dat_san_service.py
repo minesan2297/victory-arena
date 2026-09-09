@@ -180,6 +180,30 @@ class DatSanService:
             )
             db.add(new_payment)
             
+        # Tạo thông báo hệ thống gửi khách hàng
+        ten_san_info = db.query(San.ten_san).filter(San.ma == data.ma_san).scalar() or data.ma_san
+        if trang_thai == 'cho_coc':
+            noi_dung_tb = (
+                f"⚽ [GIỮ CHỖ 10 PHÚT] Đơn {ma_don} ({ten_san_info}) lúc {data.gio_bat_dau.strftime('%H:%M')}-{data.gio_ket_thuc.strftime('%H:%M')} "
+                f"ngày {data.ngay_da.strftime('%d/%m/%Y')} đang được giữ chỗ trong 10 phút. "
+                f"Vui lòng thanh toán cọc {tien_coc_ghi_nhan:,.0f} ₫ để xác nhận lịch đá!"
+            )
+        else:
+            noi_dung_tb = (
+                f"⚽ [ĐẶT SÂN THÀNH CÔNG] Đơn {ma_don} ({ten_san_info}) lúc {data.gio_bat_dau.strftime('%H:%M')}-{data.gio_ket_thuc.strftime('%H:%M')} "
+                f"ngày {data.ngay_da.strftime('%d/%m/%Y')} đã được xác nhận thành công!"
+            )
+        notif_booking = ThongBao(
+            tai_khoan_id=current_user_id,
+            ma_don=ma_don,
+            noi_dung=noi_dung_tb,
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            da_doc=False,
+            ngay_gui=datetime.utcnow()
+        )
+        db.add(notif_booking)
+            
         db.commit()
         db.refresh(new_booking)
         return new_booking
@@ -274,6 +298,19 @@ class DatSanService:
             lich.bat_dau = datetime.combine(ngay_da, gio_bat_dau)
             lich.ket_thuc = datetime.combine(ngay_da, gio_ket_thuc)
             
+        # Tạo thông báo đổi lịch cho khách hàng
+        ten_san_info = db.query(San.ten_san).filter(San.ma == ma_san).scalar() or ma_san
+        notif_doi = ThongBao(
+            tai_khoan_id=booking.ma_khach_hang,
+            ma_don=booking.ma_don,
+            noi_dung=f"🔄 [ĐỔI LỊCH THÀNH CÔNG] Đơn {booking.ma_don} đã được chuyển sang {ten_san_info} lúc {gio_bat_dau.strftime('%H:%M')}-{gio_ket_thuc.strftime('%H:%M')} ngày {ngay_da.strftime('%d/%m/%Y')}.",
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            da_doc=False,
+            ngay_gui=datetime.utcnow()
+        )
+        db.add(notif_doi)
+            
         db.commit()
         db.refresh(booking)
         return booking
@@ -301,6 +338,7 @@ class DatSanService:
         
         # Điều kiện hoàn cọc: Chỉ hoàn nếu đơn đã xác nhận, thực tế đã có tiền cọc đóng thành công và chưa hoàn lần nào
         booking_time = datetime.combine(booking.ngay_da, booking.gio_bat_dau)
+        noi_dung_huy = f"❌ [HỦY LỊCH ĐẶT SÂN] Đơn {ma_don} đã được hủy thành công."
         if booking.trang_thai == 'da_xac_nhan' and tong_coc_thuc_te > 0 and da_hoan == 0:
             if booking_time - datetime.utcnow() >= timedelta(hours=24):
                 # Hoàn cọc số tiền thực tế khách đã nộp
@@ -315,8 +353,10 @@ class DatSanService:
                 )
                 db.add(new_payment)
                 booking.ghi_chu = (booking.ghi_chu or "") + f" [Đã hoàn cọc {so_tien_hoan:,}đ do hủy trước 24h]"
+                noi_dung_huy += f" Đã hoàn lại {so_tien_hoan:,} ₫ tiền cọc do hủy trước giờ đấu 24h."
             else:
                 booking.ghi_chu = (booking.ghi_chu or "") + " [Không được hoàn cọc do hủy trễ < 24h]"
+                noi_dung_huy += " Tiền cọc không được hoàn lại do hủy sát giờ thi đấu (< 24h)."
                 
         # Cập nhật trạng thái
         booking.trang_thai = 'da_huy'
@@ -325,6 +365,18 @@ class DatSanService:
         
         # Xóa khỏi LichDat để giải phóng lịch sân
         db.query(LichDat).filter(LichDat.ma_don == ma_don).delete()
+        
+        # Tạo thông báo hủy lịch
+        notif_huy = ThongBao(
+            tai_khoan_id=booking.ma_khach_hang,
+            ma_don=ma_don,
+            noi_dung=noi_dung_huy,
+            kenh_gui='web',
+            trang_thai_gui='da_gui',
+            da_doc=False,
+            ngay_gui=datetime.utcnow()
+        )
+        db.add(notif_huy)
         
         db.commit()
         db.refresh(booking)

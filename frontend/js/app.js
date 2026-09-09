@@ -630,23 +630,46 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('btn-load-ai-insights').onclick = handleAIReport;
         
-        // Xóa thông báo
-        const btnClearNotif = document.getElementById('btn-dash-clear-notif');
-        if (btnClearNotif) {
-            btnClearNotif.onclick = async () => {
-                try {
-                    const res = await fetch('/api/van-hanh/notifications/clear', {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (res.ok) {
-                        showToast("Đã xóa sạch thông báo!");
-                        fetchNotifications();
-                    }
-                } catch (e) {
-                    console.error("Lỗi xóa thông báo:", e);
-                }
+        // Xử lý Topbar Notification Dropdown
+        const notifBtn = document.getElementById('topbar-notif-btn');
+        const notifDropdown = document.getElementById('notification-dropdown');
+        if (notifBtn && notifDropdown) {
+            notifBtn.onclick = (e) => {
+                e.stopPropagation();
+                const isHidden = notifDropdown.style.display === 'none' || !notifDropdown.style.display;
+                notifDropdown.style.display = isHidden ? 'flex' : 'none';
+                if (isHidden) fetchNotifications();
             };
+            document.addEventListener('click', (e) => {
+                if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+                    notifDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        // Đánh dấu tất cả đã đọc
+        const btnMarkAll = document.getElementById('btn-mark-all-read');
+        if (btnMarkAll) btnMarkAll.onclick = (e) => { e.stopPropagation(); markAllNotifsRead(); };
+
+        // Xóa tất cả thông báo
+        const btnClearAll = document.getElementById('btn-clear-all-notifs');
+        if (btnClearAll) btnClearAll.onclick = (e) => { e.stopPropagation(); clearAllNotifs(); };
+
+        // Xóa thông báo từ customer dashboard
+        const btnCustClearNotif = document.getElementById('btn-cust-clear-notif');
+        if (btnCustClearNotif) btnCustClearNotif.onclick = clearAllNotifs;
+
+        // Xóa thông báo từ staff/admin dashboard
+        const btnClearNotif = document.getElementById('btn-dash-clear-notif');
+        if (btnClearNotif) btnClearNotif.onclick = clearAllNotifs;
+
+        // Polling thông báo tự động mỗi 20 giây
+        if (!window.notifIntervalId) {
+            window.notifIntervalId = setInterval(() => {
+                if (token && currentUser) {
+                    fetchNotifications();
+                }
+            }, 20000);
         }
     }
     
@@ -958,39 +981,202 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    function formatNotifTime(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffSec = Math.floor((now - date) / 1000);
+            if (diffSec < 60) return 'Vừa xong';
+            const diffMin = Math.floor(diffSec / 60);
+            if (diffMin < 60) return `${diffMin} phút trước`;
+            const diffHours = Math.floor(diffMin / 60);
+            if (diffHours < 24 && date.getDate() === now.getDate()) {
+                return `${date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})} hôm nay`;
+            }
+            return date.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit'}) + ' ' + date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+        } catch (e) {
+            return dateStr;
+        }
+    }
+
+    function getNotifMeta(n) {
+        const text = n.noi_dung || '';
+        if (text.includes('GIỮ CHỖ') || text.includes('HẾT HẠN') || text.includes('⏰')) {
+            return { icon: 'fa-solid fa-clock-rotate-left', color: '#f59e0b', tag: 'Cảnh Báo Lịch' };
+        }
+        if (text.includes('XÁC NHẬN') || text.includes('cọc')) {
+            return { icon: 'fa-solid fa-circle-check', color: '#10b981', tag: 'Đặt Cọc' };
+        }
+        if (text.includes('ĐẶT SÂN') || text.includes('⚽')) {
+            return { icon: 'fa-solid fa-futbol', color: '#10b981', tag: 'Đơn Đặt Sân' };
+        }
+        if (text.includes('ĐỔI LỊCH') || text.includes('🔄')) {
+            return { icon: 'fa-solid fa-repeat', color: '#06b6d4', tag: 'Đổi Lịch' };
+        }
+        if (text.includes('HỦY') || text.includes('❌')) {
+            return { icon: 'fa-solid fa-ban', color: '#ef4444', tag: 'Hủy Lịch' };
+        }
+        if (text.includes('CHECK-IN') || text.includes('🏟️')) {
+            return { icon: 'fa-solid fa-right-to-bracket', color: '#3b82f6', tag: 'Vào Sân' };
+        }
+        if (text.includes('QUYẾT TOÁN') || text.includes('🏁')) {
+            return { icon: 'fa-solid fa-file-invoice-dollar', color: '#a855f7', tag: 'Quyết Toán' };
+        }
+        return { icon: 'fa-solid fa-bell', color: '#06b6d4', tag: 'Hệ Thống' };
+    }
+
+    window.markNotifRead = async function(notifId) {
+        try {
+            const res = await fetch(`/api/van-hanh/notifications/mark-read?thong_bao_id=${notifId}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                fetchNotifications();
+            }
+        } catch (e) {
+            console.error("Lỗi đánh dấu đã đọc:", e);
+        }
+    };
+
+    window.markAllNotifsRead = async function() {
+        try {
+            const res = await fetch('/api/van-hanh/notifications/mark-read', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                showToast("Đã đánh dấu tất cả thông báo là đã đọc!");
+                fetchNotifications();
+            }
+        } catch (e) {
+            console.error("Lỗi đánh dấu tất cả đã đọc:", e);
+        }
+    };
+
+    window.clearAllNotifs = async function() {
+        try {
+            const res = await fetch('/api/van-hanh/notifications/clear', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                showToast("Đã xóa sạch thông báo!");
+                fetchNotifications();
+            }
+        } catch (e) {
+            console.error("Lỗi xóa thông báo:", e);
+        }
+    };
+
     async function fetchNotifications() {
+        if (!token) return;
+
         const notifListEl = document.getElementById('dash-notif-list');
+        const custListEl = document.getElementById('cust-notif-list');
+        const dropdownListEl = document.getElementById('notif-dropdown-list');
         const notifCountEl = document.getElementById('dash-notif-count');
-        const topbarBadgeEl = document.querySelector('.notification-badge');
-        
+        const custCountEl = document.getElementById('cust-notif-count');
+        const topbarBadgeEl = document.getElementById('topbar-notif-badge') || document.querySelector('.notification-badge');
+        const unreadTagEl = document.getElementById('notif-unread-tag');
+
         try {
             const notifRes = await fetch('/api/van-hanh/notifications', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (notifRes.ok) {
                 const list = await notifRes.json();
-                
-                notifCountEl.textContent = list.length;
+                const unreadList = list.filter(n => !n.da_doc);
+                const unreadCount = unreadList.length;
+
+                // Cập nhật Badge trên Topbar
                 if (topbarBadgeEl) {
-                    topbarBadgeEl.textContent = list.length;
-                    topbarBadgeEl.style.display = list.length > 0 ? 'flex' : 'none';
+                    topbarBadgeEl.textContent = unreadCount;
+                    topbarBadgeEl.style.display = unreadCount > 0 ? 'flex' : 'none';
                 }
-                
-                if (list.length === 0) {
-                    notifListEl.innerHTML = `<div class="placeholder-text">Không có thông báo mới nào được ghi nhận.</div>`;
-                } else {
-                    notifListEl.innerHTML = list.map(n => {
-                        const dateStr = n.ngay_gui ? new Date(n.ngay_gui).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : '';
-                        return `
-                            <div style="background-color: rgba(255,255,255,0.02); border-left: 3px solid var(--secondary); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: 500;">
-                                    <span style="color: var(--secondary);"><i class="fa-solid fa-sparkles"></i> AI Thông Báo</span>
-                                    <span class="text-muted" style="font-size: 0.72rem;">${dateStr}</span>
-                                </div>
-                                <div style="color: #cbd5e1; line-height: 1.4;">${n.noi_dung}</div>
+
+                // Cập nhật thẻ hiển thị số lượng chưa đọc trong Header dropdown
+                if (unreadTagEl) {
+                    unreadTagEl.textContent = `${unreadCount} mới`;
+                }
+
+                // Cập nhật bộ đếm trên các panel Dashboard
+                if (notifCountEl) notifCountEl.textContent = list.length;
+                if (custCountEl) custCountEl.textContent = list.length;
+
+                // 1. Hiển thị danh sách trong Dropdown Menu Topbar
+                if (dropdownListEl) {
+                    if (list.length === 0) {
+                        dropdownListEl.innerHTML = `
+                            <div style="padding: 30px 15px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                                <i class="fa-regular fa-bell-slash" style="font-size: 1.8rem; margin-bottom: 10px; display: block; opacity: 0.4;"></i>
+                                Bạn không có thông báo nào.
                             </div>
                         `;
-                    }).join('');
+                    } else {
+                        dropdownListEl.innerHTML = list.map(n => {
+                            const meta = getNotifMeta(n);
+                            const timeStr = formatNotifTime(n.ngay_gui);
+                            const unreadClass = n.da_doc ? '' : 'unread';
+                            return `
+                                <div class="notif-item ${unreadClass}" onclick="markNotifRead(${n.thong_bao_id})">
+                                    <div class="notif-icon-wrap" style="color: ${meta.color}; background: ${meta.color}22;">
+                                        <i class="${meta.icon}"></i>
+                                    </div>
+                                    <div class="notif-details">
+                                        <div class="notif-meta">
+                                            <span class="notif-source" style="color: ${meta.color};">${meta.tag}</span>
+                                            <span class="notif-time">${timeStr}</span>
+                                        </div>
+                                        <div class="notif-text">${n.noi_dung}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+
+                // 2. Hiển thị trên Staff/Admin Dashboard
+                if (notifListEl) {
+                    if (list.length === 0) {
+                        notifListEl.innerHTML = `<div class="placeholder-text">Không có thông báo mới nào được ghi nhận.</div>`;
+                    } else {
+                        notifListEl.innerHTML = list.map(n => {
+                            const meta = getNotifMeta(n);
+                            const timeStr = formatNotifTime(n.ngay_gui);
+                            return `
+                                <div style="background-color: rgba(255,255,255,0.02); border-left: 3px solid ${meta.color}; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin-bottom: 8px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: 500;">
+                                        <span style="color: ${meta.color};"><i class="${meta.icon}"></i> ${meta.tag}</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">${timeStr}</span>
+                                    </div>
+                                    <div style="color: #cbd5e1; line-height: 1.4;">${n.noi_dung}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+
+                // 3. Hiển thị trên Customer Dashboard
+                if (custListEl) {
+                    if (list.length === 0) {
+                        custListEl.innerHTML = `<div class="placeholder-text">Không có thông báo mới.</div>`;
+                    } else {
+                        custListEl.innerHTML = list.map(n => {
+                            const meta = getNotifMeta(n);
+                            const timeStr = formatNotifTime(n.ngay_gui);
+                            return `
+                                <div style="background-color: rgba(255,255,255,0.02); border-left: 3px solid ${meta.color}; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin-bottom: 8px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: 500;">
+                                        <span style="color: ${meta.color};"><i class="${meta.icon}"></i> ${meta.tag}</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">${timeStr}</span>
+                                    </div>
+                                    <div style="color: #cbd5e1; line-height: 1.4;">${n.noi_dung}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
                 }
             }
         } catch (e) {
@@ -1320,6 +1506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 showToast("Xác nhận tiền cọc thành công!");
                 fetchBookings();
+                fetchNotifications();
             } else {
                 const err = await res.json();
                 showToast(err.detail || "Lỗi xác nhận cọc", "error");
@@ -1343,6 +1530,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 showToast("Đã hủy đơn đặt sân thành công!");
                 fetchBookings();
+                fetchNotifications();
             } else {
                 const err = await res.json();
                 showToast(err.detail || "Lỗi hủy đơn", "error");
@@ -1368,6 +1556,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 document.getElementById('ai-zalo-text').innerText = data.noi_dung_tin_nhan;
                 document.getElementById('modal-ai-notification').classList.add('active');
+                fetchNotifications();
             } else {
                 const err = await res.json();
                 showToast(err.detail || "Lỗi sinh tin nhắn AI", "error");
@@ -1452,6 +1641,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Switch tab to Bookings
             document.querySelector('[data-tab="tab-bookings"]').click();
+            fetchNotifications();
             
             // Tự động mở Modal QR thanh toán cọc
             if (booking.trang_thai === 'cho_coc') {
@@ -1601,6 +1791,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Show preview of service
                 loadServiceUsagePreview(maDon);
+                fetchNotifications();
             } else {
                 const err = await res.json();
                 showToast(err.detail || "Check-in thất bại", "error");
@@ -1695,6 +1886,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const invoice = await res.json();
                 showInvoiceModal(invoice);
                 showToast("Check-out quyết toán thành công!");
+                fetchNotifications();
                 
                 // Clear fields
                 document.getElementById('op-checkin-madon').value = "";
@@ -2267,6 +2459,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(`⚡ [Sandbox Test] Đã thanh toán cọc ${currentQrInfo.so_tien.toLocaleString()} ₫ thành công! Đơn đã được xác nhận.`);
                 window.closeQrModal();
                 fetchBookings();
+                fetchNotifications();
             } else {
                 const err = await res.json();
                 showToast(err.detail || "Lỗi thanh toán sandbox", "error");

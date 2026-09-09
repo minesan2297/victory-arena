@@ -294,10 +294,37 @@
                         <input type="date" id="query-date-input">
                     </div>
                     
-                    <!-- Notification Bell -->
-                    <div class="topbar-notification" title="Thông báo">
-                        <i class="fa-regular fa-bell"></i>
-                        <span class="notification-badge">2</span>
+                    <!-- Notification Bell & Dropdown Container -->
+                    <div class="topbar-notification-wrapper">
+                        <div class="topbar-notification" id="topbar-notif-btn" title="Xem thông báo hệ thống">
+                            <i class="fa-regular fa-bell"></i>
+                            <span class="notification-badge" id="topbar-notif-badge" style="display: none;">0</span>
+                        </div>
+
+                        <!-- Notification Dropdown Menu -->
+                        <div class="notification-dropdown" id="notification-dropdown" style="display: none;">
+                            <div class="notif-dropdown-header">
+                                <div class="notif-header-title">
+                                    <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                    <h4>Thông Báo</h4>
+                                    <span class="notif-unread-tag" id="notif-unread-tag">0 mới</span>
+                                </div>
+                                <div class="notif-header-actions">
+                                    <button type="button" class="btn-notif-action" id="btn-mark-all-read" title="Đánh dấu tất cả đã đọc">
+                                        <i class="fa-solid fa-check-double"></i> Đọc hết
+                                    </button>
+                                    <button type="button" class="btn-notif-action text-danger" id="btn-clear-all-notifs" title="Xóa tất cả thông báo">
+                                        <i class="fa-regular fa-trash-can"></i> Xóa
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="notif-dropdown-body" id="notif-dropdown-list">
+                                <div class="placeholder-text" style="padding: 20px; text-align: center;">Không có thông báo mới nào.</div>
+                            </div>
+                            <div class="notif-dropdown-footer">
+                                <span><i class="fa-solid fa-shield-halved text-neon-green"></i> SportBookAI Cảnh báo thời gian thực</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- User Profile Quick Info -->
@@ -412,6 +439,10 @@
                                     <div class="esports-header-title">
                                         <i class="fa-solid fa-bell text-neon-cyan"></i>
                                         <h3>THÔNG BÁO CỦA TÔI</h3>
+                                    </div>
+                                    <div class="notif-controls">
+                                        <span class="hud-tag" id="cust-notif-count">0</span>
+                                        <button type="button" class="btn btn-xs btn-secondary" id="btn-cust-clear-notif">Xóa</button>
                                     </div>
                                 </div>
                                 <div id="cust-notif-list" class="esports-notif-list">
