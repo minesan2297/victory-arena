@@ -95,10 +95,28 @@ class DatSanService:
 
     @staticmethod
     def create_booking(db: Session, data: DatSanCreate, current_user_id: int) -> DatSan:
+        if data.ngay_da < date.today():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể đặt sân vào ngày trong quá khứ"
+            )
+
         if data.gio_bat_dau >= data.gio_ket_thuc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Giờ bắt đầu phải nhỏ hơn giờ kết thúc"
+            )
+
+        duration_minutes = (datetime.combine(date.min, data.gio_ket_thuc) - datetime.combine(date.min, data.gio_bat_dau)).total_seconds() / 60
+        if duration_minutes < 30:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Thời gian đặt sân tối thiểu là 30 phút"
+            )
+        if duration_minutes > 240:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Thời gian đặt sân tối đa mỗi lượt là 4 tiếng"
             )
             
         # Kiểm tra trùng lịch
@@ -277,8 +295,17 @@ class DatSanService:
         gio_ket_thuc = data.gio_ket_thuc_moi or booking.gio_ket_thuc
         ma_san = data.ma_san_moi or booking.ma_san
         
+        if ngay_da < date.today():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể đổi lịch sang ngày trong quá khứ")
+
         if gio_bat_dau >= gio_ket_thuc:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Giờ bắt đầu phải nhỏ hơn giờ kết thúc")
+
+        duration_minutes = (datetime.combine(date.min, gio_ket_thuc) - datetime.combine(date.min, gio_bat_dau)).total_seconds() / 60
+        if duration_minutes < 30:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thời gian đặt sân tối thiểu là 30 phút")
+        if duration_minutes > 240:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thời gian đặt sân tối đa mỗi lượt là 4 tiếng")
             
         # Kiểm tra trùng lịch
         if DatSanService.check_conflict(db, ma_san, ngay_da, gio_bat_dau, gio_ket_thuc, exclude_ma_don=booking.ma_don):

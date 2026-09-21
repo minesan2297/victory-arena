@@ -20,7 +20,7 @@ class DichVuResponse(BaseModel):
 class SuDungDVCreate(BaseModel):
     ma_don: str
     dich_vu_id: int
-    so_luong: int = 1
+    so_luong: int = Field(1, gt=0, le=100)
 
 class SuDungDVResponse(BaseModel):
     su_dung_id: int

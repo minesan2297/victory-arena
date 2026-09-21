@@ -13,7 +13,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css?v=2.2.0">
+    <link rel="stylesheet" href="css/style.css?v=2.5.0">
 </head>
 <body>
     <!-- LOGIN INTERFACE OVERLAY -->
@@ -226,7 +226,7 @@
             </div>
 
             <!-- User Panel -->
-            <div class="user-panel">
+            <div class="user-panel" id="sidebar-user-panel" style="cursor: pointer;" title="Nhấn để xem thông tin cá nhân">
                 <div class="user-avatar">
                     <i class="fa-solid fa-user-shield" id="user-icon"></i>
                 </div>
@@ -234,7 +234,7 @@
                     <h4 id="user-display-name">Họ Tên</h4>
                     <span class="user-role-badge" id="user-display-role">ADMIN</span>
                 </div>
-                <button class="btn-logout" id="btn-logout" title="Đăng xuất">
+                <button class="btn-logout" id="btn-logout" title="Đăng xuất" onclick="event.stopPropagation()">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
@@ -328,7 +328,7 @@
                     </div>
 
                     <!-- User Profile Quick Info -->
-                    <div class="topbar-user-profile">
+                    <div class="topbar-user-profile" id="topbar-user-btn" style="cursor: pointer;" title="Nhấn để xem thông tin cá nhân">
                         <div class="topbar-user-info">
                             <span class="user-greeting">Xin chào,</span>
                             <strong class="user-name" id="topbar-user-name">Admin</strong>
@@ -851,6 +851,8 @@
                         <h3><i class="fa-solid fa-clipboard-list text-primary"></i> Nghiệp Vụ Vận Hành Sân Bóng</h3>
                     </div>
                     
+                    <div id="operations-radar-box"></div>
+
                     <div class="operations-grid">
                         <!-- Check In Section -->
                         <div class="op-card">
@@ -880,7 +882,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Số lượng</label>
-                                    <input type="number" id="op-service-quantity" value="1" min="1" style="width: 70px;">
+                                    <input type="number" id="op-service-quantity" value="1" min="1" max="100" style="width: 70px;">
                                 </div>
                             </div>
                             <button class="btn btn-secondary btn-block" id="btn-op-addservice">Thêm Dịch Vụ</button>
@@ -1306,7 +1308,7 @@
     </div>
 
     <!-- MODAL CHI TIẾT ĐẶT SÂN & DỊCH VỤ ĐÃ ĐẶT -->
-    <div class="modal-overlay" id="modal-booking-detail" style="display: none;">
+    <div class="modal-overlay" id="modal-booking-detail">
         <div class="modal-card modal-lg" style="max-width: 820px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -1314,10 +1316,10 @@
                         <i class="fa-solid fa-futbol"></i>
                     </div>
                     <div>
-                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-bright);" id="bdetail-title">Sân 7A – Phủi Pro</h3>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-bright);" id="bdetail-pitch-name">Sân 7A – Phủi Pro</h3>
                         <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
-                            <span class="fixture-code" id="bdetail-code" style="font-size: 0.8rem; letter-spacing: 0.5px; color: var(--primary);">DS20260909-001</span>
-                            <span class="fixture-status-badge" id="bdetail-badge" style="font-size: 0.75rem;">• ĐÃ XÁC NHẬN</span>
+                            <span class="fixture-code" id="bdetail-madon" style="font-size: 0.8rem; letter-spacing: 0.5px; color: var(--primary);">DS20260909-001</span>
+                            <span class="fixture-status-badge" id="bdetail-status-badge" style="font-size: 0.75rem;">• ĐÃ XÁC NHẬN</span>
                         </div>
                     </div>
                 </div>
@@ -1334,7 +1336,7 @@
                         </div>
                         <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
                             <span class="text-muted">Loại sân:</span>
-                            <strong id="bdetail-pitch-type" style="color: var(--text-bright);">Sân 7 người</strong>
+                            <strong id="bdetail-court-type" style="color: var(--text-bright);">Sân 7 người</strong>
                         </div>
                         <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
                             <span class="text-muted">Vị trí:</span>
@@ -1374,6 +1376,10 @@
                         <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
                             <span class="text-muted">Tiền cọc đã trả:</span>
                             <strong id="bdetail-deposit-paid" style="color: var(--neon-cyan);">200.000đ (Chuyển khoản)</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Tiền dịch vụ kèm:</span>
+                            <strong id="bdetail-sub-services-price" style="color: var(--primary);">0đ</strong>
                         </div>
                         <div class="detail-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                             <span class="text-muted">Còn lại cần thanh toán:</span>
@@ -1449,11 +1455,119 @@
         </div>
     </div>
 
+    <!-- MODAL THÔNG TIN CÁ NHÂN / HỒ SƠ TÀI KHOẢN -->
+    <div class="modal-overlay" id="modal-user-profile" style="display: none;">
+        <div class="modal-card modal-profile-card" style="max-width: 520px; border: 1px solid rgba(0, 240, 255, 0.25); background: linear-gradient(145deg, #0d1527 0%, #080d1a 100%); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 240, 255, 0.15); border-radius: 18px; overflow: hidden;">
+            <!-- Profile Card Header with Decorative Cover -->
+            <div style="height: 100px; background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(139, 92, 246, 0.35) 50%, rgba(16, 185, 129, 0.25) 100%); position: relative; display: flex; align-items: flex-end; padding: 0 24px;">
+                <button class="modal-close" id="btn-close-profile-modal" title="Đóng" style="position: absolute; top: 12px; right: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;">&times;</button>
+                
+                <!-- Avatar overlapping cover -->
+                <div style="width: 76px; height: 76px; border-radius: 50%; background: #0f172a; border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 2rem; transform: translateY(30px); box-shadow: 0 10px 25px rgba(0, 240, 255, 0.3); z-index: 2;" id="uprofile-avatar-box">
+                    <i class="fa-solid fa-user-shield" id="uprofile-avatar-icon"></i>
+                </div>
+            </div>
+
+            <!-- Header Info -->
+            <div style="padding: 38px 24px 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: #fff; letter-spacing: 0.3px;" id="uprofile-fullname">Nguyễn Văn C</h3>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">@<span id="uprofile-username">customer1</span></span>
+                        <span style="display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3);"></span>
+                        <span class="user-role-badge" id="uprofile-role-badge" style="font-size: 0.72rem; padding: 2px 10px; border-radius: 12px; background: rgba(0, 240, 255, 0.15); color: var(--primary); border: 1px solid rgba(0, 240, 255, 0.3); font-weight: 700;">CUSTOMER</span>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Trạng thái</span>
+                    <span style="font-size: 0.82rem; font-weight: 700; color: #10b981; display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;" id="uprofile-status">
+                        <i class="fa-solid fa-circle-check"></i> Hoạt động
+                    </span>
+                </div>
+            </div>
+
+            <!-- Profile Body Information Grid -->
+            <div class="modal-body" style="padding: 20px 24px;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-address-card"></i> Thông Tin Đăng Ký Hệ Thống
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Số điện thoại -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(0, 240, 255, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Số điện thoại liên lạc</div>
+                                <div style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 2px;" id="uprofile-phone">0912345678</div>
+                            </div>
+                        </div>
+                        <span style="font-size: 0.72rem; color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 2px 8px;">Đã xác minh</span>
+                    </div>
+
+                    <!-- Email -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(139, 92, 246, 0.1); color: #a78bfa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Địa chỉ Email</div>
+                                <div style="font-size: 0.92rem; font-weight: 600; color: #fff; margin-top: 2px;" id="uprofile-email">customer1@victoryarena.vn</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2 Cột: Điểm uy tín & Vai trò -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <!-- Điểm uy tín -->
+                        <div style="padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-star text-neon-yellow" style="color: #fbbf24; font-size: 0.9rem;"></i>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Điểm Uy Tín</span>
+                            </div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: #fbbf24;" id="uprofile-reputation">100 / 100 ⭐</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Cầu thủ tiêu chuẩn vàng</div>
+                        </div>
+
+                        <!-- Mã ID tài khoản -->
+                        <div style="padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-id-badge text-neon" style="color: var(--primary); font-size: 0.9rem;"></i>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Mã Định Danh ID</span>
+                            </div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: #fff;" id="uprofile-id">#TK-03</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;" id="uprofile-role-desc">Khách hàng đặt sân</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips / Guidance banner -->
+                <div style="margin-top: 16px; padding: 12px 16px; background: rgba(0, 240, 255, 0.05); border: 1px dashed rgba(0, 240, 255, 0.25); border-radius: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--primary); margin-top: 2px;"></i>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45;">
+                        Tài khoản của bạn được bảo mật theo tiêu chuẩn Victory Arena AI Engine v2.0. Để cập nhật số điện thoại hoặc mật khẩu, vui lòng liên hệ lễ tân sân bóng.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <button type="button" class="btn btn-outline-danger" id="uprofile-btn-logout" style="border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-close-profile-footer" style="padding: 8px 20px; font-size: 0.88rem;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 
     <!-- Scripts -->
     <script src="js/config.js"></script>
-    <script src="js/app.js?v=2.3.0"></script>
+    <script src="js/app.js?v=3.0.0"></script>
 </body>
 </html>

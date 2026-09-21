@@ -144,9 +144,28 @@ def get_booking_detail(
     if current_user.vai_tro.ten_vai_tro == "CUSTOMER" and booking.ma_khach_hang != current_user.tai_khoan_id:
         raise HTTPException(status_code=403, detail="Bạn không có quyền xem thông tin đơn này")
     
-    # Lấy thông tin hóa đơn nếu có
+    # 1. Tính toán danh sách dịch vụ và tổng tiền dịch vụ thực tế
+    dich_vus = []
+    tong_dich_vu_thuc_te = 0
+    for s in booking.su_dung_dich_vus:
+        item_don_gia = int(s.don_gia_tai_ban if s.don_gia_tai_ban is not None else (s.dich_vu.don_gia if s.dich_vu else 0))
+        item_thanh_tien = int(s.thanh_tien if s.thanh_tien is not None else (item_don_gia * s.so_luong))
+        tong_dich_vu_thuc_te += item_thanh_tien
+        dich_vus.append(DichVuItemDetail(
+            su_dung_id=s.su_dung_id,
+            dich_vu_id=s.dich_vu_id,
+            ten_dich_vu=s.dich_vu.ten_dich_vu if s.dich_vu else "Dịch vụ",
+            don_vi_tinh=s.dich_vu.don_vi_tinh if s.dich_vu else "Phần",
+            danh_muc=s.dich_vu.danh_muc if s.dich_vu else "KHAC",
+            don_gia=item_don_gia,
+            don_gia_tai_ban=item_don_gia,
+            so_luong=s.so_luong,
+            thanh_tien=item_thanh_tien
+        ))
+
+    # 2. Lấy thông tin hóa đơn / tính tiền thực tế
     tien_san = 0
-    tong_dich_vu = 0
+    tong_dich_vu = tong_dich_vu_thuc_te
     tien_coc_da_tru = booking.tien_coc
     tong_thanh_toan = 0
     check_in_thuc_te = None
@@ -154,28 +173,15 @@ def get_booking_detail(
     
     if booking.hoa_don:
         tien_san = booking.hoa_don.tien_san
-        tong_dich_vu = booking.hoa_don.tong_dich_vu
+        if booking.hoa_don.tong_dich_vu and booking.hoa_don.tong_dich_vu > 0:
+            tong_dich_vu = booking.hoa_don.tong_dich_vu
         tien_coc_da_tru = booking.hoa_don.tien_coc_da_tru
         tong_thanh_toan = booking.hoa_don.tong_thanh_toan
         check_in_thuc_te = booking.hoa_don.check_in_thuc_te
         check_out_thuc_te = booking.hoa_don.check_out_thuc_te
     else:
         tien_san = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
-        tong_thanh_toan = max(0, tien_san - booking.tien_coc)
-        
-    # Lấy danh sách dịch vụ
-    dich_vus = []
-    for s in booking.su_dung_dich_vus:
-        dich_vus.append(DichVuItemDetail(
-            su_dung_id=s.su_dung_id,
-            dich_vu_id=s.dich_vu_id,
-            ten_dich_vu=s.dich_vu.ten_dich_vu if s.dich_vu else "Dịch vụ",
-            don_vi_tinh=s.dich_vu.don_vi_tinh if s.dich_vu else "Phần",
-            danh_muc=s.dich_vu.danh_muc if s.dich_vu else "KHAC",
-            don_gia=s.don_gia_tai_ban,
-            so_luong=s.so_luong,
-            thanh_tien=s.thanh_tien
-        ))
+        tong_thanh_toan = max(0, tien_san + tong_dich_vu - booking.tien_coc)
         
     # Lấy phương thức cọc
     phuong_thuc_coc = None

@@ -376,17 +376,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('reg-email').value.trim();
         
         // Client validations
+        if (!username || username.length < 3) {
+            showAuthAlert("Tên đăng nhập phải có ít nhất 3 ký tự!");
+            document.getElementById('reg-username').classList.add('input-invalid');
+            return;
+        }
+
+        // Kiểm tra tên đăng nhập: Không dấu, không khoảng trắng, chỉ gồm a-z, 0-9, _, -
+        const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+        if (!usernameRegex.test(username)) {
+            showAuthAlert("Tên đăng nhập không được có dấu tiếng Việt, không chứa khoảng trắng hay ký tự đặc biệt (chỉ dùng a-z, 0-9, _ hoặc -)!");
+            document.getElementById('reg-username').classList.add('input-invalid');
+            return;
+        } else {
+            document.getElementById('reg-username').classList.remove('input-invalid');
+        }
+
+        if (pass.includes(' ')) {
+            showAuthAlert("Mật khẩu không được chứa khoảng trắng!");
+            document.getElementById('reg-password').classList.add('input-invalid');
+            return;
+        }
+
+        if (pass.length < 6) {
+            showAuthAlert("Mật khẩu phải có độ dài tối thiểu 6 ký tự!");
+            document.getElementById('reg-password').classList.add('input-invalid');
+            return;
+        } else {
+            document.getElementById('reg-password').classList.remove('input-invalid');
+        }
+
         if (pass !== confirmPass) {
             showAuthAlert("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại!");
             document.getElementById('reg-confirm-password').classList.add('input-invalid');
             return;
         } else {
             document.getElementById('reg-confirm-password').classList.remove('input-invalid');
-        }
-        
-        if (pass.length < 6) {
-            showAuthAlert("Mật khẩu phải có độ dài tối thiểu 6 ký tự!");
-            return;
         }
         
         const phoneRegex = /^(03|05|07|08|09)\d{8}$/;
@@ -437,8 +462,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Main App Initialization
     // ==========================================
     function initApp() {
+        const todayIso = new Date().toISOString().split('T')[0];
         document.getElementById('query-date-input').value = currentSelectedDate;
-        document.getElementById('bk-date').value = currentSelectedDate;
+        const bkDateInput = document.getElementById('bk-date');
+        if (bkDateInput) {
+            bkDateInput.value = currentSelectedDate;
+            bkDateInput.min = todayIso;
+        }
         
         // Clear listeners and attach them
         initEventListeners();
@@ -496,6 +526,11 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchSchedule();
         };
         
+        const fltCourtSelect = document.getElementById('filter-court-select');
+        if (fltCourtSelect) {
+            fltCourtSelect.onchange = () => fetchSchedule();
+        }
+
         document.getElementById('btn-refresh-schedule').onclick = () => fetchSchedule();
         document.getElementById('btn-refresh-bookings').onclick = () => fetchBookings();
         
@@ -600,6 +635,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modalBDetail) {
             modalBDetail.onclick = (e) => {
                 if (e.target === modalBDetail) window.closeBookingDetailModal();
+            };
+        }
+
+        // User Profile Modal listeners
+        const sidebarUserPanel = document.getElementById('sidebar-user-panel');
+        if (sidebarUserPanel) sidebarUserPanel.onclick = () => window.showUserProfileModal();
+
+        const topbarUserBtn = document.getElementById('topbar-user-btn');
+        if (topbarUserBtn) topbarUserBtn.onclick = () => window.showUserProfileModal();
+
+        const btnCloseProfile = document.getElementById('btn-close-profile-modal');
+        if (btnCloseProfile) btnCloseProfile.onclick = () => window.closeUserProfileModal();
+
+        const btnCloseProfileFooter = document.getElementById('btn-close-profile-footer');
+        if (btnCloseProfileFooter) btnCloseProfileFooter.onclick = () => window.closeUserProfileModal();
+
+        const btnProfileLogout = document.getElementById('uprofile-btn-logout');
+        if (btnProfileLogout) btnProfileLogout.onclick = () => {
+            window.closeUserProfileModal();
+            logout();
+        };
+
+        const modalUserProfile = document.getElementById('modal-user-profile');
+        if (modalUserProfile) {
+            modalUserProfile.onclick = (e) => {
+                if (e.target === modalUserProfile) window.closeUserProfileModal();
             };
         }
 
@@ -729,12 +790,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const statReputation = document.getElementById('cust-stat-reputation');
         const statDepositPaid = document.getElementById('cust-stat-deposit-paid');
         
-        if (myListEl) myListEl.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải lịch thi đấu của bạn...</div>`;
+        if (myListEl) {
+            myListEl.innerHTML = buildRadarScannerHtml({
+                title: "RADAR TRẬN ĐẤU CỦA BẠN",
+                badge: "FIXTURES SCANNER",
+                icon: "⚽",
+                stepMsg: "Đang kết nối lịch thi đấu cá nhân & trạng thái cọc...",
+                stepTextId: "cust-radar-step-text",
+                progressInnerId: "cust-radar-progress-inner",
+                type: "cards"
+            });
+        }
+        
+        const radarTimers = createRadarStepTimers("cust-radar-progress-inner", "cust-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-satellite-dish"></i> Đang xác thực điểm uy tín & số tiền cọc đã đóng...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-network-wired"></i> Đồng bộ hóa các trận đấu chờ cọc & sắp diễn ra...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất giao diện trận đấu...' }
+        ]);
         
         try {
-            const res = await fetch('/api/dat-san/bookings', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [res] = await Promise.all([
+                fetch('/api/dat-san/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
+            radarTimers.clear();
             if (res.ok) {
                 const allBookings = await res.json();
                 const myBookings = allBookings.filter(b => b.ma_khach_hang === currentUser.tai_khoan_id && b.trang_thai !== 'da_huy');
@@ -805,6 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (e) {
+            radarTimers.clear();
             console.error("Lỗi fetch lịch cá nhân:", e);
             if (myListEl) myListEl.innerHTML = `<div class="error-text">Không thể kết xuất dữ liệu thi đấu cá nhân.</div>`;
         }
@@ -817,12 +899,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const statPending = document.getElementById('staff-stat-pending');
         const statCompleted = document.getElementById('staff-stat-completed');
         
-        if (staffListEl) staffListEl.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải lịch vận hành ca trực...</div>`;
+        if (staffListEl) {
+            staffListEl.innerHTML = buildRadarScannerHtml({
+                title: "RADAR CA TRỰC VẬN HÀNH HÔM NAY",
+                badge: "DUTY SCANNER",
+                icon: "🏟️",
+                stepMsg: "Đang quét danh sách các trận đấu diễn ra trong ngày...",
+                stepTextId: "staff-radar-step-text",
+                progressInnerId: "staff-radar-progress-inner",
+                type: "cards"
+            });
+        }
+        
+        const radarTimers = createRadarStepTimers("staff-radar-progress-inner", "staff-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-calendar-check"></i> Phân loại các trận cần check-in nhận sân & bàn giao bóng...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-stopwatch"></i> Kiểm tra các đơn quá hạn cọc 10P và đơn đang thi đấu...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất danh sách ca trực...' }
+        ]);
         
         try {
-            const res = await fetch('/api/dat-san/bookings', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [res] = await Promise.all([
+                fetch('/api/dat-san/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
+            radarTimers.clear();
             if (res.ok) {
                 const allBookings = await res.json();
                 const todayStr = currentSelectedDate;
@@ -884,6 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (e) {
+            radarTimers.clear();
             console.error("Lỗi fetch lịch staff:", e);
             if (staffListEl) staffListEl.innerHTML = `<div class="error-text">Không thể kết xuất dữ liệu ca trực.</div>`;
         }
@@ -894,13 +997,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const todayCountEl = document.getElementById('dash-today-count');
         
         if (upcomingListEl) {
-            upcomingListEl.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải lịch thi đấu hôm nay...</div>`;
+            upcomingListEl.innerHTML = buildRadarScannerHtml({
+                title: "RADAR ĐẤU TRƯỜNG ARENA HÔM NAY",
+                badge: "ARENA SCANNER",
+                icon: "⚡",
+                stepMsg: "Đang kết nối trung tâm điều hành toàn bộ sân bãi...",
+                stepTextId: "adm-radar-step-text",
+                progressInnerId: "adm-radar-progress-inner",
+                type: "cards"
+            });
         }
         
+        const radarTimers = createRadarStepTimers("adm-radar-progress-inner", "adm-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-bolt text-warning"></i> Quét tình trạng đèn chiếu sáng & thiết bị sân...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-chart-line text-primary"></i> Tổng hợp các lượt đặt sân 7 và sân 11 trong ngày...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất bảng đấu trường...' }
+        ]);
+        
         try {
-            const bookingsRes = await fetch('/api/dat-san/bookings', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [bookingsRes] = await Promise.all([
+                fetch('/api/dat-san/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
+            radarTimers.clear();
             if (bookingsRes.ok) {
                 const allBookings = await bookingsRes.json();
                 
@@ -969,6 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (e) {
+            radarTimers.clear();
             console.error("Lỗi fetch lịch admin:", e);
             if (upcomingListEl) upcomingListEl.innerHTML = `<div class="error-text">Không thể kết xuất dữ liệu thi đấu.</div>`;
         }
@@ -998,7 +1120,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     window.closeBookingDetailModal = () => {
         const modal = document.getElementById('modal-booking-detail');
-        if (modal) modal.classList.remove('active');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
     };
 
     window.showBookingDetailModal = async (maDon) => {
@@ -1006,20 +1131,50 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modal) return;
 
         // Reset and show modal with loading state
+        modal.style.display = 'flex';
         modal.classList.add('active');
-        document.getElementById('bdetail-madon').textContent = maDon;
-        document.getElementById('bdetail-pitch-name').textContent = "Đang tải dữ liệu...";
-        document.getElementById('bdetail-client-name').textContent = "Đang tải...";
-        document.getElementById('bdetail-client-phone').textContent = "Đang tải...";
-        document.getElementById('bdetail-services-tbody').innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 20px;"><i class="fa-solid fa-circle-notch fa-spin text-primary"></i> Đang tải thông tin sân và dịch vụ...</td></tr>`;
-        document.getElementById('bdetail-services-empty').style.display = 'none';
-        document.getElementById('bdetail-services-tfoot').style.display = 'table-footer-group';
-        document.getElementById('bdetail-dynamic-actions').innerHTML = '';
+
+        const elMadon = document.getElementById('bdetail-madon') || document.getElementById('bdetail-code');
+        if (elMadon) elMadon.textContent = maDon;
+        const elPitchName = document.getElementById('bdetail-pitch-name') || document.getElementById('bdetail-title');
+        if (elPitchName) elPitchName.textContent = "Đang tải dữ liệu...";
+        const elClientName = document.getElementById('bdetail-client-name');
+        if (elClientName) elClientName.textContent = "Đang tải...";
+        const elClientPhone = document.getElementById('bdetail-client-phone');
+        if (elClientPhone) elClientPhone.textContent = "Đang tải...";
+        const elTbody = document.getElementById('bdetail-services-tbody');
+        if (elTbody) {
+            elTbody.innerHTML = buildRadarScannerHtml({
+                title: `CHI TIẾT TRẬN ĐẤU (${maDon})`,
+                badge: "MATCH SCANNER",
+                icon: "📋",
+                stepMsg: "Đang truy xuất thông tin đơn, tiền cọc & dịch vụ phát sinh...",
+                stepTextId: "bdetail-radar-step-text",
+                progressInnerId: "bdetail-radar-progress-inner",
+                type: "table",
+                cols: 7,
+                isTableTbody: true
+            });
+        }
+        const modalTimers = createRadarStepTimers("bdetail-radar-progress-inner", "bdetail-radar-step-text", [
+            { delay: 250, width: "65%", html: '<i class="fa-solid fa-bottle-water text-primary"></i> Đang tải danh sách nước giải khát, đồ thuê & cọc thực tế...' },
+            { delay: 550, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất chi tiết trận đấu...' }
+        ]);
+        const elEmpty = document.getElementById('bdetail-services-empty');
+        if (elEmpty) elEmpty.style.display = 'none';
+        const elTfoot = document.getElementById('bdetail-services-tfoot');
+        if (elTfoot) elTfoot.style.display = 'table-footer-group';
+        const elActions = document.getElementById('bdetail-dynamic-actions');
+        if (elActions) elActions.innerHTML = '';
 
         try {
-            const res = await fetch(`/api/dat-san/booking/${encodeURIComponent(maDon)}/detail`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [res] = await Promise.all([
+                fetch(`/api/dat-san/booking/${encodeURIComponent(maDon)}/detail`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 750))
+            ]);
+            modalTimers.clear();
 
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
@@ -1029,8 +1184,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             // Populate Header & Status
-            document.getElementById('bdetail-madon').textContent = data.ma_don;
-            const statusBadgeEl = document.getElementById('bdetail-status-badge');
+            if (elMadon) elMadon.textContent = data.ma_don;
+            const statusBadgeEl = document.getElementById('bdetail-status-badge') || document.getElementById('bdetail-badge');
             let statusText = 'ĐÃ XÁC NHẬN';
             let badgeClass = 'badge-confirmed';
             let statusIcon = '<i class="fa-solid fa-circle-check"></i>';
@@ -1052,21 +1207,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 badgeClass = 'badge-danger';
                 statusIcon = '<i class="fa-solid fa-ban"></i>';
             }
-            statusBadgeEl.className = `fixture-status-badge ${badgeClass}`;
-            statusBadgeEl.innerHTML = `${statusIcon} ${statusText}`;
+            if (statusBadgeEl) {
+                statusBadgeEl.className = `fixture-status-badge ${badgeClass}`;
+                statusBadgeEl.innerHTML = `${statusIcon} ${statusText}`;
+            }
 
             // Pitch Info
-            document.getElementById('bdetail-pitch-name').textContent = data.san ? data.san.ten_san : data.ma_san;
-            document.getElementById('bdetail-court-type').textContent = data.san && data.san.loai_san ? (data.san.loai_san.ten_loai || formatCourtType(data.san.loai_san)) : 'Sân bóng đá';
-            document.getElementById('bdetail-pitch-location').textContent = (data.san && data.san.vi_tri) ? data.san.vi_tri : 'Khu vực chính';
-            document.getElementById('bdetail-match-date').textContent = formatDateString(data.ngay_da);
-            document.getElementById('bdetail-match-time').textContent = `${data.gio_bat_dau.slice(0, 5)} - ${data.gio_ket_thuc.slice(0, 5)}`;
-            document.getElementById('bdetail-note').textContent = data.ghi_chu || 'Không có ghi chú thêm';
+            if (elPitchName) elPitchName.textContent = data.san ? data.san.ten_san : data.ma_san;
+            const elCourtType = document.getElementById('bdetail-court-type') || document.getElementById('bdetail-pitch-type');
+            if (elCourtType) elCourtType.textContent = data.san && data.san.loai_san ? (data.san.loai_san.ten_loai || formatCourtType(data.san.loai_san)) : 'Sân bóng đá';
+            const elLocation = document.getElementById('bdetail-pitch-location');
+            if (elLocation) elLocation.textContent = (data.san && data.san.vi_tri) ? data.san.vi_tri : 'Khu vực chính';
+            const elMatchDate = document.getElementById('bdetail-match-date');
+            if (elMatchDate) elMatchDate.textContent = formatDateString(data.ngay_da);
+            const elMatchTime = document.getElementById('bdetail-match-time');
+            if (elMatchTime) elMatchTime.textContent = `${data.gio_bat_dau.slice(0, 5)} - ${data.gio_ket_thuc.slice(0, 5)}`;
+            const elNote = document.getElementById('bdetail-note');
+            if (elNote) elNote.textContent = data.ghi_chu || 'Không có ghi chú thêm';
 
             // Customer & Financial Info
-            document.getElementById('bdetail-client-name').textContent = data.khach_hang_ten || 'Khách hàng vãng lai';
-            document.getElementById('bdetail-client-phone').textContent = data.khach_hang_sdt || 'Chưa cung cấp';
-            document.getElementById('bdetail-pitch-price').textContent = `${Number(data.tien_san || 0).toLocaleString()}đ`;
+            if (elClientName) elClientName.textContent = data.khach_hang_ten || 'Khách hàng vãng lai';
+            if (elClientPhone) elClientPhone.textContent = data.khach_hang_sdt || 'Chưa cung cấp';
+            // Financial calculations
+            const tienSan = Number(data.tien_san || 0);
+            const tienCoc = Number(data.tien_coc || 0);
+            
+            // Calculate total services accurately from items
+            const services = data.dich_vus || [];
+            let sumServices = 0;
+            services.forEach(s => {
+                const sDonGia = Number((s.don_gia !== undefined && s.don_gia !== null) ? s.don_gia : (s.don_gia_tai_ban || 0));
+                const sThanhTien = Number((s.thanh_tien !== undefined && s.thanh_tien !== null) ? s.thanh_tien : (sDonGia * (s.so_luong || 1)));
+                sumServices += sThanhTien;
+            });
+            const tongDichVu = (data.tong_dich_vu !== undefined && data.tong_dich_vu > 0) ? Number(data.tong_dich_vu) : sumServices;
+            
+            // Total remaining to pay = Sân + Dịch vụ - Cọc đã trả
+            const remainingToPay = Math.max(0, tienSan + tongDichVu - tienCoc);
+
+            const elPitchPrice = document.getElementById('bdetail-pitch-price');
+            if (elPitchPrice) elPitchPrice.textContent = `${tienSan.toLocaleString()}đ`;
+
+            const elSubServices = document.getElementById('bdetail-sub-services-price');
+            if (elSubServices) elSubServices.textContent = `${tongDichVu.toLocaleString()}đ`;
+
+            const elRemaining = document.getElementById('bdetail-remaining-price');
+            if (elRemaining) elRemaining.textContent = `${remainingToPay.toLocaleString()}đ`;
 
             // Deposit formatted
             let pMethodStr = 'Chưa nạp';
@@ -1079,29 +1265,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 pMethodStr = methodMap[data.phuong_thuc_coc] || data.phuong_thuc_coc;
             }
-            const depositText = data.tien_coc > 0 
-                ? `${Number(data.tien_coc).toLocaleString()}đ (${pMethodStr})`
+            const depositText = tienCoc > 0 
+                ? `${tienCoc.toLocaleString()}đ (${pMethodStr})`
                 : 'Chưa đặt cọc (0đ)';
-            document.getElementById('bdetail-deposit-paid').textContent = depositText;
-
-            // Remaining balance for pitch
-            const pitchBalance = Math.max(0, (data.tien_san || 0) - (data.tien_coc || 0));
-            document.getElementById('bdetail-remaining-price').textContent = `${pitchBalance.toLocaleString()}đ`;
+            const elDeposit = document.getElementById('bdetail-deposit-paid');
+            if (elDeposit) elDeposit.textContent = depositText;
 
             // Services Table
-            const services = data.dich_vus || [];
-            document.getElementById('bdetail-service-count').textContent = `${services.length} món`;
-            const tbody = document.getElementById('bdetail-services-tbody');
-            const emptyEl = document.getElementById('bdetail-services-empty');
-            const tfoot = document.getElementById('bdetail-services-tfoot');
+            const elServiceCount = document.getElementById('bdetail-service-count');
+            if (elServiceCount) elServiceCount.textContent = `${services.length} món`;
 
             if (services.length === 0) {
-                tbody.innerHTML = '';
-                emptyEl.style.display = 'block';
-                tfoot.style.display = 'none';
+                if (elTbody) elTbody.innerHTML = '';
+                if (elEmpty) elEmpty.style.display = 'block';
+                if (elTfoot) elTfoot.style.display = 'none';
             } else {
-                emptyEl.style.display = 'none';
-                tfoot.style.display = 'table-footer-group';
+                if (elEmpty) elEmpty.style.display = 'none';
+                if (elTfoot) elTfoot.style.display = 'table-footer-group';
                 
                 const categoryLabels = {
                     'NUOC_UONG': '<span class="badge badge-xs badge-info" style="background: rgba(0,240,255,0.15); color: var(--primary);">Nước giải khát</span>',
@@ -1109,24 +1289,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     'KHAC': '<span class="badge badge-xs badge-secondary">Khác</span>'
                 };
 
-                tbody.innerHTML = services.map((s, idx) => {
-                    const catBadge = categoryLabels[s.danh_muc] || `<span class="badge badge-xs">${s.danh_muc || 'Dịch vụ'}</span>`;
-                    return `
-                        <tr>
-                            <td style="text-align: center; color: var(--text-muted); font-weight: 600;">${idx + 1}</td>
-                            <td><strong style="color: var(--text-bright);">${s.ten_dich_vu}</strong></td>
-                            <td>${catBadge}</td>
-                            <td style="color: var(--text-muted);">${s.don_vi_tinh || 'Lượt'}</td>
-                            <td style="text-align: right; color: var(--text-main);">${Number(s.don_gia_tai_ban).toLocaleString()}đ</td>
-                            <td style="text-align: center;"><span class="badge badge-secondary" style="font-size: 0.85rem; font-weight: 700; padding: 2px 8px;">x${s.so_luong}</span></td>
-                            <td style="text-align: right; font-weight: 700; color: var(--primary);">${Number(s.thanh_tien).toLocaleString()}đ</td>
-                        </tr>
-                    `;
-                }).join('');
+                if (elTbody) {
+                    elTbody.innerHTML = services.map((s, idx) => {
+                        const catBadge = categoryLabels[s.danh_muc] || `<span class="badge badge-xs">${s.danh_muc || 'Dịch vụ'}</span>`;
+                        const donGia = Number((s.don_gia !== undefined && s.don_gia !== null) ? s.don_gia : (s.don_gia_tai_ban || 0));
+                        const thanhTien = Number((s.thanh_tien !== undefined && s.thanh_tien !== null) ? s.thanh_tien : (donGia * (s.so_luong || 1)));
+                        return `
+                            <tr>
+                                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">${idx + 1}</td>
+                                <td><strong style="color: var(--text-bright);">${s.ten_dich_vu}</strong></td>
+                                <td>${catBadge}</td>
+                                <td style="color: var(--text-muted);">${s.don_vi_tinh || 'Lượt'}</td>
+                                <td style="text-align: right; color: var(--text-main); font-weight: 600;">${donGia.toLocaleString()}đ</td>
+                                <td style="text-align: center;"><span class="badge badge-secondary" style="font-size: 0.85rem; font-weight: 700; padding: 2px 8px;">x${s.so_luong}</span></td>
+                                <td style="text-align: right; font-weight: 700; color: var(--primary);">${thanhTien.toLocaleString()}đ</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
             }
 
-            document.getElementById('bdetail-services-total').textContent = `${Number(data.tong_dich_vu || 0).toLocaleString()}đ`;
-            document.getElementById('bdetail-grand-total').textContent = `${Number(data.tong_thanh_toan || 0).toLocaleString()}đ`;
+            const elTotalServices = document.getElementById('bdetail-services-total');
+            if (elTotalServices) elTotalServices.textContent = `${tongDichVu.toLocaleString()}đ`;
+            const elGrandTotal = document.getElementById('bdetail-grand-total');
+            if (elGrandTotal) elGrandTotal.textContent = `${remainingToPay.toLocaleString()}đ`;
 
             // Quick Add Service Button Handler
             const btnQuickAddService = document.getElementById('btn-quick-add-service');
@@ -1224,6 +1410,115 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(err.message, 'error');
         }
     };
+
+    // ==========================================
+    // User Profile Modal Controller
+    // ==========================================
+    window.closeUserProfileModal = () => {
+        const modal = document.getElementById('modal-user-profile');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    };
+
+    window.showUserProfileModal = async () => {
+        const modal = document.getElementById('modal-user-profile');
+        if (!modal) return;
+
+        // Nếu chưa có currentUser hoặc cần làm mới thông tin mới nhất từ API
+        if (!currentUser) {
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    currentUser = await res.json();
+                }
+            } catch (e) {
+                console.error("Không thể lấy profile mới nhất:", e);
+            }
+        }
+
+        if (!currentUser) {
+            showToast("Vui lòng đăng nhập để xem thông tin cá nhân!", "warning");
+            return;
+        }
+
+        // Điền dữ liệu vào Modal
+        const elFullName = document.getElementById('uprofile-fullname');
+        if (elFullName) elFullName.textContent = currentUser.ho_ten || 'Người Dùng';
+
+        const elUsername = document.getElementById('uprofile-username');
+        if (elUsername) elUsername.textContent = currentUser.ten_dang_nhap || '---';
+
+        const elRoleBadge = document.getElementById('uprofile-role-badge');
+        if (elRoleBadge) {
+            elRoleBadge.textContent = currentUser.vai_tro || 'CUSTOMER';
+            if (currentUser.vai_tro === 'ADMIN') {
+                elRoleBadge.style.color = '#ef4444';
+                elRoleBadge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                elRoleBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+            } else if (currentUser.vai_tro === 'STAFF') {
+                elRoleBadge.style.color = '#f59e0b';
+                elRoleBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+                elRoleBadge.style.background = 'rgba(245, 158, 11, 0.15)';
+            } else {
+                elRoleBadge.style.color = 'var(--primary)';
+                elRoleBadge.style.borderColor = 'rgba(0, 240, 255, 0.4)';
+                elRoleBadge.style.background = 'rgba(0, 240, 255, 0.15)';
+            }
+        }
+
+        const elPhone = document.getElementById('uprofile-phone');
+        if (elPhone) elPhone.textContent = currentUser.so_dien_thoai || 'Chưa cập nhật';
+
+        const elEmail = document.getElementById('uprofile-email');
+        if (elEmail) elEmail.textContent = currentUser.email || 'Chưa liên kết email';
+
+        const elRep = document.getElementById('uprofile-reputation');
+        if (elRep) elRep.textContent = `${currentUser.diem_uy_tin !== undefined ? currentUser.diem_uy_tin : 100} / 100 ⭐`;
+
+        const elId = document.getElementById('uprofile-id');
+        if (elId) elId.textContent = `#TK-${String(currentUser.tai_khoan_id || 1).padStart(2, '0')}`;
+
+        const elRoleDesc = document.getElementById('uprofile-role-desc');
+        if (elRoleDesc) {
+            if (currentUser.vai_tro === 'ADMIN') elRoleDesc.textContent = 'Quản trị viên toàn quyền hệ thống';
+            else if (currentUser.vai_tro === 'STAFF') elRoleDesc.textContent = 'Nhân viên lễ tân & điều hành sân';
+            else elRoleDesc.textContent = 'Khách hàng đặt sân tiêu chuẩn';
+        }
+
+        const elStatus = document.getElementById('uprofile-status');
+        if (elStatus) {
+            if (currentUser.trang_thai === 'active') {
+                elStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đang hoạt động`;
+                elStatus.style.color = '#10b981';
+            } else {
+                elStatus.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Đang tạm khóa`;
+                elStatus.style.color = '#ef4444';
+            }
+        }
+
+        const elAvatarIcon = document.getElementById('uprofile-avatar-icon');
+        if (elAvatarIcon) {
+            if (currentUser.vai_tro === 'ADMIN') {
+                elAvatarIcon.className = 'fa-solid fa-user-shield';
+                elAvatarIcon.style.color = '#ef4444';
+            } else if (currentUser.vai_tro === 'STAFF') {
+                elAvatarIcon.className = 'fa-solid fa-user-tie';
+                elAvatarIcon.style.color = '#f59e0b';
+            } else {
+                elAvatarIcon.className = 'fa-solid fa-user';
+                elAvatarIcon.style.color = 'var(--primary)';
+            }
+        }
+
+        // Hiển thị modal
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    };
+
     
     function formatNotifTime(dateStr) {
         if (!dateStr) return '';
@@ -1450,6 +1745,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fltCourt.innerHTML = courtsList.map(c => 
                 `<option value="${c.ma}">${c.ten_san}</option>`
             ).join('');
+            fltCourt.onchange = () => fetchSchedule();
             
             admPricingSan.innerHTML = courtsList.map(c => 
                 `<option value="${c.ma}">${c.ten_san}</option>`
@@ -1468,25 +1764,154 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // ==========================================
+    // Unified High-Tech Live Radar Scanner Loader
+    // ==========================================
+    function buildRadarScannerHtml({
+        title = "SÂN THỂ THAO VICTORY ARENA",
+        badge = "LIVE SCANNER",
+        icon = "⚽",
+        stepMsg = "Đang kết nối cảm biến sân & cơ sở dữ liệu...",
+        stepTextId = "radar-step-text",
+        progressInnerId = "radar-progress-inner",
+        type = "table", // 'table' | 'cards'
+        cols = 8,
+        isTableTbody = false
+    }) {
+        const loaderBox = `
+            <div class="schedule-loader-box" style="margin: 6px 0; width: 100%;">
+                <div class="radar-scanner-wrapper">
+                    <div class="radar-rings">
+                        <div class="radar-ring-outer"></div>
+                        <div class="radar-ring-inner"></div>
+                        <div class="radar-center-ball">${icon}</div>
+                    </div>
+                    <div class="radar-info">
+                        <div class="radar-title">
+                            <span class="radar-badge-live"><span class="radar-dot"></span> ${badge}</span>
+                            <h4>${title}</h4>
+                        </div>
+                        <div class="radar-status-msg" id="${stepTextId}">
+                            <i class="fa-solid fa-satellite-dish"></i> ${stepMsg}
+                        </div>
+                        <div class="radar-progress-bar-wrap">
+                            <div class="radar-progress-bar" id="${progressInnerId}" style="width: 25%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                ${type === 'cards' ? `
+                    <div class="skeleton-matrix-grid">
+                        ${[1, 2, 3, 4].map(() => `
+                            <div class="skeleton-slot-card" style="padding: 14px 18px;">
+                                <div class="skeleton-left">
+                                    <div class="skeleton-bar skeleton-time" style="width: 150px; height: 16px;"></div>
+                                    <div class="skeleton-bar skeleton-price" style="width: 100px; height: 13px;"></div>
+                                </div>
+                                <div class="skeleton-bar skeleton-status" style="width: 110px; height: 26px;"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <div class="skeleton-table-grid">
+                        ${[1, 2, 3, 4].map(() => `
+                            <div class="skeleton-table-row">
+                                <div class="skeleton-cell w-15"></div>
+                                <div class="skeleton-cell w-20"></div>
+                                <div class="skeleton-cell w-25"></div>
+                                <div class="skeleton-cell w-15"></div>
+                                <div class="skeleton-cell w-badge"></div>
+                                <div class="skeleton-cell w-btn"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        `;
+
+        if (isTableTbody) {
+            return `<tr><td colspan="${cols}" style="padding: 10px 4px; border: none; background: transparent;">${loaderBox}</td></tr>`;
+        }
+        return loaderBox;
+    }
+
+    function createRadarStepTimers(progressInnerId, stepTextId, steps) {
+        const timerIds = [];
+        steps.forEach(({ delay, width, html }) => {
+            const tId = setTimeout(() => {
+                const pInner = document.getElementById(progressInnerId);
+                const pText = document.getElementById(stepTextId);
+                if (pInner && width) pInner.style.width = width;
+                if (pText && html) pText.innerHTML = html;
+            }, delay);
+            timerIds.push(tId);
+        });
+        return {
+            clear: () => timerIds.forEach(id => clearTimeout(id))
+        };
+    }
+    
     async function fetchSchedule() {
         const scheduleMatrix = document.getElementById('schedule-matrix');
-        const courtId = document.getElementById('filter-court-select').value;
+        const courtSelect = document.getElementById('filter-court-select');
+        const courtId = courtSelect ? courtSelect.value : null;
         if (!courtId) return;
         
-        scheduleMatrix.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải ma trận khung giờ...</div>`;
+        const courtName = (courtSelect.options && courtSelect.selectedIndex >= 0) 
+            ? courtSelect.options[courtSelect.selectedIndex].text 
+            : 'Sân bóng đá';
+        
+        const btnRefresh = document.getElementById('btn-refresh-schedule');
+        const originalBtnHtml = btnRefresh ? btnRefresh.innerHTML : '';
+        
+        if (btnRefresh) {
+            btnRefresh.disabled = true;
+            btnRefresh.innerHTML = `<i class="fa-solid fa-rotate fa-spin"></i> Đang tải...`;
+        }
+        if (courtSelect) courtSelect.disabled = true;
+        
+        // Render High-Tech Live Radar & Skeleton Loader
+        scheduleMatrix.innerHTML = buildRadarScannerHtml({
+            title: courtName,
+            badge: "LIVE SCANNER",
+            icon: "⚽",
+            stepMsg: "Đang kết nối cảm biến sân & cơ sở dữ liệu...",
+            stepTextId: "radar-step-text",
+            progressInnerId: "radar-progress-inner",
+            type: "cards"
+        });
+        
+        // Step progression timers for dynamic realistic feeling
+        const radarTimers = createRadarStepTimers("radar-progress-inner", "radar-step-text", [
+            { delay: 350, width: "60%", html: '<i class="fa-solid fa-magnifying-glass-chart"></i> Đang truy vấn ma trận lịch thi đấu & bảo trì...' },
+            { delay: 750, width: "88%", html: '<i class="fa-solid fa-network-wired"></i> Đồng bộ tình trạng đặt cọc & khung giờ trống...' },
+            { delay: 1150, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất giao diện...' }
+        ]);
         
         try {
-            const res = await fetch(`/api/dat-san/schedule?ngay=${currentSelectedDate}&san_id=${courtId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            // Chạy song song API fetch và độ trễ 1.4s
+            const [res] = await Promise.all([
+                fetch(`/api/dat-san/schedule?ngay=${currentSelectedDate}&san_id=${courtId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 1400))
+            ]);
+            
+            radarTimers.clear();
+            
             const data = await res.json();
             
-            if (data.slots.length === 0) {
-                scheduleMatrix.innerHTML = `<div class="placeholder-text">Không có khung giờ nào khả dụng trong ngày.</div>`;
+            if (!data.slots || data.slots.length === 0) {
+                scheduleMatrix.innerHTML = `
+                    <div class="placeholder-text" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                        <i class="fa-solid fa-calendar-xmark" style="font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+                        Không có khung giờ nào khả dụng trong ngày được chọn.
+                    </div>
+                `;
                 return;
             }
             
-            let html = `<div class="matrix-grid">`;
+            let html = `<div class="matrix-grid fade-in">`;
             data.slots.forEach(slot => {
                 let statusClass = slot.trang_thai.toLowerCase();
                 let statusLabel = "";
@@ -1510,7 +1935,17 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `</div>`;
             scheduleMatrix.innerHTML = html;
         } catch (e) {
-            scheduleMatrix.innerHTML = `<div class="error-text">Không thể kết nối đến máy chủ.</div>`;
+            clearTimeout(step1);
+            clearTimeout(step2);
+            clearTimeout(step3);
+            console.error("Lỗi fetchSchedule:", e);
+            scheduleMatrix.innerHTML = `<div class="error-text" style="padding: 30px; text-align: center; color: var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; margin-bottom: 8px; display: block;"></i>Không thể kết nối đến máy chủ để tải lịch sân.</div>`;
+        } finally {
+            if (btnRefresh) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = `<i class="fa-solid fa-rotate"></i> Làm mới`;
+            }
+            if (courtSelect) courtSelect.disabled = false;
         }
     }
     
@@ -1534,12 +1969,45 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchBookings() {
         const tableBody = document.getElementById('bookings-table-body');
         const badgeCount = document.getElementById('badge-active-bookings');
-        tableBody.innerHTML = `<tr><td colspan="8" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải danh sách sân đã đặt...</td></tr>`;
+        if (!tableBody) return;
+
+        const btnRefresh = document.getElementById('btn-refresh-bookings');
+        const origBtnText = btnRefresh ? btnRefresh.innerHTML : '';
+        if (btnRefresh) {
+            btnRefresh.disabled = true;
+            btnRefresh.innerHTML = `<i class="fa-solid fa-rotate fa-spin"></i> Đang tải...`;
+        }
+
+        tableBody.innerHTML = buildRadarScannerHtml({
+            title: "QUẢN LÝ ĐƠN ĐẶT SÂN (ACTIVE)",
+            badge: "BOOKING SCANNER",
+            icon: "📋",
+            stepMsg: "Đang kết nối danh mục đơn đặt sân & trạng thái cọc...",
+            stepTextId: "bk-radar-step-text",
+            progressInnerId: "bk-radar-progress-inner",
+            type: "table",
+            cols: 8,
+            isTableTbody: true
+        });
+
+        const radarTimers = createRadarStepTimers("bk-radar-progress-inner", "bk-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-stopwatch text-warning"></i> Rà soát hạn giữ chỗ 10P & trạng thái duyệt cọc...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-network-wired"></i> Đồng bộ các trận đấu chờ cọc, đã xác nhận và đang thi đấu...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất bảng dữ liệu...' }
+        ]);
         
         try {
-            const res = await fetch('/api/dat-san/bookings', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [res] = await Promise.all([
+                fetch('/api/dat-san/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
+            radarTimers.clear();
+            if (btnRefresh) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origBtnText || `<i class="fa-solid fa-arrows-rotate"></i> Tải lại`;
+            }
             const bookings = await res.json();
             
             // Lọc các đơn active: chờ cọc, đã xác nhận, đang đá
@@ -1629,6 +2097,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             tableBody.innerHTML = html;
         } catch (e) {
+            radarTimers.clear();
+            if (btnRefresh) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origBtnText || `<i class="fa-solid fa-arrows-rotate"></i> Tải lại`;
+            }
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Lỗi tải danh sách sân đã đặt.</td></tr>`;
         }
     }
@@ -1636,12 +2109,44 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchBookingHistory() {
         const tableBody = document.getElementById('history-table-body');
         if (!tableBody) return;
-        tableBody.innerHTML = `<tr><td colspan="8" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải lịch sử đặt sân...</td></tr>`;
+
+        const btnRefresh = document.getElementById('btn-refresh-history');
+        const origBtnText = btnRefresh ? btnRefresh.innerHTML : '';
+        if (btnRefresh) {
+            btnRefresh.disabled = true;
+            btnRefresh.innerHTML = `<i class="fa-solid fa-rotate fa-spin"></i> Đang tải...`;
+        }
+
+        tableBody.innerHTML = buildRadarScannerHtml({
+            title: "HỒ SƠ LỊCH SỬ THI ĐẤU & HÓA ĐƠN",
+            badge: "ARCHIVE SCANNER",
+            icon: "📜",
+            stepMsg: "Đang kết nối cơ sở dữ liệu hồ sơ lịch sử đặt sân...",
+            stepTextId: "hist-radar-step-text",
+            progressInnerId: "hist-radar-progress-inner",
+            type: "table",
+            cols: 8,
+            isTableTbody: true
+        });
+
+        const radarTimers = createRadarStepTimers("hist-radar-progress-inner", "hist-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-box-archive"></i> Đang trích xuất các trận đấu đã hoàn tất & đã hủy...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-file-invoice-dollar"></i> Đồng bộ hóa chi tiết hóa đơn quyết toán & mã QR...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất bảng lịch sử...' }
+        ]);
 
         try {
-            const res = await fetch('/api/dat-san/bookings', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [res] = await Promise.all([
+                fetch('/api/dat-san/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
+            radarTimers.clear();
+            if (btnRefresh) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origBtnText || `<i class="fa-solid fa-arrows-rotate"></i> Tải lại`;
+            }
             const bookings = await res.json();
             
             // Lịch sử: các đơn đã hoàn tất hoặc đã hủy
@@ -1651,6 +2156,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderFilteredBookingHistory("");
         } catch (e) {
+            radarTimers.clear();
+            if (btnRefresh) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = origBtnText || `<i class="fa-solid fa-arrows-rotate"></i> Tải lại`;
+            }
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Lỗi tải dữ liệu lịch sử đặt sân.</td></tr>`;
         }
     }
@@ -1837,19 +2347,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function fetchOperationsData() {
-        // Load danh mục dịch vụ phục vụ cho thêm nước ngọt/đồ thuê
-        try {
-            const res = await fetch('/api/dich-vu', {
-                headers: { 'Authorization': `Bearer ${token}` }
+        const radarBox = document.getElementById('operations-radar-box');
+        if (radarBox) {
+            radarBox.innerHTML = buildRadarScannerHtml({
+                title: "TRUNG TÂM VẬN HÀNH CA TRỰC SÂN BÃI",
+                badge: "OPS SCANNER",
+                icon: "⚡",
+                stepMsg: "Đang kết nối trung tâm điều hành bàn giao sân & dịch vụ...",
+                stepTextId: "ops-radar-step-text",
+                progressInnerId: "ops-radar-progress-inner",
+                type: "cards"
             });
+        }
+        const radarTimers = createRadarStepTimers("ops-radar-progress-inner", "ops-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-bottle-water text-primary"></i> Đang tải bảng giá dịch vụ nước giải khát & áo bib...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-clipboard-check text-warning"></i> Kiểm tra các đơn sân đang thi đấu sẵn sàng phục vụ...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hệ thống vận hành sẵn sàng ghi nhận Check-in & Dịch vụ!' }
+        ]);
+
+        try {
+            const [res] = await Promise.all([
+                fetch('/api/dich-vu', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 950))
+            ]);
+            radarTimers.clear();
             const services = await res.json();
             
             const sSelect = document.getElementById('op-service-id');
-            sSelect.innerHTML = services.map(s => 
-                `<option value="${s.dich_vu_id}">${s.ten_dich_vu} - ${s.don_gia.toLocaleString()}đ/${s.don_vi_tinh}</option>`
-            ).join('');
+            if (sSelect) {
+                sSelect.innerHTML = services.map(s => 
+                    `<option value="${s.dich_vu_id}">${s.ten_dich_vu} - ${s.don_gia.toLocaleString()}đ/${s.don_vi_tinh}</option>`
+                ).join('');
+            }
+            if (radarBox) {
+                setTimeout(() => {
+                    radarBox.innerHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-md); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; animation: matrixSlotsFadeIn 0.3s ease-out;">
+                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #6ee7b7;">
+                                <i class="fa-solid fa-satellite-dish fa-beat text-success" style="font-size: 1.1rem;"></i>
+                                <span><strong>VẬN HÀNH TRỰC TUYẾN:</strong> Đã đồng bộ ${services.length} mặt hàng dịch vụ & sẵn sàng tiếp nhận Check-in / Quyết toán.</span>
+                            </div>
+                            <span class="radar-badge-live" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);"><span class="radar-dot" style="background: #10b981;"></span> SẴN SÀNG</span>
+                        </div>
+                    `;
+                }, 350);
+            }
         } catch (e) {
+            radarTimers.clear();
             console.error("Lỗi fetch dịch vụ:", e);
+            if (radarBox) radarBox.innerHTML = '';
         }
     }
 
@@ -1868,6 +2416,24 @@ document.addEventListener('DOMContentLoaded', () => {
             ghi_chu: document.getElementById('bk-note').value || null,
             phuong_thuc_thanh_toan: document.getElementById('bk-payment-method').value
         };
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (data.ngay_da < todayStr) {
+            showToast("Không thể đặt sân vào ngày trong quá khứ", "warning");
+            return;
+        }
+
+        const [sh, sm] = data.gio_bat_dau.split(':').map(Number);
+        const [eh, em] = data.gio_ket_thuc.split(':').map(Number);
+        const durationMin = (eh * 60 + em) - (sh * 60 + sm);
+        if (durationMin < 30) {
+            showToast("Thời gian đặt sân tối thiểu là 30 phút", "warning");
+            return;
+        }
+        if (durationMin > 240) {
+            showToast("Thời gian đặt sân tối đa mỗi ca là 4 tiếng (240 phút)", "warning");
+            return;
+        }
         
         try {
             const res = await fetch('/api/dat-san/booking', {
@@ -1930,26 +2496,69 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesEl.insertAdjacentHTML('beforeend', userMsgHtml);
         messagesEl.scrollTop = messagesEl.scrollHeight;
         
-        // 3. Tạo placeholder tải thông tin AI
+        // 3. Tạo placeholder tải thông tin AI với hoạt ảnh Neural Thinking cao cấp
         const loadingId = "chatbot-loading-" + Date.now();
         const loadingMsgHtml = `
             <div class="chatbot-message ai" id="${loadingId}">
-                <div class="ai-avatar"><i class="fa-solid fa-sparkles"></i></div>
-                <div class="msg-text"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang quét khung giờ trống...</div>
+                <div class="ai-avatar"><i class="fa-solid fa-brain" style="color: #38bdf8; animation: radarBallPulse 1.2s infinite;"></i></div>
+                <div class="msg-text" style="width: 100%;">
+                    <div class="chatbot-ai-thinking-box">
+                        <div class="ai-thinking-header">
+                            <i class="fa-solid fa-sparkles"></i> AI ĐANG SUY NGHĨ & PHÂN TÍCH
+                            <div class="ai-thinking-dots">
+                                <span class="ai-thinking-dot"></span>
+                                <span class="ai-thinking-dot"></span>
+                                <span class="ai-thinking-dot"></span>
+                            </div>
+                        </div>
+                        <div class="ai-thinking-step" id="${loadingId}-step">
+                            <i class="fa-solid fa-magnifying-glass"></i> Đang phân tích nhu cầu tìm sân & dịch vụ...
+                        </div>
+                        <div class="ai-msg-skeleton">
+                            <div class="ai-skel-line w-95"></div>
+                            <div class="ai-skel-line w-80"></div>
+                            <div class="ai-skel-line w-60"></div>
+                            <div class="ai-skel-card">
+                                <div class="ai-skel-line" style="width: 40%; background: rgba(0,240,255,0.2);"></div>
+                                <div class="ai-skel-line" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
         messagesEl.insertAdjacentHTML('beforeend', loadingMsgHtml);
         messagesEl.scrollTop = messagesEl.scrollHeight;
         
+        // Dynamic step telemetry timers for realistic AI thinking
+        const stepEl = document.getElementById(`${loadingId}-step`);
+        const t1 = setTimeout(() => {
+            if (stepEl) stepEl.innerHTML = `<i class="fa-solid fa-bolt text-warning"></i> Đang quét dữ liệu ma trận lịch trống & bảng giá...`;
+        }, 450);
+        const t2 = setTimeout(() => {
+            if (stepEl) stepEl.innerHTML = `<i class="fa-solid fa-filter text-primary"></i> Đang đối chiếu các khung giờ và sân phù hợp nhất...`;
+        }, 900);
+        const t3 = setTimeout(() => {
+            if (stepEl) stepEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-success"></i> Đang sinh câu trả lời & thẻ đặt sân trực quan...`;
+        }, 1300);
+        
         try {
-            const res = await fetch('/api/ai/consult', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ user_prompt: promptInput, ngay_mong_muon: currentSelectedDate })
-            });
+            // Chạy song song API fetch và độ trễ 1.5s để tạo trải nghiệm AI suy luận chân thật
+            const [res] = await Promise.all([
+                fetch('/api/ai/consult', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ user_prompt: promptInput, ngay_mong_muon: currentSelectedDate })
+                }),
+                new Promise(resolve => setTimeout(resolve, 1500))
+            ]);
+            
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
             
             // Xóa placeholder tải thông tin
             const loadEl = document.getElementById(loadingId);
@@ -1989,7 +2598,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const aiMsgHtml = `
-                <div class="chatbot-message ai">
+                <div class="chatbot-message ai" style="animation: matrixSlotsFadeIn 0.3s ease-out;">
                     <div class="ai-avatar"><i class="fa-solid fa-sparkles"></i></div>
                     <div class="msg-text">
                         ${data.assistant_message}
@@ -2001,6 +2610,9 @@ document.addEventListener('DOMContentLoaded', () => {
             messagesEl.scrollTop = messagesEl.scrollHeight;
             
         } catch (e) {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
             const loadEl = document.getElementById(loadingId);
             if (loadEl) loadEl.remove();
             
@@ -2055,12 +2667,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function handleOpAddService() {
-        const maDon = document.getElementById('op-service-madon').value;
+        const maDon = (document.getElementById('op-service-madon').value || '').trim();
         const serviceId = parseInt(document.getElementById('op-service-id').value);
         const qty = parseInt(document.getElementById('op-service-quantity').value);
         
         if (!maDon || !serviceId) {
             showToast("Vui lòng nhập mã đơn đặt sân đang hoạt động!", "warning");
+            return;
+        }
+        if (isNaN(qty) || qty <= 0) {
+            showToast("Số lượng dịch vụ phải lớn hơn 0", "warning");
+            return;
+        }
+        if (qty > 100) {
+            showToast("Số lượng dịch vụ thêm một lần không được vượt quá 100", "warning");
             return;
         }
         
@@ -2195,44 +2815,135 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleAIReport() {
         const summary = document.getElementById('ai-insight-summary');
         const list = document.getElementById('ai-promotions-list');
+        const btnLoad = document.getElementById('btn-load-ai-insights');
+        const originalBtnHtml = btnLoad ? btnLoad.innerHTML : '';
         
-        summary.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> AI đang kết nối, truy xuất dữ liệu doanh thu thực tế và tổng hợp báo cáo...</div>`;
-        list.innerHTML = "";
+        if (btnLoad) {
+            btnLoad.disabled = true;
+            btnLoad.innerHTML = `<i class="fa-solid fa-rotate fa-spin"></i> AI Đang Phân Tích...`;
+        }
+        
+        // Render High-Tech Neural Analytics Scanner & Skeleton Loading
+        summary.innerHTML = `
+            <div class="ai-report-loader-box">
+                <div class="ai-neural-scanner-wrapper">
+                    <div class="ai-neural-rings">
+                        <div class="ai-neural-ring-outer"></div>
+                        <div class="ai-neural-ring-inner"></div>
+                        <div class="ai-neural-center-icon"><i class="fa-solid fa-brain"></i></div>
+                    </div>
+                    <div class="ai-neural-info">
+                        <div class="ai-neural-title">
+                            <span class="ai-neural-badge"><span class="radar-dot"></span> NEURAL ANALYTICS</span>
+                            <h4>Mô Hình AI Đang Phân Tích Hiệu Suất & Đề Xuất Tối Ưu</h4>
+                        </div>
+                        <div class="ai-neural-status-msg" id="ai-rep-step-text">
+                            <i class="fa-solid fa-satellite-dish"></i> Đang trích xuất dữ liệu doanh thu 7 ngày qua...
+                        </div>
+                        <div class="ai-neural-progress-wrap">
+                            <div class="ai-neural-progress-bar" id="ai-rep-progress-inner" style="width: 25%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skeleton Executive Summary Box -->
+                <div class="ai-skeleton-summary-box">
+                    <div class="ai-skel-line" style="width: 45%; height: 18px; background: rgba(56, 189, 248, 0.25);"></div>
+                    <div class="ai-skel-line w-95"></div>
+                    <div class="ai-skel-line w-80"></div>
+                    <div class="ai-skel-line w-60"></div>
+                    <div class="ai-skel-line" style="width: 35%; height: 16px; background: rgba(16, 185, 129, 0.2); margin-top: 6px;"></div>
+                </div>
+            </div>
+        `;
+        
+        list.innerHTML = `
+            <div class="ai-skeleton-promos-grid">
+                ${[1, 2, 3].map(() => `
+                    <div class="ai-skeleton-promo-card">
+                        <div class="ai-skel-line" style="width: 55%; height: 16px; background: rgba(139, 92, 246, 0.25);"></div>
+                        <div class="ai-skel-line w-95"></div>
+                        <div class="ai-skel-line w-80"></div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        const pInner = document.getElementById('ai-rep-progress-inner');
+        const pText = document.getElementById('ai-rep-step-text');
+        
+        const step1 = setTimeout(() => {
+            if (pInner) pInner.style.width = '55%';
+            if (pText) pText.innerHTML = `<i class="fa-solid fa-chart-pie text-primary"></i> Đang tính toán tỷ lệ lấp đầy & phân loại khung giờ cao điểm...`;
+        }, 450);
+        
+        const step2 = setTimeout(() => {
+            if (pInner) pInner.style.width = '85%';
+            if (pText) pText.innerHTML = `<i class="fa-solid fa-lightbulb text-warning"></i> AI đang sinh chiến lược khuyến mãi giờ thấp điểm (Off-Peak)...`;
+        }, 950);
+        
+        const step3 = setTimeout(() => {
+            if (pInner) pInner.style.width = '100%';
+            if (pText) pText.innerHTML = `<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang kết xuất báo cáo thông minh...`;
+        }, 1400);
         
         const tuNgay = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString().split('T')[0];
         const denNgay = new Date().toISOString().split('T')[0];
         
         try {
-            const res = await fetch('/api/ai/report', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ tu_ngay: tuNgay, den_ngay: denNgay })
-            });
+            // Chạy song song API fetch và độ trễ 1.6s
+            const [res] = await Promise.all([
+                fetch('/api/ai/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ tu_ngay: tuNgay, den_ngay: denNgay })
+                }),
+                new Promise(resolve => setTimeout(resolve, 1600))
+            ]);
+            
+            clearTimeout(step1);
+            clearTimeout(step2);
+            clearTimeout(step3);
             
             if (res.ok) {
                 const data = await res.json();
                 summary.innerHTML = `
-                    <div style="font-size: 14px; line-height: 1.6; color: #f1f5f9; padding: 10px;">
-                        <h4 style="color: #34d399; margin-bottom: 10px;"><i class="fa-solid fa-sparkles"></i> Phân Tích Tổng Quan Bằng Trí Tuệ Nhân Tạo:</h4>
-                        ${data.tom_tat}
-                        <div style="margin-top: 15px; font-weight: 600;">Tỷ lệ lấp đầy trung bình tuần qua: <span style="color: #34d399;">${data.ty_le_lap_day}%</span></div>
+                    <div style="font-size: 14px; line-height: 1.6; color: #f1f5f9; padding: 14px; animation: matrixSlotsFadeIn 0.35s ease-out;">
+                        <h4 style="color: #34d399; margin-bottom: 10px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-sparkles"></i> Phân Tích Tổng Quan Bằng Trí Tuệ Nhân Tạo:
+                        </h4>
+                        <div style="margin-bottom: 14px; color: var(--text-main); font-size: 0.95rem;">${data.tom_tat}</div>
+                        <div style="margin-top: 15px; font-weight: 700; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-chart-simple text-success"></i> Tỷ lệ lấp đầy trung bình tuần qua: <span style="color: #34d399; font-size: 1.1rem;">${data.ty_le_lap_day}%</span>
+                        </div>
                     </div>
                 `;
                 
                 list.innerHTML = data.de_xuat.map(dx => `
-                    <div class="promo-card">
+                    <div class="promo-card" style="animation: matrixSlotsFadeIn 0.4s ease-out;">
                         <div class="promo-header"><i class="fa-solid fa-percent"></i> Đề Xuất Tối Ưu Lấp Đầy</div>
                         <div class="promo-body">${dx}</div>
                     </div>
                 `).join('');
             } else {
-                summary.innerHTML = `<div class="error-text">Lỗi phân tích AI. Vui lòng kiểm tra lại GEMINI_API_KEY.</div>`;
+                summary.innerHTML = `<div class="error-text" style="padding: 24px; text-align: center; color: var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.6rem; margin-bottom: 8px; display: block;"></i>Lỗi phân tích AI. Vui lòng kiểm tra lại cấu hình GEMINI_API_KEY.</div>`;
+                list.innerHTML = "";
             }
         } catch (e) {
-            summary.innerHTML = `<div class="error-text">Không thể kết nối.</div>`;
+            clearTimeout(step1);
+            clearTimeout(step2);
+            clearTimeout(step3);
+            console.error("Lỗi handleAIReport:", e);
+            summary.innerHTML = `<div class="error-text" style="padding: 24px; text-align: center; color: var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.6rem; margin-bottom: 8px; display: block;"></i>Không thể kết nối đến dịch vụ AI.</div>`;
+            list.innerHTML = "";
+        } finally {
+            if (btnLoad) {
+                btnLoad.disabled = false;
+                btnLoad.innerHTML = originalBtnHtml || `<i class="fa-solid fa-wand-magic-sparkles"></i> Phân Tích Doanh Thu AI`;
+            }
         }
     }
     
@@ -2313,10 +3024,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('admin-courts-table-body');
         if (!tbody) return;
         
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải dữ liệu sân bóng...</td></tr>';
+        tbody.innerHTML = buildRadarScannerHtml({
+            title: "CẤU HÌNH DANH MỤC SÂN BÃI (ARENA)",
+            badge: "COURT SCANNER",
+            icon: "🏟️",
+            stepMsg: "Đang kết nối thông số kỹ thuật sân bãi & bảng giá...",
+            stepTextId: "adm-c-radar-step-text",
+            progressInnerId: "adm-c-radar-progress-inner",
+            type: "table",
+            cols: 7,
+            isTableTbody: true
+        });
+
+        const radarTimers = createRadarStepTimers("adm-c-radar-progress-inner", "adm-c-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-futbol text-primary"></i> Đang quét danh sách sân 7 và sân 11...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-screwdriver-wrench text-warning"></i> Kiểm tra trạng thái hoạt động & bảo trì...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang hiển thị danh mục sân...' }
+        ]);
         
         try {
-            const res = await fetch('/api/san');
+            const [res] = await Promise.all([
+                fetch('/api/san'),
+                new Promise(resolve => setTimeout(resolve, 950))
+            ]);
+            radarTimers.clear();
             if (!res.ok) throw new Error("Không thể tải danh sách sân");
             const courts = await res.json();
             
@@ -2431,8 +3162,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.handleDeleteCourt = async function(ma, tenSan) {
-        if (!confirm(`Bạn có chắc chắn muốn xóa sân "${tenSan}" (${ma})?\n\n- Nếu sân đã có đơn đặt, hệ thống sẽ tự động chuyển sang "Tạm ngưng" (inactive) để bảo vệ lịch sử hóa đơn.\n- Nếu sân chưa có đơn đặt nào, hệ thống sẽ xóa hoàn toàn.`)) {
+    window.handleDeleteCourt = async function(ma, ten) {
+        if (!confirm(`Bạn có chắc chắn muốn xóa/ngưng hoạt động sân '${ten}' (${ma})?\nLưu ý: Nếu sân đã có lịch đặt, sân sẽ được chuyển sang trạng thái 'Tạm ngưng'.`)) {
             return;
         }
         
@@ -2466,16 +3197,38 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAdminUsersTable() {
         const tbody = document.getElementById('admin-users-table-body');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải danh sách tài khoản...</td></tr>';
+
+        tbody.innerHTML = buildRadarScannerHtml({
+            title: "QUẢN TRỊ HỒ SƠ TÀI KHOẢN NGƯỜI DÙNG",
+            badge: "USERS SCANNER",
+            icon: "👥",
+            stepMsg: "Đang kết nối danh bạ thành viên & phân quyền hệ thống...",
+            stepTextId: "adm-u-radar-step-text",
+            progressInnerId: "adm-u-radar-progress-inner",
+            type: "table",
+            cols: 8,
+            isTableTbody: true
+        });
+
+        const radarTimers = createRadarStepTimers("adm-u-radar-progress-inner", "adm-u-radar-step-text", [
+            { delay: 300, width: "60%", html: '<i class="fa-solid fa-user-shield text-primary"></i> Đang xác thực phân quyền ADMIN, STAFF và CUSTOMER...' },
+            { delay: 650, width: "88%", html: '<i class="fa-solid fa-address-book"></i> Đồng bộ hóa số điện thoại, email và điểm uy tín...' },
+            { delay: 950, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Hoàn tất! Đang hiển thị bảng tài khoản...' }
+        ]);
 
         try {
-            const res = await fetch('/api/khach-hang', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [res] = await Promise.all([
+                fetch('/api/khach-hang', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                new Promise(resolve => setTimeout(resolve, 950))
+            ]);
+            radarTimers.clear();
             if (!res.ok) throw new Error("Không thể tải danh sách tài khoản");
             cachedAdminUsers = await res.json();
             renderFilteredAdminUsers("");
         } catch (e) {
+            radarTimers.clear();
             tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Lỗi khi tải danh sách người dùng.</td></tr>';
         }
     }

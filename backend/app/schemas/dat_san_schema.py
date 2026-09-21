@@ -8,7 +8,7 @@ class DatSanCreate(BaseModel):
     ngay_da: date
     gio_bat_dau: time
     gio_ket_thuc: time
-    tien_coc: int = 0
+    tien_coc: int = Field(0, ge=0)
     ghi_chu: Optional[str] = None
     phuong_thuc_thanh_toan: str = 'tien_mat'
 
@@ -83,6 +83,7 @@ class DichVuItemDetail(BaseModel):
     don_vi_tinh: str
     danh_muc: str
     don_gia: int
+    don_gia_tai_ban: Optional[int] = None
     so_luong: int
     thanh_tien: int
 

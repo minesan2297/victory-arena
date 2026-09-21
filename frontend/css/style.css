@@ -2674,3 +2674,630 @@ input.input-invalid {
     overflow-y: auto;
     margin-top: 14px;
 }
+
+/* ==========================================
+   Realistic Stadium Schedule Radar & Skeleton Loader
+   ========================================== */
+.schedule-loader-box {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 15, 30, 0.9) 100%);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 0 20px rgba(0, 240, 255, 0.04);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin: 8px 0;
+    backdrop-filter: blur(10px);
+}
+
+.radar-scanner-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+/* Dual Ring Radar with Soccer Ball */
+.radar-rings {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.radar-ring-outer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px dashed rgba(0, 240, 255, 0.85);
+    border-top-color: transparent;
+    animation: stadiumSpinClockwise 1.4s linear infinite;
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
+}
+
+.radar-ring-inner {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(16, 185, 129, 0.85);
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    animation: stadiumSpinCounter 0.9s linear infinite;
+}
+
+.radar-center-ball {
+    font-size: 1.45rem;
+    animation: radarBallPulse 1.2s ease-in-out infinite;
+    z-index: 2;
+    line-height: 1;
+}
+
+.radar-info {
+    flex: 1;
+    min-width: 260px;
+}
+
+.radar-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.radar-badge-live {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+
+.radar-dot {
+    width: 7px;
+    height: 7px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary);
+    animation: radarDotBlink 0.8s infinite alternate;
+}
+
+.radar-title h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-bright);
+}
+
+.radar-status-msg {
+    font-size: 0.86rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    min-height: 22px;
+    font-family: 'Plus Jakarta Sans', monospace, sans-serif;
+}
+
+.radar-status-msg i {
+    color: var(--primary);
+    animation: pulseIcon 1s infinite alternate;
+}
+
+/* Dynamic Smooth Progress Bar */
+.radar-progress-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.radar-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00f0ff, #10b981, #00f0ff);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+    transition: width 0.35s ease-out;
+    animation: gradientMove 1.5s linear infinite;
+}
+
+/* Realistic Skeleton Grid */
+.skeleton-matrix-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.skeleton-slot-card {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-slot-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.09) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerSweep 1.3s infinite;
+}
+
+.skeleton-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skeleton-bar {
+    border-radius: 6px;
+}
+
+.skeleton-time {
+    width: 140px;
+    height: 18px;
+    background: rgba(0, 240, 255, 0.18);
+}
+
+.skeleton-price {
+    width: 85px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.skeleton-status {
+    width: 140px;
+    height: 26px;
+    border-radius: 13px;
+    background: rgba(16, 185, 129, 0.15);
+}
+
+/* Realistic Skeleton Table Grid */
+.skeleton-table-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.skeleton-table-row {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+.skeleton-table-row::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.08) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerSweep 1.3s infinite;
+}
+
+.skeleton-cell {
+    height: 14px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.09);
+    flex-shrink: 0;
+}
+
+.skeleton-cell.w-10 { width: 10%; }
+.skeleton-cell.w-12 { width: 12%; }
+.skeleton-cell.w-15 { width: 15%; }
+.skeleton-cell.w-20 { width: 20%; }
+.skeleton-cell.w-25 { width: 25%; }
+.skeleton-cell.w-30 { width: 30%; }
+.skeleton-cell.w-badge { width: 95px; height: 22px; border-radius: 11px; background: rgba(0, 240, 255, 0.15); }
+.skeleton-cell.w-btn { width: 85px; height: 26px; border-radius: 6px; background: rgba(16, 185, 129, 0.18); margin-left: auto; }
+
+
+/* Keyframe Animations */
+@keyframes stadiumSpinClockwise {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes stadiumSpinCounter {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes radarBallPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.5)); }
+    50% { transform: scale(1.18); filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.85)); }
+}
+
+@keyframes radarDotBlink {
+    0% { opacity: 0.3; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes pulseIcon {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; filter: drop-shadow(0 0 6px var(--primary)); }
+}
+
+@keyframes gradientMove {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+@keyframes shimmerSweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+@keyframes matrixSlotsFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.matrix-grid.fade-in {
+    animation: matrixSlotsFadeIn 0.35s ease-out forwards;
+}
+
+/* ==========================================
+   AI Chatbot Realistic Thinking Animation
+   ========================================== */
+.chatbot-ai-thinking-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.ai-thinking-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    letter-spacing: 0.5px;
+}
+
+.ai-thinking-dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.ai-thinking-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    animation: aiDotBounce 1.2s infinite ease-in-out both;
+}
+
+.ai-thinking-dot:nth-child(1) { animation-delay: -0.32s; }
+.ai-thinking-dot:nth-child(2) { animation-delay: -0.16s; }
+
+.ai-thinking-step {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-style: italic;
+    min-height: 20px;
+    transition: all 0.25s ease;
+}
+
+.ai-thinking-step i {
+    color: #38bdf8;
+}
+
+.ai-msg-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.ai-msg-skeleton::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.15) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerSweep 1.2s infinite;
+}
+
+.ai-skel-line {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+}
+
+.ai-skel-line.w-80 { width: 85%; }
+.ai-skel-line.w-60 { width: 65%; }
+.ai-skel-line.w-95 { width: 95%; }
+
+.ai-skel-card {
+    height: 70px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    margin-top: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ==========================================
+   AI Report & Insights Realistic Neural Analytics Loader
+   ========================================== */
+.ai-report-loader-box {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(8, 14, 28, 0.95) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(56, 189, 248, 0.05);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    margin: 8px 0;
+    backdrop-filter: blur(12px);
+}
+
+.ai-neural-scanner-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.ai-neural-rings {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ai-neural-ring-outer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px dashed rgba(56, 189, 248, 0.85);
+    border-top-color: transparent;
+    animation: stadiumSpinClockwise 1.3s linear infinite;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+}
+
+.ai-neural-ring-inner {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 2px solid rgba(139, 92, 246, 0.85);
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    animation: stadiumSpinCounter 0.8s linear infinite;
+}
+
+.ai-neural-center-icon {
+    font-size: 1.6rem;
+    color: #38bdf8;
+    animation: radarBallPulse 1.2s ease-in-out infinite;
+    z-index: 2;
+    line-height: 1;
+}
+
+.ai-neural-info {
+    flex: 1;
+    min-width: 260px;
+}
+
+.ai-neural-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.ai-neural-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+
+.ai-neural-title h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+}
+
+.ai-neural-status-msg {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    min-height: 22px;
+    font-family: 'Plus Jakarta Sans', monospace, sans-serif;
+}
+
+.ai-neural-status-msg i {
+    color: #38bdf8;
+}
+
+.ai-neural-progress-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.ai-neural-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #38bdf8, #8b5cf6, #10b981);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+    transition: width 0.35s ease-out;
+    animation: gradientMove 1.5s linear infinite;
+}
+
+/* Skeleton for AI Executive Summary */
+.ai-skeleton-summary-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-skeleton-summary-box::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerSweep 1.3s infinite;
+}
+
+/* Skeleton for AI Promotions Grid */
+.ai-skeleton-promos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.ai-skeleton-promo-card {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-skeleton-promo-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerSweep 1.3s infinite;
+}
+
+/* Profile Modal & User Panel Enhancements */
+.user-panel {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.user-panel:hover {
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 240, 255, 0.15);
+}
+
+.topbar-user-profile {
+    padding: 6px 14px;
+    border-radius: 24px;
+    border: 1px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.topbar-user-profile:hover {
+    background: rgba(0, 240, 255, 0.08);
+    border-color: rgba(0, 240, 255, 0.35);
+    box-shadow: 0 4px 16px rgba(0, 240, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.topbar-user-profile:hover .topbar-avatar {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.modal-profile-card {
+    animation: profileModalZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes profileModalZoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+
+

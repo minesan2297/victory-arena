@@ -86,10 +86,11 @@ def test_auth_registration(db_session):
 def test_create_booking_success(db_session):
     """Kiểm tra đặt sân thành công: Khách tạo đơn ở trạng thái cho_coc, sau đó được duyệt da_xac_nhan."""
     customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    future_date = date.today() + timedelta(days=1)
     
     booking_in = DatSanCreate(
         ma_san="SAN5-001",
-        ngay_da=date(2026, 9, 1),
+        ngay_da=future_date,
         gio_bat_dau=time(18, 0),
         gio_ket_thuc=time(19, 30),
         tien_coc=100000.0,
@@ -112,11 +113,12 @@ def test_create_booking_success(db_session):
 def test_anti_overbooking_overlap(db_session):
     """Kiểm tra ngăn chặn đặt trùng giờ (Interval Overlap)."""
     customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    future_date = date.today() + timedelta(days=1)
     
     # Đặt đơn 1: 18:00 - 19:30
     booking1_in = DatSanCreate(
         ma_san="SAN5-001",
-        ngay_da=date(2026, 9, 1),
+        ngay_da=future_date,
         gio_bat_dau=time(18, 0),
         gio_ket_thuc=time(19, 30),
         tien_coc=100000.0
@@ -126,7 +128,7 @@ def test_anti_overbooking_overlap(db_session):
     # Đặt đơn 2: 18:30 - 20:00 (chồng lấn)
     booking2_in = DatSanCreate(
         ma_san="SAN5-001",
-        ngay_da=date(2026, 9, 1),
+        ngay_da=future_date,
         gio_bat_dau=time(18, 30),
         gio_ket_thuc=time(20, 0),
         tien_coc=100000.0
@@ -139,10 +141,11 @@ def test_anti_overbooking_overlap(db_session):
 
 def test_booking_maintenance_lock(db_session):
     """Kiểm tra từ chối đặt sân trong khung giờ đang bảo trì."""
+    future_date = date.today() + timedelta(days=1)
     # Tạo lịch bảo trì từ 14:00 đến 16:00
     maint_in = BaoTriCreate(
         san_id="SAN5-001",
-        ngay_bao_tri=date(2026, 9, 1),
+        ngay_bao_tri=future_date,
         gio_bat_dau=time(14, 0),
         gio_ket_thuc=time(16, 0),
         ly_do="Bảo trì đèn chiếu sáng"
@@ -153,7 +156,7 @@ def test_booking_maintenance_lock(db_session):
     customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
     booking_in = DatSanCreate(
         ma_san="SAN5-001",
-        ngay_da=date(2026, 9, 1),
+        ngay_da=future_date,
         gio_bat_dau=time(14, 30),
         gio_ket_thuc=time(15, 30),
         tien_coc=100000.0
@@ -225,7 +228,7 @@ def test_qr_deposit_generation_and_sandbox(db_session):
     
     booking_in = DatSanCreate(
         ma_san="SAN5-001",
-        ngay_da=date(2026, 9, 2),
+        ngay_da=date.today() + timedelta(days=2),
         gio_bat_dau=time(19, 0),
         gio_ket_thuc=time(20, 30),
         tien_coc=100000.0
@@ -400,5 +403,158 @@ def test_booking_detail_with_services(db_session):
         assert data["dich_vus"][0]["thanh_tien"] == 75000
     finally:
         app.dependency_overrides.clear()
+
+
+def test_booking_rejects_past_date(db_session):
+    """Kiểm tra từ chối tạo đơn đặt sân vào ngày trong quá khứ."""
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    past_date = date.today() - timedelta(days=1)
+    
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=past_date,
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(19, 30),
+        tien_coc=100000.0
+    )
+    with pytest.raises(HTTPException) as exc:
+        DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+    assert exc.value.status_code == 400
+    assert "quá khứ" in exc.value.detail
+
+
+def test_booking_rejects_duration_bounds(db_session):
+    """Kiểm tra chặn thời gian đặt sân quá ngắn (<30 phút) hoặc quá dài (>4 tiếng)."""
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    future_date = date.today() + timedelta(days=2)
+    
+    # 1. Quá ngắn: 18:00 đến 18:20 (20 phút)
+    short_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=future_date,
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(18, 20),
+        tien_coc=100000.0
+    )
+    with pytest.raises(HTTPException) as exc_short:
+        DatSanService.create_booking(db_session, short_in, customer.tai_khoan_id)
+    assert exc_short.value.status_code == 400
+    assert "tối thiểu là 30 phút" in exc_short.value.detail
+
+    # 2. Quá dài: 14:00 đến 19:00 (5 tiếng = 300 phút)
+    long_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=future_date,
+        gio_bat_dau=time(14, 0),
+        gio_ket_thuc=time(19, 0),
+        tien_coc=100000.0
+    )
+    with pytest.raises(HTTPException) as exc_long:
+        DatSanService.create_booking(db_session, long_in, customer.tai_khoan_id)
+    assert exc_long.value.status_code == 400
+    assert "tối đa mỗi lượt là 4 tiếng" in exc_long.value.detail
+
+
+def test_service_usage_quantity_validation(db_session):
+    """Kiểm tra ngăn chặn lỗ hổng thêm dịch vụ có số lượng âm, bằng 0 hoặc vượt quá giới hạn."""
+    from app.models.dich_vu import DanhMucDichVu
+    from app.services.hoa_don_service import HoaDonService
+
+    # 1. Tạo dịch vụ mẫu
+    dv = DanhMucDichVu(
+        ten_dich_vu="Nước khoáng Lavie",
+        don_vi_tinh="Chai",
+        don_gia=10000,
+        danh_muc="NUOC_UONG",
+        trang_thai="active"
+    )
+    db_session.add(dv)
+    db_session.flush()
+
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    staff = db_session.query(TaiKhoan).filter(TaiKhoan.vai_tro.has(ten_vai_tro="STAFF")).first()
+    if not staff:
+        v_staff = db_session.query(VaiTro).filter(VaiTro.ten_vai_tro == "STAFF").first()
+        staff = TaiKhoan(
+            ten_dang_nhap="staff1",
+            mat_khau_hash="hash",
+            ho_ten="Nhân Viên 1",
+            so_dien_thoai="0911222333",
+            vai_tro_id=v_staff.vai_tro_id
+        )
+        db_session.add(staff)
+        db_session.flush()
+
+    # 2. Tạo đơn và check-in chuyển sang dang_da
+    future_date = date.today() + timedelta(days=1)
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=future_date,
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(19, 30),
+        tien_coc=100000.0
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+    DatSanService.xac_nhan_coc(db_session, booking.ma_don, 100000, "tien_mat")
+    HoaDonService.check_in(db_session, booking.ma_don, staff.tai_khoan_id)
+
+    # 3. Thử thêm số lượng âm -> phải bị chặn 400
+    with pytest.raises(HTTPException) as exc_neg:
+        HoaDonService.add_service_usage(db_session, booking.ma_don, dv.dich_vu_id, so_luong=-3)
+    assert exc_neg.value.status_code == 400
+    assert "phải lớn hơn 0" in exc_neg.value.detail
+
+    # 4. Thử thêm số lượng = 0 -> phải bị chặn 400
+    with pytest.raises(HTTPException) as exc_zero:
+        HoaDonService.add_service_usage(db_session, booking.ma_don, dv.dich_vu_id, so_luong=0)
+    assert exc_zero.value.status_code == 400
+    assert "phải lớn hơn 0" in exc_zero.value.detail
+
+    # 5. Thử thêm số lượng quá lớn (> 100) -> phải bị chặn 400
+    with pytest.raises(HTTPException) as exc_large:
+        HoaDonService.add_service_usage(db_session, booking.ma_don, dv.dich_vu_id, so_luong=105)
+    assert exc_large.value.status_code == 400
+    assert "không được vượt quá 100" in exc_large.value.detail
+
+    # 6. Thêm số lượng hợp lệ -> Thành công và tính đúng thành tiền
+    valid_usage = HoaDonService.add_service_usage(db_session, booking.ma_don, dv.dich_vu_id, so_luong=4)
+    assert valid_usage.so_luong == 4
+    assert valid_usage.thanh_tien == 40000
+
+
+def test_reschedule_validation(db_session):
+    """Kiểm tra tính an toàn khi đổi lịch (không được đổi về quá khứ hoặc thời lượng sai)."""
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    future_date = date.today() + timedelta(days=2)
+    past_date = date.today() - timedelta(days=1)
+
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=future_date,
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(19, 30),
+        tien_coc=100000.0
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+
+    # Đổi về ngày quá khứ -> 400
+    with pytest.raises(HTTPException) as exc_past:
+        DatSanService.doi_lich(db_session, DoiLichRequest(
+            ma_don=booking.ma_don,
+            ngay_da_moi=past_date
+        ))
+    assert exc_past.value.status_code == 400
+    assert "quá khứ" in exc_past.value.detail
+
+    # Đổi thời lượng quá ngắn (15 phút) -> 400
+    with pytest.raises(HTTPException) as exc_short:
+        DatSanService.doi_lich(db_session, DoiLichRequest(
+            ma_don=booking.ma_don,
+            gio_bat_dau_moi=time(19, 0),
+            gio_ket_thuc_moi=time(19, 15)
+        ))
+    assert exc_short.value.status_code == 400
+    assert "tối thiểu là 30 phút" in exc_short.value.detail
+
 
 

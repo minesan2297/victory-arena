@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 from app.config import get_settings
 from app.database import engine, Base
@@ -58,6 +59,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Bắt các lỗi validate từ Pydantic và chuyển thành thông báo tiếng Việt thân thiện."""
+    errors = exc.errors()
+    first_error = errors[0] if errors else {}
+    msg = str(first_error.get("msg", "Dữ liệu gửi lên không hợp lệ"))
+    if "Value error, " in msg:
+        msg = msg.replace("Value error, ", "")
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": msg}
+    )
 
 # Đăng ký các API Routers
 app.include_router(auth_router)

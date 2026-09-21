@@ -98,6 +98,17 @@ class HoaDonService:
                 detail="Chỉ có thể thêm dịch vụ khi đang thi đấu (trạng thái Đang đá)"
             )
             
+        if so_luong <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Số lượng dịch vụ phải lớn hơn 0"
+            )
+        if so_luong > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Số lượng dịch vụ thêm một lần không được vượt quá 100"
+            )
+
         service = db.query(DanhMucDichVu).filter(DanhMucDichVu.dich_vu_id == dich_vu_id).first()
         if not service or service.trang_thai != 'active':
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Dịch vụ không tồn tại hoặc đã dừng kinh doanh")
