@@ -1,5 +1,5 @@
 import pytest
-from datetime import date, time, datetime
+from datetime import date, time, datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -113,7 +113,7 @@ def test_ai_promotions_insight(db_session):
 
 def test_ai_consult_rejects_off_topic_prompts(db_session):
     """Kiểm tra AI từ chối các câu hỏi linh tinh, bừa bãi, không liên quan đến sân bóng."""
-    EXPECTED_REJECTION = "Xin lỗi! Điều này không nằm trọng phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
+    EXPECTED_REJECTION = "Xin lỗi! Điều này không nằm trong phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
 
     off_topic_queries = [
         "Thời tiết hôm nay thế nào bạn ơi?",
@@ -142,19 +142,19 @@ def test_ai_consult_service_and_policy_inquiries(db_session):
     """Kiểm tra AI phản hồi đúng nghiệp vụ khi hỏi về dịch vụ và chính sách sân bóng."""
     # 1. Hỏi về dịch vụ nước uống, trang thiết bị
     res_service = AIService.consult_pitch(db_session, user_prompt="Sân mình có bán nước uống Revive hay cho thuê áo bít không?")
-    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res_service.assistant_message
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res_service.assistant_message
     assert "Victory Arena" in res_service.assistant_message
     assert res_service.analyzed_intent.get("intent") == "court_service"
 
     # 2. Hỏi về quy định tiền cọc và hủy lịch
     res_policy = AIService.consult_pitch(db_session, user_prompt="Quy định đặt cọc và chính sách hủy sân hoàn tiền như thế nào?")
-    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res_policy.assistant_message
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res_policy.assistant_message
     assert "10 phút" in res_policy.assistant_message or "cọc" in res_policy.assistant_message
     assert res_policy.analyzed_intent.get("intent") == "court_policy_info"
 
     # 3. Chào hỏi ban đầu
     res_greeting = AIService.consult_pitch(db_session, user_prompt="Xin chào, hỗ trợ tư vấn giúp em với")
-    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res_greeting.assistant_message
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res_greeting.assistant_message
     assert "Victory Arena" in res_greeting.assistant_message
     assert res_greeting.analyzed_intent.get("intent") == "general_greeting"
 
@@ -241,7 +241,7 @@ def test_ai_consult_missing_data_empty_database(db_session):
 
     assert res.co_san_phu_hop is False
     assert len(res.recommended_slots) == 0
-    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res.assistant_message
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res.assistant_message
     assert len(res.assistant_message) > 0
 
 
@@ -275,6 +275,38 @@ def test_ai_consult_edge_empty_and_whitespace_prompt(db_session):
         assert res.co_san_phu_hop is False
         assert len(res.recommended_slots) == 0
         assert res.analyzed_intent.get("intent") == "out_of_scope"
-        assert res.assistant_message == "Xin lỗi! Điều này không nằm trọng phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
+        assert res.assistant_message == "Xin lỗi! Điều này không nằm trong phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
+
+
+def test_ai_consult_followup_and_temporal_queries(db_session):
+    """
+    [TIÊU CHÍ 8 & 10 - KT3] KIỂM THỬ CÂU HỎI THỜI GIAN & NỐI TIẾP TRONG HỘI THOẠI:
+    - 'ngày mai thì sao': Không được coi là out_of_scope! Phải nhận diện ngày mai và trả về lịch trống.
+    - 'thế còn ngày mai': Nhận diện booking intent.
+    - 'sân 11 thì sao': Nhận diện loại sân Sân 11.
+    - 'tối mai có sân không': Nhận diện booking intent.
+    """
+    # 1. "ngày mai thì sao" -> Phải nhận diện hợp lệ và tìm đúng ngày mai
+    res_tomorrow = AIService.consult_pitch(db_session, user_prompt="ngày mai thì sao")
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res_tomorrow.assistant_message
+    assert res_tomorrow.analyzed_intent.get("intent") == "pitch_booking"
+    assert res_tomorrow.co_san_phu_hop is True
+    assert len(res_tomorrow.recommended_slots) > 0
+    assert str(date.today() + timedelta(days=1)) in res_tomorrow.analyzed_intent.get("ngay")
+
+    # 2. "thế còn ngày mai"
+    res_followup = AIService.consult_pitch(db_session, user_prompt="thế còn ngày mai")
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res_followup.assistant_message
+    assert res_followup.analyzed_intent.get("intent") == "pitch_booking"
+
+    # 3. "sân 5 thì sao"
+    res_court5 = AIService.consult_pitch(db_session, user_prompt="sân 5 thì sao")
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res_court5.assistant_message
+    assert res_court5.analyzed_intent.get("loai_san") == "Sân 5"
+
+    # 4. "tối mai có sân không"
+    res_eve = AIService.consult_pitch(db_session, user_prompt="tối mai có sân không")
+    assert "Xin lỗi! Điều này không nằm trong phạm vi" not in res_eve.assistant_message
+    assert res_eve.analyzed_intent.get("intent") == "pitch_booking"
 
 

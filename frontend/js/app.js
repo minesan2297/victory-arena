@@ -2159,12 +2159,14 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(aiMessage, "warning");
     };
 
-    window.quickSelectSlot = (sanId, timeStr) => {
+    window.quickSelectSlot = (sanId, timeStr, customDate = null) => {
         document.getElementById('bk-court-id').value = sanId;
-        const [start, end] = timeStr.split(' - ');
+        const parts = timeStr.includes(' - ') ? timeStr.split(' - ') : timeStr.split('-');
+        const start = parts[0] ? parts[0].trim() : '';
+        const end = parts[1] ? parts[1].trim() : '';
         document.getElementById('bk-start-time').value = start;
         document.getElementById('bk-end-time').value = end;
-        document.getElementById('bk-date').value = currentSelectedDate;
+        document.getElementById('bk-date').value = customDate || currentSelectedDate;
         const depositInp = document.getElementById('bk-deposit');
         if (depositInp) depositInp.value = 100000;
         
@@ -2856,9 +2858,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Tạo các thẻ gợi ý sân bóng khả dụng
             let recommendedHtml = "";
+            const targetDateStr = (data.analyzed_intent && data.analyzed_intent.ngay) ? data.analyzed_intent.ngay : currentSelectedDate;
             if (data.recommended_slots && data.recommended_slots.length > 0) {
                 recommendedHtml = `
-                    <div class="recommended-cards-title" style="margin-top: 12px;">Các Khung Giờ Khả Dụng Được AI Gợi Ý:</div>
+                    <div class="recommended-cards-title" style="margin-top: 12px;">Các Khung Giờ Khả Dụng Được AI Gợi Ý (${formatDateString(targetDateStr)}):</div>
                     <div class="recommended-cards-grid">
                         ${data.recommended_slots.map(slot => `
                             <div class="recommended-card">
@@ -2866,7 +2869,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="rec-time"><i class="fa-regular fa-clock"></i> Khung giờ: ${slot.khung_gio}</div>
                                 <div class="rec-price"><i class="fa-solid fa-tag"></i> Giá: ${slot.don_gia.toLocaleString()}đ</div>
                                 <div class="rec-reason">${slot.ly_do}</div>
-                                <button class="btn btn-xs btn-primary btn-block" onclick="window.quickSelectSlot('${slot.san_id}', '${slot.khung_gio}')" style="margin-top: 10px;">Đặt Giữ Sân</button>
+                                <button class="btn btn-xs btn-primary btn-block" onclick="window.quickSelectSlot('${slot.san_id}', '${slot.khung_gio}', '${targetDateStr}')" style="margin-top: 10px;">Đặt Giữ Sân</button>
                             </div>
                         `).join('')}
                     </div>

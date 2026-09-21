@@ -3,7 +3,7 @@ import unicodedata
 import time as pytime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from datetime import datetime, date, time, timezone
+from datetime import datetime, date, time, timezone, timedelta
 import json
 from typing import Optional, List, Tuple
 import google.generativeai as genai
@@ -20,7 +20,7 @@ from app.services.dat_san_service import DatSanService
 def get_utc_now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
-OUT_OF_SCOPE_RESPONSE = "Xin lỗi! Điều này không nằm trọng phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
+OUT_OF_SCOPE_RESPONSE = "Xin lỗi! Điều này không nằm trong phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
 
 class AIService:
     @classmethod
@@ -113,9 +113,10 @@ class AIService:
     def classify_user_prompt(cls, user_prompt: str) -> Tuple[bool, str]:
         """
         Phân loại câu hỏi của người dùng:
-        - Chỉ chấp nhận các câu hỏi liên quan đến sân bóng, đặt sân, lịch đá, giá tiền, và dịch vụ sân bóng.
+        - Chấp nhận các câu hỏi liên quan đến sân bóng, đặt sân, lịch đá, giá tiền, dịch vụ sân bóng,
+          các câu hỏi thời gian (ngày mai, hôm nay, tối mai, thứ 7...) và câu hỏi nối tiếp (thì sao, còn không...).
         - Trả về (is_relevant: bool, intent: str).
-        - Nếu ngoài phạm vi (linh tinh, bừa bãi, không liên quan) -> return (False, "out_of_scope").
+        - Nếu ngoài phạm vi (linh tinh, bừa bãi, lập trình, giải toán, nấu ăn...) -> return (False, "out_of_scope").
         """
         raw = user_prompt.strip()
         if len(raw) < 2:
@@ -143,6 +144,12 @@ class AIService:
                     continue
                 return False, "out_of_scope"
 
+        # Kiểm tra spam toán học, ký tự vô nghĩa không có nguyên âm
+        if re.match(r'^[\d\s\+\-\*\/\=\?]+$', p_norm):
+            return False, "out_of_scope"
+        if len(p_norm) >= 5 and not any(v in p_norm for v in 'aeiouy'):
+            return False, "out_of_scope"
+
         # 2. Danh mục từ khóa hợp lệ thuộc nghiệp vụ sân bóng
         pitch_keywords = [
             'san', 'san bong', 'san co', 'co nhan tao', 'san 5', 'san 7', 'san 11',
@@ -156,7 +163,24 @@ class AIService:
             'trong', 'bat doi', 'cap keo', 'doi lich', 'huy lich', 'doi san', 'doi gio',
             'hoan coc', 'dat coc', 'tien coc', 'tien san', 'bang gia', 'gia san', 'gia thue',
             'bao nhieu tien', 'bao nhieu 1 gio', 'gia bao nhieu', 'co san khong', 'con san khong',
-            'het san'
+            'het san', 'gia sao', 'dat sao', 'bao nhieu'
+        ]
+
+        temporal_keywords = [
+            'ngay mai', 'ngay kia', 'ngay mot', 'mai', 'hom nay', 'toi nay', 'chieu nay', 'sang nay',
+            'toi mai', 'sang mai', 'chieu mai', 'dem nay', 'trua nay', 'trua mai',
+            'cuoi tuan', 'thu 2', 'thu 3', 'thu 4', 'thu 5', 'thu 6', 'thu 7', 'chu nhat',
+            'thu hai', 'thu ba', 'thu tu', 'thu nam', 'thu sau', 'thu bay',
+            't2', 't3', 't4', 't5', 't6', 't7', 'cn', 'tuan nay', 'tuan sau',
+            'gio nao', 'khung gio', 'may gio', 'slot', 'ca da'
+        ]
+
+        followup_keywords = [
+            'thi sao', 'the con', 'con khong', 'con san', 'co khong', 'co san', 'duoc khong',
+            'the nao', 'sao', 'con gio nao', 'con slot nao', 'co cho nao', 'dat duoc khong',
+            'con trong khong', 'co trong khong', 'xem giup', 'check giup', 'tim giup', 'tra giup',
+            'goi y giup', 'bao gio', 'co slot', 'co gio', 'con slot', 'con gio',
+            'con tran nao', 'da duoc khong'
         ]
 
         service_keywords = [
@@ -177,24 +201,69 @@ class AIService:
         has_booking = any(kw in p_norm for kw in booking_keywords)
         has_service = any(kw in p_norm for kw in service_keywords)
         has_facility_greeting = any(kw in p_norm for kw in facility_greeting_keywords)
+        has_temporal = any(kw in p_norm for kw in temporal_keywords)
+        has_followup = any(kw in p_norm for kw in followup_keywords)
 
-        # Nếu không chứa bất kỳ từ khóa chuyên môn/lời chào hợp lệ nào -> Ngoài phạm vi
-        if not (has_pitch or has_booking or has_service or has_facility_greeting):
+        # Nếu không chứa bất kỳ từ khóa chuyên môn/lời chào/thời gian/câu hỏi hợp lệ nào -> Ngoài phạm vi
+        if not (has_pitch or has_booking or has_service or has_facility_greeting or has_temporal or has_followup):
             return False, "out_of_scope"
 
         # Phân loại intent cụ thể
-        if has_service and not (has_booking and any(k in p_norm for k in ['khung gio', 'gio', 'trong', 'slot', 'toi nay', 'ngay mai'])):
+        if has_service and not (has_booking or has_temporal or any(k in p_norm for k in ['khung gio', 'gio', 'trong', 'slot', 'toi nay', 'ngay mai'])):
             return True, "court_service"
         if any(k in p_norm for k in ['quy dinh', 'noi quy', 'chinh sach', 'hoan coc', 'tien coc', 'dia chi', 'o dau', 'mo cua', 'dong cua']):
             return True, "court_policy_info"
-        if has_facility_greeting and not (has_pitch or has_booking or has_service):
+        if has_facility_greeting and not (has_pitch or has_booking or has_service or has_temporal or has_followup):
             return True, "general_greeting"
 
         return True, "pitch_booking"
 
     @classmethod
+    def extract_target_date(cls, user_prompt: str, base_date: Optional[date] = None) -> date:
+        """
+        Trích xuất ngày đá bóng mong muốn từ câu hỏi của người dùng:
+        - "ngày mai", "mai", "tối mai", "sáng mai", "chiều mai" -> ref_date + 1 ngày
+        - "ngày kia", "ngày mốt", "mốt" -> ref_date + 2 ngày
+        - "hôm nay", "tối nay", "chiều nay" -> date.today()
+        - Định dạng ngày dd/mm hoặc dd/mm/yyyy
+        """
+        today = date.today()
+        ref_date = base_date or today
+        p_norm = cls._remove_accents(user_prompt.strip().lower())
+
+        # 1. Từ khóa tương đối chỉ ngày kia / ngày mốt
+        if any(k in p_norm for k in ['ngay kia', 'ngay mot', 'mốt']):
+            return ref_date + timedelta(days=2)
+
+        # 2. Từ khóa tương đối chỉ ngày mai / mai
+        if any(k in p_norm for k in ['ngay mai', 'toi mai', 'sang mai', 'chieu mai', 'trua mai', 'mai thi sao', 'mai con', 'mai co']):
+            return ref_date + timedelta(days=1)
+        if re.search(r'\bmai\b', p_norm) and not any(k in p_norm for k in ['mai che', 'khuyen mai']):
+            return ref_date + timedelta(days=1)
+
+        # 3. Hôm nay / tối nay / chiều nay -> chính là ref_date
+        if any(k in p_norm for k in ['hom nay', 'toi nay', 'chieu nay', 'sang nay', 'trua nay', 'nay con']):
+            return ref_date
+
+        # 4. Định dạng ngày cụ thể dd/mm hoặc dd/mm/yyyy
+        m = re.search(r'\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{4}))?\b', p_norm)
+        if m:
+            day = int(m.group(1))
+            month = int(m.group(2))
+            year = int(m.group(3)) if m.group(3) else today.year
+            try:
+                parsed = date(year, month, day)
+                if parsed >= today:
+                    return parsed
+            except ValueError:
+                pass
+
+        return ref_date
+
+    @classmethod
     def consult_pitch(cls, db: Session, user_prompt: str, ngay_mong_muon: Optional[date] = None) -> AIConsultResponse:
-        query_date = ngay_mong_muon or date.today()
+        # Tự động trích xuất ngày từ câu hỏi tự nhiên nếu có (VD: "ngày mai thì sao" -> ngày mai)
+        query_date = cls.extract_target_date(user_prompt, ngay_mong_muon)
         
         # 1. Kiểm tra phạm vi câu hỏi
         is_relevant, intent = cls.classify_user_prompt(user_prompt)
@@ -233,6 +302,27 @@ class AIService:
                 for slot in sched.slots:
                     if slot.trang_thai == 'AVAILABLE':
                         available_slots.append(slot)
+
+        # Ưu tiên xếp hạng slot theo khung thời gian mong muốn (sáng / chiều / tối / giờ cao điểm)
+        p_norm = cls._remove_accents(user_prompt.lower())
+        wants_evening = any(k in p_norm for k in ['toi', 'dem', '18h', '19h', '20h', '21h'])
+        wants_morning = any(k in p_norm for k in ['sang', 'som', '6h', '7h', '8h', '9h', '10h'])
+        wants_afternoon = any(k in p_norm for k in ['chieu', 'trua', '14h', '15h', '16h'])
+
+        def slot_sort_key(slot):
+            sh = slot.gio_bat_dau.hour
+            if wants_evening:
+                return 0 if sh >= 17 else 1
+            if wants_morning:
+                return 0 if sh < 12 else 1
+            if wants_afternoon:
+                return 0 if 12 <= sh < 18 else 1
+            # Giờ cao điểm đá bóng thường là 17h-20h
+            if 17 <= sh <= 20:
+                return 0
+            return 1
+
+        available_slots.sort(key=slot_sort_key)
 
         recommended = []
         for slot in available_slots[:3]:
@@ -320,10 +410,17 @@ class AIService:
                 )
             else:
                 slots_str = ", ".join([f"{r.ten_san} ({r.khung_gio} - Giá: {r.don_gia:,.0f}đ)" for r in recommended])
-                if recommended:
-                    assistant_message = f"Hệ thống Victory Arena ghi nhận ngày {query_date.strftime('%d/%m/%Y')} đang còn trống các khung giờ cho {loai_san_khach_tim} như sau: {slots_str}. Quý khách vui lòng chọn khung giờ phù hợp để giữ chỗ trong 10 phút và hoàn tất đặt cọc nhé! ⚽🏟️"
+                if query_date == date.today() + timedelta(days=1):
+                    date_label = f"ngày mai ({query_date.strftime('%d/%m/%Y')})"
+                elif query_date == date.today():
+                    date_label = f"hôm nay ({query_date.strftime('%d/%m/%Y')})"
                 else:
-                    assistant_message = f"Thông báo: Hiện tại loại {loai_san_khach_tim} trong ngày {query_date.strftime('%d/%m/%Y')} đã kín lịch hoặc đang trong thời gian bảo trì. Quý khách vui lòng tham khảo chuyển sang loại sân khác hoặc ngày khác nhé!"
+                    date_label = f"ngày {query_date.strftime('%d/%m/%Y')}"
+
+                if recommended:
+                    assistant_message = f"Hệ thống Victory Arena ghi nhận {date_label} đang còn trống các khung giờ cho {loai_san_khach_tim} như sau: {slots_str}. Quý khách vui lòng chọn khung giờ phù hợp để giữ chỗ trong 10 phút và hoàn tất đặt cọc nhé! ⚽🏟️"
+                else:
+                    assistant_message = f"Thông báo: Hiện tại loại {loai_san_khach_tim} trong {date_label} đã kín lịch hoặc đang trong thời gian bảo trì. Quý khách vui lòng tham khảo chuyển sang loại sân khác hoặc ngày khác nhé!"
 
         return AIConsultResponse(
             assistant_message=assistant_message,
