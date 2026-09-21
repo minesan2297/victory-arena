@@ -2526,7 +2526,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (res.ok) {
                 const data = await res.json();
-                document.getElementById('ai-zalo-text').innerText = data.noi_dung_tin_nhan;
+                document.getElementById('ai-zalo-text').innerHTML = renderAIMarkdown(data.noi_dung_tin_nhan);
                 document.getElementById('modal-ai-notification').classList.add('active');
                 fetchNotifications();
             } else {
@@ -2745,6 +2745,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function handleChatbotSubmit() {
         const inputEl = document.getElementById('chatbot-user-input');
+        const sendBtn = document.getElementById('btn-chatbot-send');
         const messagesEl = document.getElementById('chatbot-messages');
         const promptInput = inputEl.value.trim();
         
@@ -2753,8 +2754,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // 1. Xóa nội dung nhập
+        // 1. Xóa nội dung nhập & Khóa tương tác trong khi AI đang xử lý (Tiêu chí 10 - KT3 UX)
         inputEl.value = "";
+        inputEl.disabled = true;
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+        }
         
         // 2. Thêm tin nhắn của User
         const userMsgHtml = `
@@ -2766,7 +2772,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesEl.insertAdjacentHTML('beforeend', userMsgHtml);
         messagesEl.scrollTop = messagesEl.scrollHeight;
         
-        // 3. Tạo placeholder tải thông tin AI với hoạt ảnh Neural Thinking cao cấp
+        // 3. Tạo placeholder tải thông tin AI với hoạt ảnh Neural Thinking cao cấp (Tiêu chí 6 & 10 - KT3)
         const loadingId = "chatbot-loading-" + Date.now();
         const loadingMsgHtml = `
             <div class="chatbot-message ai" id="${loadingId}">
@@ -2774,7 +2780,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="msg-text" style="width: 100%;">
                     <div class="chatbot-ai-thinking-box">
                         <div class="ai-thinking-header">
-                            <i class="fa-solid fa-sparkles"></i> AI ĐANG SUY NGHĨ & PHÂN TÍCH
+                            <i class="fa-solid fa-sparkles"></i> AI ĐANG PHÂN TÍCH & TÌM KHUNG GIỜ PHÙ HỢP
                             <div class="ai-thinking-dots">
                                 <span class="ai-thinking-dot"></span>
                                 <span class="ai-thinking-dot"></span>
@@ -2852,7 +2858,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let recommendedHtml = "";
             if (data.recommended_slots && data.recommended_slots.length > 0) {
                 recommendedHtml = `
-                    <div class="recommended-cards-title">Các Khung Giờ Khả Dụng Được AI Gợi Ý:</div>
+                    <div class="recommended-cards-title" style="margin-top: 12px;">Các Khung Giờ Khả Dụng Được AI Gợi Ý:</div>
                     <div class="recommended-cards-grid">
                         ${data.recommended_slots.map(slot => `
                             <div class="recommended-card">
@@ -2871,7 +2877,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="chatbot-message ai" style="animation: matrixSlotsFadeIn 0.3s ease-out;">
                     <div class="ai-avatar"><i class="fa-solid fa-sparkles"></i></div>
                     <div class="msg-text">
-                        ${data.assistant_message}
+                        ${renderAIMarkdown(data.assistant_message)}
                         ${recommendedHtml}
                     </div>
                 </div>
@@ -2894,6 +2900,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             messagesEl.insertAdjacentHTML('beforeend', errMsgHtml);
             messagesEl.scrollTop = messagesEl.scrollHeight;
+        } finally {
+            if (inputEl) {
+                inputEl.disabled = false;
+                inputEl.focus();
+            }
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i>`;
+            }
         }
     }
     
@@ -3185,7 +3200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h4 style="color: #34d399; margin-bottom: 10px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
                             <i class="fa-solid fa-sparkles"></i> Phân Tích Tổng Quan Bằng Trí Tuệ Nhân Tạo:
                         </h4>
-                        <div style="margin-bottom: 14px; color: var(--text-main); font-size: 0.95rem;">${data.tom_tat}</div>
+                        <div style="margin-bottom: 14px; color: var(--text-main); font-size: 0.95rem;">${renderAIMarkdown(data.tom_tat)}</div>
                         <div style="margin-top: 15px; font-weight: 700; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;">
                             <i class="fa-solid fa-chart-simple text-success"></i> Tỷ lệ lấp đầy trung bình tuần qua: <span style="color: #34d399; font-size: 1.1rem;">${data.ty_le_lap_day}%</span>
                         </div>
@@ -3195,7 +3210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 list.innerHTML = data.de_xuat.map(dx => `
                     <div class="promo-card" style="animation: matrixSlotsFadeIn 0.4s ease-out;">
                         <div class="promo-header"><i class="fa-solid fa-percent"></i> Đề Xuất Tối Ưu Lấp Đầy</div>
-                        <div class="promo-body">${dx}</div>
+                        <div class="promo-body">${renderAIMarkdown(dx)}</div>
                     </div>
                 `).join('');
             } else {
@@ -3787,5 +3802,45 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'FOOTBALL_11') return 'Sân 11';
         if (type === 'FUTSAL') return 'Futsal';
         return type;
+    }
+
+    /**
+     * Chuyển đổi cú pháp Markdown của AI sang HTML an toàn và chuẩn typography (Tiêu chí 6 & 10 - KT3)
+     */
+    function renderAIMarkdown(rawText) {
+        if (!rawText) return '';
+        let text = String(rawText).trim();
+
+        // 1. Thoát mã HTML chống XSS
+        let html = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        // 2. Tiêu đề Markdown
+        html = html.replace(/^###\s+(.*$)/gim, '<h5 class="ai-md-h5">$1</h5>');
+        html = html.replace(/^##\s+(.*$)/gim, '<h4 class="ai-md-h4">$1</h4>');
+        html = html.replace(/^#\s+(.*$)/gim, '<h3 class="ai-md-h3">$1</h3>');
+
+        // 3. In đậm & In nghiêng
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="ai-bold">$1</strong>');
+        html = html.replace(/__(.+?)__/g, '<strong class="ai-bold">$1</strong>');
+        html = html.replace(/\*([^\*\n]+?)\*/g, '<em>$1</em>');
+        html = html.replace(/`([^`\n]+?)`/g, '<code class="ai-inline-code">$1</code>');
+
+        // 4. Trích dẫn Blockquote
+        html = html.replace(/^&gt;\s+(.*$)/gim, '<blockquote class="ai-md-quote">$1</blockquote>');
+
+        // 5. Danh sách gạch đầu dòng (Bullet lists)
+        html = html.replace(/^[\-\*]\s+(.*$)/gim, '<li class="ai-md-li">$1</li>');
+        html = html.replace(/(<li class="ai-md-li">[\s\S]*?<\/li>(?:\s*<li class="ai-md-li">[\s\S]*?<\/li>)*)/gi, '<ul class="ai-md-ul">$1</ul>');
+
+        // 6. Xuống dòng chuẩn
+        html = html.replace(/\n\n+/g, '<br><br>');
+        html = html.replace(/\n/g, '<br>');
+        html = html.replace(/<br>\s*(<\/?(ul|li|h3|h4|h5|blockquote)>)/gi, '$1');
+        html = html.replace(/(<\/?(ul|li|h3|h4|h5|blockquote)>)\s*<br>/gi, '$1');
+
+        return `<div class="ai-markdown-content">${html}</div>`;
     }
 });

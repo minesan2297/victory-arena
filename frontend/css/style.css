@@ -3434,5 +3434,106 @@ input.input-invalid {
     }
 }
 
+/* ==========================================
+   AI Markdown Content & Rich Typography (Tiêu chí 6 & 10 - KT3)
+   ========================================== */
+.ai-markdown-content {
+    line-height: 1.65;
+    color: #e2e8f0;
+    font-size: 0.92rem;
+}
+
+.ai-markdown-content p {
+    margin-bottom: 8px;
+}
+
+.ai-markdown-content p:last-child {
+    margin-bottom: 0;
+}
+
+.ai-bold {
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+.ai-md-h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    margin: 12px 0 8px 0;
+}
+
+.ai-md-h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #34d399;
+    margin: 10px 0 6px 0;
+}
+
+.ai-md-h5 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #93c5fd;
+    margin: 8px 0 4px 0;
+}
+
+.ai-md-ul {
+    margin: 8px 0 10px 0;
+    padding-left: 6px;
+    list-style-type: none;
+}
+
+.ai-md-li {
+    position: relative;
+    padding-left: 22px;
+    margin-bottom: 6px;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.ai-md-li::before {
+    content: "⚽";
+    position: absolute;
+    left: 0;
+    font-size: 0.75rem;
+    top: 2px;
+}
+
+.ai-md-quote {
+    border-left: 3px solid var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.05);
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #94a3b8;
+}
+
+.ai-inline-code {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+}
+
+.ai-typing-cursor {
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background-color: var(--neon-cyan);
+    margin-left: 3px;
+    vertical-align: middle;
+    animation: blinkCursor 0.8s infinite;
+}
+
+@keyframes blinkCursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 
 
