@@ -1,13 +1,16 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.dat_san import DatSan, LichDat
 from app.models.ai_models import ThongBao
 
+def get_utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 def check_and_expire_bookings(db: Session):
     """Quét và hủy các đơn giữ chỗ đã hết hạn 10 phút chưa thanh toán cọc."""
-    now = datetime.utcnow()
+    now = get_utc_now()
     expired_bookings = db.query(DatSan).filter(
         DatSan.trang_thai == 'cho_coc',
         DatSan.lock_expires_at < now

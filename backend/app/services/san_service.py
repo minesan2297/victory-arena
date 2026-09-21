@@ -1,9 +1,12 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.san import San, LoaiSan, BangGia
 from app.models.dat_san import LichDat
 from app.schemas.san_schema import SanCreate, SanUpdate, BangGiaCreate, BaoTriCreate
+
+def get_utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class SanService:
     @staticmethod
@@ -34,7 +37,7 @@ class SanService:
             vi_tri=data.vi_tri,
             mo_ta_ai=data.mo_ta_ai,
             trang_thai='active',
-            ngay_tao=datetime.utcnow()
+            ngay_tao=get_utc_now()
         )
         db.add(new_court)
         db.commit()

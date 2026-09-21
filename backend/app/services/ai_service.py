@@ -1,8 +1,9 @@
 import re
 import unicodedata
+import time as pytime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timezone
 import json
 from typing import Optional, List, Tuple
 import google.generativeai as genai
@@ -16,6 +17,9 @@ from app.models.enums import KieuGoiAI, KenhGui, TrangThaiGui, TrangThaiAI
 from app.schemas.ai_schema import RecommendedSlot, AIConsultResponse, AIReminderResponse, AIReportResponse
 from app.services.dat_san_service import DatSanService
 
+def get_utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 OUT_OF_SCOPE_RESPONSE = "Xin lỗi! Điều này không nằm trọng phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
 
 class AIService:
@@ -23,26 +27,19 @@ class AIService:
     def _call_gemini(cls, db: Session, kieu_goi: KieuGoiAI, system_instruction: str, user_prompt: str) -> Optional[str]:
         settings = get_settings()
         
-        # Lấy hoặc tạo AIConfig
-        ai_config = db.query(AIConfig).filter(
-            AIConfig.provider == 'google',
-            AIConfig.model == settings.gemini_model,
-            AIConfig.trang_thai == 'active'
-        ).first()
-        
+        ai_config = db.query(AIConfig).first()
         if not ai_config:
             ai_config = AIConfig(
-                provider='google',
+                provider="gemini",
                 model=settings.gemini_model,
-                prompt_template=system_instruction,
-                trang_thai='active'
+                prompt_template=system_instruction
             )
             db.add(ai_config)
             db.commit()
             db.refresh(ai_config)
             
-        if not settings.gemini_api_key:
-            # Ghi nhận log AI request với trạng thái thất bại do thiếu API key
+        if not settings.gemini_api_key or settings.gemini_api_key == "YOUR_GEMINI_API_KEY_HERE":
+            # Ghi nhận log AI request lỗi thiếu API key
             ai_req = AIRequest(
                 ai_config_id=ai_config.ai_config_id,
                 kieu_goi=kieu_goi.value,
@@ -54,7 +51,7 @@ class AIService:
             db.commit()
             return None
             
-        start_time = datetime.utcnow()
+        start_perf = pytime.perf_counter()
         try:
             genai.configure(api_key=settings.gemini_api_key)
             model = genai.GenerativeModel(
@@ -62,7 +59,7 @@ class AIService:
                 system_instruction=system_instruction
             )
             response = model.generate_content(user_prompt)
-            duration = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+            duration = int((pytime.perf_counter() - start_perf) * 1000)
             
             # Ghi nhận log AI request thành công
             ai_req = AIRequest(
@@ -77,7 +74,7 @@ class AIService:
             db.commit()
             return response.text
         except Exception as e:
-            duration = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+            duration = int((pytime.perf_counter() - start_perf) * 1000)
             # Ghi nhận log AI request lỗi
             ai_req = AIRequest(
                 ai_config_id=ai_config.ai_config_id,
@@ -356,7 +353,7 @@ class AIService:
             noi_dung=noi_dung,
             kenh_gui=KenhGui.WEB.value,
             trang_thai_gui=TrangThaiGui.DA_GUI.value,
-            ngay_gui=datetime.utcnow()
+            ngay_gui=get_utc_now()
         )
         db.add(new_notify)
         db.commit()

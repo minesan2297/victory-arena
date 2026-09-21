@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException, status
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 import random
 import urllib.parse
 from app.models.dat_san import DatSan, LichDat
@@ -11,6 +11,10 @@ from app.models.hoa_don import ThanhToan
 from app.models.ai_models import ThongBao
 from app.schemas.dat_san_schema import DatSanCreate, DoiLichRequest, LichSanResponse, SlotInfo
 from app.config import get_settings
+
+def get_utc_now() -> datetime:
+    """Trả về thời gian UTC dạng naive datetime tương thích chuẩn SQLite."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class DatSanService:
     @staticmethod
@@ -87,7 +91,7 @@ class DatSanService:
                     continue
                 # Kiểm tra xem có bị hết hạn giữ chỗ (lock) hay không
                 if c.dat_san.trang_thai == 'cho_coc' and c.dat_san.lock_expires_at:
-                    if datetime.utcnow() > c.dat_san.lock_expires_at:
+                    if get_utc_now() > c.dat_san.lock_expires_at:
                         continue
                 return True
                 
@@ -155,7 +159,7 @@ class DatSanService:
             tien_coc_ghi_nhan = int(data.tien_coc)
         else:
             trang_thai = 'cho_coc'
-            lock_expires_at = datetime.utcnow() + timedelta(minutes=settings.lock_expiry_minutes)
+            lock_expires_at = get_utc_now() + timedelta(minutes=settings.lock_expiry_minutes)
             tien_coc_ghi_nhan = 100000
             
         new_booking = DatSan(
@@ -169,7 +173,7 @@ class DatSanService:
             trang_thai=trang_thai,
             lock_expires_at=lock_expires_at,
             ghi_chu=data.ghi_chu,
-            ngay_tao=datetime.utcnow()
+            ngay_tao=get_utc_now()
         )
         db.add(new_booking)
         db.flush() # Lấy ID/Mã đơn
@@ -194,7 +198,7 @@ class DatSanService:
                 phuong_thuc=data.phuong_thuc_thanh_toan,
                 loai_giao_dich='dat_coc',
                 trang_thai='thanh_cong',
-                thoi_gian=datetime.utcnow()
+                thoi_gian=get_utc_now()
             )
             db.add(new_payment)
             
@@ -218,7 +222,7 @@ class DatSanService:
             kenh_gui='web',
             trang_thai_gui='da_gui',
             da_doc=False,
-            ngay_gui=datetime.utcnow()
+            ngay_gui=get_utc_now()
         )
         db.add(notif_booking)
             
@@ -236,7 +240,7 @@ class DatSanService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Đơn đặt sân không ở trạng thái Chờ cọc")
             
         # Kiểm tra lock hết hạn
-        if booking.lock_expires_at and datetime.utcnow() > booking.lock_expires_at:
+        if booking.lock_expires_at and get_utc_now() > booking.lock_expires_at:
             booking.trang_thai = 'da_huy'
             db.commit()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Giờ giữ chỗ (lock 10 phút) đã hết hạn")
@@ -252,7 +256,7 @@ class DatSanService:
         booking.tien_coc = int(so_tien)
         booking.trang_thai = 'da_xac_nhan'
         booking.lock_expires_at = None
-        booking.ngay_cap_nhat = datetime.utcnow()
+        booking.ngay_cap_nhat = get_utc_now()
         
         # Thêm ThanhToan cọc
         new_payment = ThanhToan(
@@ -261,7 +265,7 @@ class DatSanService:
             phuong_thuc=phuong_thuc,
             loai_giao_dich='dat_coc',
             trang_thai='thanh_cong',
-            thoi_gian=datetime.utcnow()
+            thoi_gian=get_utc_now()
         )
         db.add(new_payment)
         
@@ -272,7 +276,7 @@ class DatSanService:
             noi_dung=f"Đơn đặt sân {ma_don} đã được xác nhận đặt cọc thành công số tiền {int(so_tien):,} ₫ qua {phuong_thuc}!",
             kenh_gui='web',
             trang_thai_gui='da_gui',
-            ngay_gui=datetime.utcnow()
+            ngay_gui=get_utc_now()
         )
         db.add(notif)
         
@@ -316,7 +320,7 @@ class DatSanService:
         booking.gio_bat_dau = gio_bat_dau
         booking.gio_ket_thuc = gio_ket_thuc
         booking.ma_san = ma_san
-        booking.ngay_cap_nhat = datetime.utcnow()
+        booking.ngay_cap_nhat = get_utc_now()
         
         # Cập nhật LichDat tương ứng
         lich = db.query(LichDat).filter(LichDat.ma_don == booking.ma_don).first()
@@ -334,7 +338,7 @@ class DatSanService:
             kenh_gui='web',
             trang_thai_gui='da_gui',
             da_doc=False,
-            ngay_gui=datetime.utcnow()
+            ngay_gui=get_utc_now()
         )
         db.add(notif_doi)
             
@@ -367,7 +371,7 @@ class DatSanService:
         booking_time = datetime.combine(booking.ngay_da, booking.gio_bat_dau)
         noi_dung_huy = f"❌ [HỦY LỊCH ĐẶT SÂN] Đơn {ma_don} đã được hủy thành công."
         if booking.trang_thai == 'da_xac_nhan' and tong_coc_thuc_te > 0 and da_hoan == 0:
-            if booking_time - datetime.utcnow() >= timedelta(hours=24):
+            if booking_time - get_utc_now() >= timedelta(hours=24):
                 # Hoàn cọc số tiền thực tế khách đã nộp
                 so_tien_hoan = int(tong_coc_thuc_te)
                 new_payment = ThanhToan(
@@ -376,7 +380,7 @@ class DatSanService:
                     phuong_thuc='chuyen_khoan',
                     loai_giao_dich='hoan_coc',
                     trang_thai='thanh_cong',
-                    thoi_gian=datetime.utcnow()
+                    thoi_gian=get_utc_now()
                 )
                 db.add(new_payment)
                 booking.ghi_chu = (booking.ghi_chu or "") + f" [Đã hoàn cọc {so_tien_hoan:,}đ do hủy trước 24h]"
@@ -388,7 +392,7 @@ class DatSanService:
         # Cập nhật trạng thái
         booking.trang_thai = 'da_huy'
         booking.lock_expires_at = None
-        booking.ngay_cap_nhat = datetime.utcnow()
+        booking.ngay_cap_nhat = get_utc_now()
         
         # Xóa khỏi LichDat để giải phóng lịch sân
         db.query(LichDat).filter(LichDat.ma_don == ma_don).delete()
@@ -401,7 +405,7 @@ class DatSanService:
             kenh_gui='web',
             trang_thai_gui='da_gui',
             da_doc=False,
-            ngay_gui=datetime.utcnow()
+            ngay_gui=get_utc_now()
         )
         db.add(notif_huy)
         
@@ -439,7 +443,7 @@ class DatSanService:
         
         con_lai_giay = 0
         if booking.lock_expires_at:
-            diff = (booking.lock_expires_at - datetime.utcnow()).total_seconds()
+            diff = (booking.lock_expires_at - get_utc_now()).total_seconds()
             con_lai_giay = max(0, int(diff))
             
         return {
@@ -467,7 +471,7 @@ class DatSanService:
         if booking.trang_thai != 'cho_coc':
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Đơn đặt sân không ở trạng thái Chờ cọc")
             
-        if booking.lock_expires_at and datetime.utcnow() > booking.lock_expires_at:
+        if booking.lock_expires_at and get_utc_now() > booking.lock_expires_at:
             booking.trang_thai = 'da_huy'
             db.commit()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thời hạn 10 phút giữ sân đã hết hạn")
@@ -480,7 +484,7 @@ class DatSanService:
             
         booking.trang_thai = 'da_xac_nhan'
         booking.lock_expires_at = None
-        booking.ngay_cap_nhat = datetime.utcnow()
+        booking.ngay_cap_nhat = get_utc_now()
         
         # Thêm ThanhToan cọc
         new_payment = ThanhToan(
@@ -489,7 +493,7 @@ class DatSanService:
             phuong_thuc=phuong_thuc,
             loai_giao_dich='dat_coc',
             trang_thai='thanh_cong',
-            thoi_gian=datetime.utcnow()
+            thoi_gian=get_utc_now()
         )
         db.add(new_payment)
         
@@ -500,7 +504,7 @@ class DatSanService:
             noi_dung=f"[Sandbox/QR] Thanh toán cọc {amount:,} ₫ qua {phuong_thuc} thành công! Đơn {ma_don} đã được duyệt tự động.",
             kenh_gui='web',
             trang_thai_gui='da_gui',
-            ngay_gui=datetime.utcnow()
+            ngay_gui=get_utc_now()
         )
         db.add(notif)
         
@@ -560,7 +564,7 @@ class DatSanService:
                     ma_don = lich.dat_san.ma_don
                     ten_khach = lich.dat_san.khach_hang.ho_ten
                     if lich.dat_san.trang_thai == 'cho_coc':
-                        if lich.dat_san.lock_expires_at and datetime.utcnow() > lich.dat_san.lock_expires_at:
+                        if lich.dat_san.lock_expires_at and get_utc_now() > lich.dat_san.lock_expires_at:
                             trang_thai = 'AVAILABLE'
                             ma_don = None
                             ten_khach = None

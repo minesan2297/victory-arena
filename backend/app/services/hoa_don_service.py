@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException, status
-from datetime import datetime
+from datetime import datetime, timezone
 import random
 import urllib.parse
 from app.models.dat_san import DatSan
@@ -9,6 +9,10 @@ from app.models.hoa_don import HoaDon, CheckIn, ThanhToan
 from app.models.dich_vu import SuDungDichVu, DanhMucDichVu
 from app.models.ai_models import ThongBao
 from app.services.dat_san_service import DatSanService
+
+def get_utc_now() -> datetime:
+    """Trả về thời gian UTC dạng naive datetime tương thích chuẩn SQLite."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class HoaDonService:
     @staticmethod
@@ -23,14 +27,15 @@ class HoaDonService:
                 detail="Đơn đặt sân phải ở trạng thái Đã xác nhận mới có thể Check-in"
             )
             
+        now = get_utc_now()
         # Cập nhật trạng thái đặt sân
         booking.trang_thai = 'dang_da'
-        booking.ngay_cap_nhat = datetime.utcnow()
+        booking.ngay_cap_nhat = now
         
         # Tạo bản ghi CheckIn
         new_checkin = CheckIn(
             ma_don=ma_don,
-            thoi_gian_checkin=datetime.utcnow(),
+            thoi_gian_checkin=now,
             nhan_vien_id=nhan_vien_id,
             ghi_chu=ghi_chu
         )
@@ -42,7 +47,7 @@ class HoaDonService:
         )
         
         # Tạo mã hóa đơn duy nhất
-        date_str = datetime.utcnow().strftime("%Y%m%d")
+        date_str = now.strftime("%Y%m%d")
         while True:
             ma_hoa_don = f"HD{date_str}-{random.randint(1000, 9999)}"
             if not db.query(HoaDon).filter(HoaDon.ma_hoa_don == ma_hoa_don).first():
@@ -60,13 +65,13 @@ class HoaDonService:
         new_invoice = HoaDon(
             ma_hoa_don=ma_hoa_don,
             ma_don=ma_don,
-            check_in_thuc_te=datetime.utcnow(),
+            check_in_thuc_te=now,
             tien_san=tien_san,
             tong_dich_vu=0,
             tien_coc_da_tru=tien_coc_da_tru,
             tong_thanh_toan=max(0, tien_san - tien_coc_da_tru),
             trang_thai='chua_thanh_toan',
-            ngay_tao=datetime.utcnow()
+            ngay_tao=now
         )
         db.add(new_invoice)
         
@@ -78,7 +83,7 @@ class HoaDonService:
             kenh_gui='web',
             trang_thai_gui='da_gui',
             da_doc=False,
-            ngay_gui=datetime.utcnow()
+            ngay_gui=now
         )
         db.add(notif_ci)
         
@@ -170,8 +175,9 @@ class HoaDonService:
         if not invoice:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy hóa đơn tạm tính")
             
+        now = get_utc_now()
         # Cập nhật hóa đơn chính thức
-        invoice.check_out_thuc_te = datetime.utcnow()
+        invoice.check_out_thuc_te = now
         
         # Tính toán lại tổng lần cuối
         usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
@@ -181,7 +187,7 @@ class HoaDonService:
         
         # Cập nhật đơn đặt sân
         booking.trang_thai = 'hoan_tat'
-        booking.ngay_cap_nhat = datetime.utcnow()
+        booking.ngay_cap_nhat = now
         
         # Thêm ThanhToan toàn bộ
         if invoice.tong_thanh_toan > 0:
@@ -191,7 +197,7 @@ class HoaDonService:
                 phuong_thuc=phuong_thuc,
                 loai_giao_dich='thanh_toan_het',
                 trang_thai='thanh_cong',
-                thoi_gian=datetime.utcnow()
+                thoi_gian=now
             )
             db.add(payment)
             
@@ -203,7 +209,7 @@ class HoaDonService:
             kenh_gui='web',
             trang_thai_gui='da_gui',
             da_doc=False,
-            ngay_gui=datetime.utcnow()
+            ngay_gui=now
         )
         db.add(notif_co)
             
