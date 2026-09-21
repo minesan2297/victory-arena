@@ -246,20 +246,20 @@ class AIService:
                 ly_do=f"Khung giờ trống lý tưởng cho {slot.loai_san} vào ngày {query_date.strftime('%d/%m/%Y')}."
             ))
 
-        # 4. Chuẩn bị prompt gửi LLM (kèm Guardrail nghiêm ngặt)
+        # 4. Chuẩn bị Prompt gửi LLM theo kiến trúc Cognitive Scheduling Engine chuẩn kỹ thuật
         system_instruction = (
-            "Bạn là trợ lý AI chuyên nghiệp của Cụm sân bóng đá Victory Arena.\n"
-            "PHẠM VI TRẢ LỜI CỦA BẠN CHỈ GIỚI HẠN TRONG CÁC VẤN ĐỀ LIÊN QUAN ĐẾN:\n"
-            "1. Sân bóng đá (các loại Sân 5, Sân 7, Sân 11, mặt cỏ, cơ sở vật chất, địa chỉ, khung giờ hoạt động 06:00-23:00).\n"
-            "2. Đặt sân, giữ sân (kiểm tra khung giờ trống, giá thuê, giữ chỗ 10 phút, đặt cọc 30%, đổi lịch, hủy lịch hoàn cọc 100% trước 24h, thanh toán).\n"
-            "3. Các dịch vụ tại sân bóng (nước giải khát Revive/nước khoáng, thuê áo bít, giày đá bóng, bóng thi đấu, trọng tài, tủ đồ, tắm tráng, gửi xe).\n"
-            "4. Lời chào hỏi lịch sự và tư vấn bóng đá phong trào thân thiện.\n\n"
-            "QUY TẮC BẢO VỆ PHẠM VI BẮT BUỘC:\n"
-            "- Nếu câu hỏi hoặc yêu cầu của người dùng là nội dung bừa bãi, linh tinh, hoặc KHÔNG LIÊN QUAN đến sân bóng đá, đặt sân, hay dịch vụ của sân bóng "
-            "(ví dụ: hỏi thời tiết, nấu ăn, lập trình/viết code, giải toán, thơ ca, chính trị, tán gẫu ngoài lề, câu chữ vô nghĩa, spam...):\n"
-            f"BẠN PHẢI TRẢ LỜI DUY NHẤT CÂU SAU ĐÂY VÀ KHÔNG ĐƯỢC NÓI THÊM BẤT KỲ ĐIỀU GÌ KHÁC:\n"
+            "HỆ THỐNG: Victory Arena Cognitive Scheduling & Recommendation Engine (Phân hệ Gợi ý & Điều phối Lịch Sân).\n"
+            "MỤC TIÊU: Tiếp nhận nhu cầu đặt sân của khách hàng, đối chiếu chính xác với dữ liệu lịch sân thực tế từ CSDL để sinh phản hồi tư vấn, gợi ý khung giờ khả dụng và giải đáp thông tin dịch vụ/chính sách.\n\n"
+            "NGUYÊN TẮC HOẠT ĐỘNG & RÀNG BUỘC KỸ THUẬT BẮT BUỘC:\n"
+            "1. CHÍNH SÁCH KHÔNG ẢO GIÁC (ZERO-HALLUCINATION): Chỉ đề xuất các khung giờ xuất hiện trong danh sách 'khung_gio_trong_thuc_te' của dữ liệu đầu vào. Tuyệt đối không tự ý tạo ra các khung giờ không tồn tại trong CSDL.\n"
+            "2. GIAO THỨC XỬ LÝ HẾT SÂN (QUÁ TẢI): Khi 'khung_gio_trong_thuc_te' rỗng (tất cả các slot trong ngày đã có người đặt hoặc bảo trì), giải thích rõ ràng tình trạng kín lịch của ngày yêu cầu và chủ động đề xuất khách hàng tham khảo ngày kế tiếp hoặc khung giờ/loại sân khác.\n"
+            "3. GIAO THỨC XỬ LÝ THIẾU THÔNG TIN (VAGUE QUERY): Khi yêu cầu của khách hàng chưa rõ ràng về loại sân hoặc thời gian thi đấu, tự động áp dụng cấu hình suy luận mặc định (ưu tiên Sân 7 phổ biến nhất) và hướng dẫn khách hàng bổ sung thêm thông tin số lượng người hoặc giờ đá dự kiến.\n"
+            "4. GIỚI HẠN PHẠM VI NGHIỆP VỤ (DOMAIN BOUNDARY GUARDRAIL):\n"
+            "- Hệ thống chỉ xử lý các nội dung thuộc phạm vi vận hành của Cụm sân bóng đá Victory Arena: đặt sân, giữ chỗ 10 phút, đặt cọc 30%, chính sách hủy sân hoàn cọc 100% trước 24h, đổi lịch trước 12h, danh mục nước uống và trang thiết bị (áo bít, giày, bóng), giờ mở cửa 06:00-23:00.\n"
+            "- Nếu yêu cầu của người dùng là nội dung bừa bãi, linh tinh, hoặc KHÔNG LIÊN QUAN đến sân bóng đá (viết code/lập trình, giải toán, nấu ăn, thời tiết, chính trị, tán gẫu ngoài lề, spam...):\n"
+            f"BẮT BUỘC TRẢ LỜI DUY NHẤT CÂU SAU ĐÂY VÀ KHÔNG KÈM THEO BẤT KỲ NỘI DUNG NÀO KHÁC:\n"
             f'"{OUT_OF_SCOPE_RESPONSE}"\n\n'
-            "- Tuyệt đối không trả lời, không giải thích những nội dung ngoài phạm vi trên."
+            "5. PHONG CÁCH GIAO TIẾP: Lịch sự, văn minh, chuẩn mực, mang tính chất thông báo chính thức và hỗ trợ khách hàng của Cụm sân Victory Arena."
         )
 
         context_data = {
@@ -294,36 +294,36 @@ class AIService:
                     analyzed_intent={"intent": "out_of_scope", "ngay": str(query_date)}
                 )
         else:
-            # Chế độ Fallback quy tắc
+            # Chế độ Fallback quy tắc (Đảm bảo phản hồi mang tính thông báo nền tảng chính thức, không roleplay)
             if intent == "court_service":
                 assistant_message = (
-                    "Dạ, tại Cụm sân bóng đá Victory Arena có đầy đủ các dịch vụ tiện ích phục vụ anh em thi đấu:\n"
-                    f"- 🥤 Nước giải khát: {', '.join(dv_nuoc) if dv_nuoc else 'Revive, Nước suối, Bò húc...'}\n"
-                    f"- 🎽 Trang thiết bị: {', '.join(dv_tb) if dv_tb else 'Áo bít, Giày đá bóng, Bóng thi đấu...'}\n"
+                    "Thông tin dịch vụ tiện ích tại Cụm sân bóng đá Victory Arena:\n"
+                    f"- 🥤 Danh mục nước giải khát: {', '.join(dv_nuoc) if dv_nuoc else 'Revive, Nước suối, Bò húc...'}\n"
+                    f"- 🎽 Danh mục trang thiết bị: {', '.join(dv_tb) if dv_tb else 'Áo bít, Giày đá bóng, Bóng thi đấu...'}\n"
                     "- 🚗 Tiện ích miễn phí: Bãi đỗ xe an toàn, phòng thay đồ, vòi tắm tráng nước sạch và hệ thống đèn LED cao áp chuẩn thi đấu.\n"
-                    "Anh/chị cần đặt trước dịch vụ hay đặt lịch sân thì cứ nhắn em hỗ trợ ngay nhé! ⚽🏟️"
+                    "Quý khách có thể lựa chọn thêm các dịch vụ trên trực tiếp khi đặt sân hoặc tại quầy lễ tân. ⚽🏟️"
                 )
             elif intent == "court_policy_info":
                 assistant_message = (
-                    "Dạ, quy định đặt sân và chính sách bảo đảm tại Victory Arena như sau:\n"
-                    "- ⏱️ **Giữ chỗ**: Đơn đặt sân được giữ chỗ tự động trong 10 phút để quý khách chuyển cọc (30% tiền sân).\n"
-                    "- 🔄 **Chính sách hủy sân**: Nếu hủy trước giờ thi đấu từ 24 tiếng trở lên, hệ thống sẽ tự động hoàn 100% tiền cọc. Hủy dưới 24 tiếng sẽ không được hoàn cọc theo quy định sân.\n"
-                    "- 🔁 **Đổi lịch thi đấu**: Hỗ trợ đổi khung giờ hoặc đổi sân trước giờ đá 12 tiếng nếu còn lịch trống.\n"
-                    "- ⏰ **Giờ mở cửa**: Cụm sân hoạt động từ 06:00 đến 23:00 tất cả các ngày trong tuần (kể cả lễ tết).\n"
-                    "Anh/chị cần kiểm tra lịch trống khung giờ nào thì báo em hỗ trợ ngay nhé! ⚽🏟️"
+                    "Quy định đặt sân và chính sách bảo đảm tại Cụm sân Victory Arena:\n"
+                    "- ⏱️ **Giữ chỗ**: Đơn đặt sân được hệ thống giữ chỗ tự động trong 10 phút để quý khách chuyển cọc (30% tiền sân).\n"
+                    "- 🔄 **Chính sách hủy sân**: Hủy trước giờ thi đấu từ 24 tiếng trở lên được hệ thống tự động hoàn 100% tiền cọc. Hủy dưới 24 tiếng không được hoàn cọc theo quy định vận hành.\n"
+                    "- 🔁 **Đổi lịch thi đấu**: Hỗ trợ đổi khung giờ hoặc đổi sân trước giờ đá tối thiểu 12 tiếng nếu hệ thống còn lịch trống.\n"
+                    "- ⏰ **Giờ mở cửa**: Cụm sân phục vụ từ 06:00 đến 23:00 tất cả các ngày trong tuần (kể cả lễ tết).\n"
+                    "Quý khách có thể tra cứu lịch trống trực tiếp trên bảng ma trận hoặc gửi yêu cầu để hệ thống hỗ trợ. ⚽🏟️"
                 )
             elif intent == "general_greeting":
                 assistant_message = (
-                    "Dạ xin chào anh/chị! Em là trợ lý AI chuyên môn của Cụm sân bóng đá Victory Arena. "
-                    "Hiện tại cụm sân bên em có hệ thống Sân 5, Sân 7 và Sân 11 đạt tiêu chuẩn thi đấu, kèm đầy đủ dịch vụ giải khát, thuê áo bít, giày và bóng thi đấu. "
-                    "Anh/chị cần em hỗ trợ tìm sân trống, báo giá hay tư vấn dịch vụ nào cho đội mình không ạ? ⚽🏟️"
+                    "Xin chào quý khách! Hệ thống Cụm sân bóng đá Victory Arena xin hân hạnh hỗ trợ. "
+                    "Hiện tại cụm sân có hệ thống Sân 5, Sân 7 và Sân 11 đạt tiêu chuẩn thi đấu, kèm đầy đủ dịch vụ giải khát, thuê áo bít, giày và bóng thi đấu. "
+                    "Quý khách có thể gửi yêu cầu tìm sân trống, tra cứu bảng giá hoặc đăng ký dịch vụ cho đội bóng của mình. ⚽🏟️"
                 )
             else:
                 slots_str = ", ".join([f"{r.ten_san} ({r.khung_gio} - Giá: {r.don_gia:,.0f}đ)" for r in recommended])
                 if recommended:
-                    assistant_message = f"Dạ, ngày {query_date.strftime('%d/%m/%Y')} hệ thống đang còn trống các khung giờ cho {loai_san_khach_tim} như sau: {slots_str}. Anh/chị xem có khung giờ nào phù hợp với đội mình không ạ? Trận đấu sẽ được giữ chỗ trong 10 phút để anh/chị chuyển cọc nhé! ⚽🏟️"
+                    assistant_message = f"Hệ thống Victory Arena ghi nhận ngày {query_date.strftime('%d/%m/%Y')} đang còn trống các khung giờ cho {loai_san_khach_tim} như sau: {slots_str}. Quý khách vui lòng chọn khung giờ phù hợp để giữ chỗ trong 10 phút và hoàn tất đặt cọc nhé! ⚽🏟️"
                 else:
-                    assistant_message = f"Dạ, hiện tại loại {loai_san_khach_tim} trong ngày {query_date.strftime('%d/%m/%Y')} đã kín lịch hoặc đang bảo trì mất rồi ạ. Anh/chị có muốn tham khảo sang loại sân khác hoặc ngày khác không ạ?"
+                    assistant_message = f"Thông báo: Hiện tại loại {loai_san_khach_tim} trong ngày {query_date.strftime('%d/%m/%Y')} đã kín lịch hoặc đang trong thời gian bảo trì. Quý khách vui lòng tham khảo chuyển sang loại sân khác hoặc ngày khác nhé!"
 
         return AIConsultResponse(
             assistant_message=assistant_message,
@@ -339,8 +339,9 @@ class AIService:
             raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
             
         system_instruction = (
-            "Bạn là trợ lý AI gửi tin nhắn tự động. Hãy soạn thảo một tin nhắn nhắc nhở lịch thi đấu bóng đá ngắn gọn, "
-            "vui vẻ, đầy đủ thông tin (bao gồm: Tên khách hàng, Tên sân, Ngày đá, Khung giờ, Số tiền cọc đã đóng, và lưu ý chuẩn bị nước uống/giày đá bóng phù hợp)."
+            "HỆ THỐNG: Victory Arena Automated Notification Engine (Phân hệ Tạo Tin Nhắn Tự Động).\n"
+            "MỤC TIÊU: Dựa trên dữ liệu đơn đặt sân được cung cấp từ CSDL, soạn thảo thông điệp nhắc lịch thi đấu bóng đá ngắn gọn, "
+            "chuẩn xác, đầy đủ các trường thông tin (Tên khách hàng, Tên sân, Ngày đá, Khung giờ, Số tiền cọc đã ghi nhận, và lưu ý chuẩn bị trước trận đấu)."
         )
         
         context_data = {
@@ -357,7 +358,7 @@ class AIService:
             noi_dung = llm_response.strip()
         else:
             noi_dung = (
-                f"⚽ [SportBookAI] Nhắc lịch đá: Xin chào anh/chị {booking.khach_hang.ho_ten}! "
+                f"⚽ [Victory Arena] Nhắc lịch thi đấu: Xin chào quý khách {booking.khach_hang.ho_ten}! "
                 f"Đội của mình có lịch hẹn ra sân tại {booking.san.ten_san} vào lúc {booking.gio_bat_dau.strftime('%H:%M')}-{booking.gio_ket_thuc.strftime('%H:%M')} ngày {booking.ngay_da.strftime('%d/%m/%Y')}. "
                 f"Số tiền cọc đã ghi nhận: {booking.tien_coc:,.0f}đ. Chúc đội mình có một trận đấu bùng nổ! ⚽🏟️"
             )
@@ -405,9 +406,10 @@ class AIService:
         ty_le_lap_day = round((total_bookings / total_possible_slots) * 100, 2)
         
         system_instruction = (
-            "Bạn là chuyên gia phân tích dữ liệu kinh doanh sân bóng. Hãy viết tóm tắt đánh giá hiệu suất hoạt động, "
-            "chỉ ra các khung giờ cao điểm, thấp điểm và đề xuất chiến dịch khuyến mại (ví dụ giảm 20-30% giờ thấp điểm) "
-            "để tối ưu công suất hoạt động của sân bóng."
+            "HỆ THỐNG: Victory Arena Business Intelligence & Revenue Engine (Phân hệ Phân Tích Dữ Liệu Kinh Doanh).\n"
+            "MỤC TIÊU: Dựa trên các chỉ số doanh thu thực tế, tỷ lệ lấp đầy sân và số lượng đơn đặt trong kỳ báo cáo từ CSDL, "
+            "tổng hợp đánh giá hiệu suất khai thác sân, chỉ rõ các khung giờ cao điểm, thấp điểm và đề xuất chiến lược khuyến mại (giảm giá 20-30% giờ thấp điểm) "
+            "nhằm tối ưu hóa công suất vận hành cụm sân."
         )
         
         context_data = {
