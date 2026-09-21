@@ -476,16 +476,26 @@ body {
 }
 
 .slot-card.booked {
-    background-color: rgba(239, 68, 68, 0.04);
-    border-color: rgba(239, 68, 68, 0.2);
+    background-color: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.25);
     color: #f87171;
-    cursor: not-allowed;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.slot-card.booked:hover {
+    background-color: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
 }
 
 .slot-card.locked {
     background-color: rgba(245, 158, 11, 0.05);
     border-color: rgba(245, 158, 11, 0.25);
     color: #fbbf24;
+    cursor: pointer;
 }
 
 .slot-card.locked:hover {
@@ -498,7 +508,12 @@ body {
     background-color: rgba(100, 116, 139, 0.05);
     border-color: rgba(100, 116, 139, 0.2);
     color: #94a3b8;
-    cursor: not-allowed;
+    cursor: pointer;
+}
+
+.slot-card.maintenance:hover {
+    background-color: rgba(100, 116, 139, 0.1);
+    border-color: rgba(100, 116, 139, 0.35);
 }
 
 .slot-time {

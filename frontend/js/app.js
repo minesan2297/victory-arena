@@ -2068,8 +2068,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const timeStr = `${slot.gio_bat_dau.substring(0, 5)} - ${slot.gio_ket_thuc.substring(0, 5)}`;
                 
+                // Xác định tên sân hiển thị
+                const courtObj = (courtsList || []).find(c => c.ma === slot.san_id);
+                const currentCourtName = courtObj ? courtObj.ten_san : courtName;
+                const safeCourtName = currentCourtName.replace(/'/g, "\\'");
+                const safeCustomer = (slot.ten_khach || 'Ẩn danh').replace(/'/g, "\\'");
+
+                let clickAttr = "";
+                if (slot.trang_thai === 'AVAILABLE') {
+                    clickAttr = `onclick="window.quickSelectSlot('${slot.san_id}', '${timeStr}')" title="Bấm để chọn đặt sân khung giờ ${timeStr}"`;
+                } else if (slot.trang_thai === 'BOOKED') {
+                    clickAttr = `onclick="window.handleUnavailableSlotClick('${safeCourtName}', '${timeStr}', 'BOOKED', '${safeCustomer}')" title="Khung giờ đã có người đặt"`;
+                } else if (slot.trang_thai === 'LOCKED') {
+                    clickAttr = `onclick="window.handleUnavailableSlotClick('${safeCourtName}', '${timeStr}', 'LOCKED')" title="Khung giờ đang tạm giữ chỗ"`;
+                } else if (slot.trang_thai === 'MAINTENANCE') {
+                    clickAttr = `onclick="window.handleUnavailableSlotClick('${safeCourtName}', '${timeStr}', 'MAINTENANCE')" title="Khung giờ đang bảo trì"`;
+                }
+                
                 html += `
-                    <div class="slot-card ${statusClass}" onclick="window.quickSelectSlot('${slot.san_id}', '${timeStr}')">
+                    <div class="slot-card ${statusClass}" ${clickAttr}>
                         <div class="slot-time">${timeStr}</div>
                         <div class="slot-price">${slot.don_gia.toLocaleString()} ₫</div>
                         <div class="slot-status">${statusLabel}</div>
@@ -2094,7 +2111,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Globals for onclick selection in grid
+    // Globals for AI alerts & slot interactions
+    window.showAiAlertModal = ({ title, message, court, time, customer }) => {
+        const modal = document.getElementById('ai-slot-alert-modal');
+        const titleEl = document.getElementById('ai-slot-modal-title');
+        const msgEl = document.getElementById('ai-slot-modal-message');
+        const detailEl = document.getElementById('ai-slot-modal-detail');
+        if (!modal) return;
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.innerHTML = message;
+        if (detailEl) {
+            detailEl.innerHTML = `
+                <span><i class="fa-solid fa-stadium text-primary"></i> Sân: <strong style="color: #38bdf8;">${court}</strong></span>
+                <span><i class="fa-regular fa-clock text-warning"></i> Ca: <strong style="color: #fff;">${time}</strong></span>
+                ${customer && customer !== 'Ẩn danh' ? `<span><i class="fa-solid fa-user-check text-success"></i> Đội: <strong style="color: #4ade80;">${customer}</strong></span>` : ''}
+            `;
+        }
+        modal.style.display = 'flex';
+    };
+
+    window.handleUnavailableSlotClick = (courtName, timeStr, statusType, customerName = '') => {
+        let aiMessage = "";
+        let modalTitle = "";
+
+        if (statusType === 'BOOKED') {
+            modalTitle = "Khung Giờ Đã Có Người Đặt";
+            aiMessage = `Xin lỗi quý khách! Khung giờ này của sân "${courtName}" đã có người đặt! Quý khách vui lòng chọn khung giờ khác`;
+        } else if (statusType === 'LOCKED') {
+            modalTitle = "Khung Giờ Đang Tạm Giữ Chỗ";
+            aiMessage = `Xin lỗi quý khách! Khung giờ này của sân "${courtName}" đang được tạm giữ chỗ trong 10 phút chờ thanh toán đặt cọc! Quý khách vui lòng chọn khung giờ khác hoặc quay lại sau ít phút.`;
+        } else if (statusType === 'MAINTENANCE') {
+            modalTitle = "Sân Đang Bảo Trì Định Kỳ";
+            aiMessage = `Xin lỗi quý khách! Khung giờ này của sân "${courtName}" đang trong thời gian bảo trì kỹ thuật! Quý khách vui lòng chọn khung giờ khác.`;
+        }
+
+        // Bật Modal thông báo từ Trợ Lý AI
+        window.showAiAlertModal({
+            title: modalTitle,
+            message: aiMessage,
+            court: courtName,
+            time: timeStr,
+            customer: customerName
+        });
+
+        // Hiển thị Toast thông báo
+        showToast(aiMessage, "warning");
+    };
+
     window.quickSelectSlot = (sanId, timeStr) => {
         document.getElementById('bk-court-id').value = sanId;
         const [start, end] = timeStr.split(' - ');

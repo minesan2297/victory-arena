@@ -1620,6 +1620,41 @@
         </div>
     </div>
 
+    <!-- Modal Thông Báo Từ Trợ Lý AI (Khi bấm vào khung giờ đã có người đặt) -->
+    <div id="ai-slot-alert-modal" class="modal-overlay" style="display: none; z-index: 100000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="max-width: 480px; width: 92%; padding: 28px 24px; border: 1px solid rgba(239, 68, 68, 0.45); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9); background: rgba(15, 23, 42, 0.97); backdrop-filter: blur(16px); border-radius: var(--radius-lg); text-align: center;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 62px; height: 62px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); border: 2px solid rgba(239, 68, 68, 0.4); color: #f87171; font-size: 1.8rem; margin-bottom: 12px; box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div>
+                <span class="badge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 240, 255, 0.12); color: #38bdf8; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase;">
+                    <span class="radar-dot" style="background: #38bdf8; box-shadow: 0 0 8px #38bdf8;"></span> THÔNG BÁO TỪ TRỢ LÝ AI
+                </span>
+            </div>
+            <h4 id="ai-slot-modal-title" style="margin: 14px 0 10px 0; color: #fff; font-size: 1.15rem; font-weight: 800;">
+                Khung Giờ Đã Có Người Đặt
+            </h4>
+            
+            <div style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-left: 4px solid #ef4444; border-radius: var(--radius-md); padding: 14px 16px; margin: 12px 0 16px 0; text-align: left;">
+                <p id="ai-slot-modal-message" style="margin: 0; font-size: 0.95rem; color: #f1f5f9; line-height: 1.55;">
+                    <!-- Nội dung AI thông báo -->
+                </p>
+                <div id="ai-slot-modal-detail" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                    <!-- Chi tiết phụ: sân, giờ, người đặt -->
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('ai-slot-alert-modal').style.display='none'" style="padding: 8px 22px; font-weight: 600;">
+                    <i class="fa-solid fa-xmark"></i> Đóng
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('ai-slot-alert-modal').style.display='none'" style="padding: 8px 20px; font-weight: 600;">
+                    <i class="fa-regular fa-clock"></i> Chọn Khung Giờ Khác
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 
