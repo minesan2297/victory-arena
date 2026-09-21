@@ -710,11 +710,23 @@
             <!-- Tab 2: Đặt Sân (Booking Form) -->
             <section id="tab-booking-form" class="tab-content">
                 <div class="panel">
-                    <div class="panel-header">
-                        <h3><i class="fa-regular fa-calendar-check text-primary"></i> Đặt Lịch Giữ Sân Bóng</h3>
-                        <p class="text-sm text-muted">Trận đấu sẽ được tạm khóa giữ lịch trong 10 phút chờ thanh toán đặt cọc.</p>
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h3><i class="fa-regular fa-calendar-check text-primary"></i> Đặt Lịch Giữ Sân Bóng</h3>
+                            <p class="text-sm text-muted">Trận đấu sẽ được tạm khóa giữ lịch trong 10 phút chờ thanh toán đặt cọc.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" id="btn-refresh-booking-form" title="Làm mới tình trạng sân">
+                            <i class="fa-solid fa-rotate"></i> Làm mới sân
+                        </button>
                     </div>
-                    <form id="form-create-booking">
+
+                    <!-- Fake Loader Live Radar Container -->
+                    <div id="booking-radar-box"></div>
+
+                    <!-- Court Live Status Info Card -->
+                    <div id="booking-court-status-card" class="court-status-banner" style="display: none; margin-bottom: 20px;"></div>
+
+                    <form id="form-create-booking" style="transition: opacity 0.3s ease;">
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Chọn Sân Bóng *</label>
@@ -763,8 +775,8 @@
                         </div>
 
                         <div class="button-group">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa-solid fa-check"></i> Xác Nhận Giữ Sân
+                            <button type="submit" class="btn btn-primary" id="btn-submit-booking">
+                                <i class="fa-solid fa-check"></i> <span>Xác Nhận Giữ Sân</span>
                             </button>
                         </div>
                     </form>
@@ -1559,6 +1571,51 @@
                     <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất
                 </button>
                 <button type="button" class="btn btn-secondary" id="btn-close-profile-footer" style="padding: 8px 20px; font-size: 0.88rem;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Fake Loader: Khóa Giữ Sân Live Radar Scanner -->
+    <div id="booking-lock-radar-modal" class="modal-overlay" style="display: none; z-index: 100000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="max-width: 480px; width: 92%; text-align: center; padding: 30px 24px; border: 1px solid rgba(0, 240, 255, 0.35); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9); background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(16px); border-radius: var(--radius-lg);">
+            <div class="radar-visual-header" style="justify-content: center; margin-bottom: 18px;">
+                <div class="radar-scan-ball-wrap" style="width: 64px; height: 64px;">
+                    <div class="radar-ring-outer" style="border-top-color: #00f0ff; border-right-color: #10b981;"></div>
+                    <div class="radar-ring-inner" style="border-bottom-color: #3b82f6;"></div>
+                    <div class="radar-ball-core" style="font-size: 1.6rem;">⚽</div>
+                </div>
+                <div class="radar-meta" style="text-align: left;">
+                    <div class="radar-title">
+                        <span class="radar-badge-live"><span class="radar-dot"></span> LIVE HOLD-LOCK</span>
+                        <h4 style="margin: 0; font-size: 1.1rem; color: #fff;">Khóa Giữ Lịch 10 Phút</h4>
+                    </div>
+                    <div class="radar-status-msg" id="lock-radar-step-text" style="font-size: 0.85rem; color: #93c5fd; margin-top: 5px;">
+                        <i class="fa-solid fa-satellite-dish"></i> Đang xác minh tính khả dụng của sân bóng...
+                    </div>
+                    <div class="radar-progress-bar-wrap" style="width: 230px; height: 6px; margin-top: 6px;">
+                        <div class="radar-progress-bar" id="lock-radar-progress" style="width: 25%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Booking Preview Info -->
+            <div id="lock-radar-info-box" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); padding: 12px 16px; margin: 16px 0; text-align: left; font-size: 0.88rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span class="text-muted">Sân thi đấu:</span>
+                    <strong id="lock-prev-court" style="color: #38bdf8;">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span class="text-muted">Thời gian:</span>
+                    <strong id="lock-prev-time" style="color: #fff;">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span class="text-muted">Tiền đặt cọc:</span>
+                    <strong id="lock-prev-deposit" style="color: #10b981;">100.000 ₫</strong>
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fa-solid fa-shield-halved text-success"></i> Hệ thống tự động chống trùng lịch (Anti-Overbooking Lock)
             </div>
         </div>
     </div>

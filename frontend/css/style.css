@@ -2736,6 +2736,10 @@ input.input-invalid {
     animation: radarBallPulse 1.2s ease-in-out infinite;
     z-index: 2;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .radar-info {
@@ -2923,6 +2927,122 @@ input.input-invalid {
 .skeleton-cell.w-30 { width: 30%; }
 .skeleton-cell.w-badge { width: 95px; height: 22px; border-radius: 11px; background: rgba(0, 240, 255, 0.15); }
 .skeleton-cell.w-btn { width: 85px; height: 26px; border-radius: 6px; background: rgba(16, 185, 129, 0.18); margin-left: auto; }
+
+/* Realistic Skeleton Form Grid */
+.skeleton-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-top: 14px;
+}
+
+.skeleton-form-row {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+}
+
+.skeleton-form-row.full {
+    flex-direction: column;
+}
+
+.skeleton-form-field {
+    flex: 1;
+    height: 44px;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-form-field::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.08) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerSweep 1.3s infinite;
+}
+
+.skeleton-form-btn {
+    width: 200px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    background: rgba(16, 185, 129, 0.22);
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-form-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.35) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerSweep 1.3s infinite;
+}
+
+/* Court Status Live Banner */
+.court-status-banner {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    animation: fadeIn 0.3s ease;
+}
+
+.court-status-banner .cs-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.court-status-banner .cs-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(0, 240, 255, 0.12);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.court-status-banner .cs-info h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #fff;
+    font-weight: 700;
+}
+
+.court-status-banner .cs-info p {
+    margin: 3px 0 0 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.court-status-banner .cs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+}
+
 
 
 /* Keyframe Animations */

@@ -510,6 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (targetTab === 'tab-dashboard') fetchDashboardData();
                 if (targetTab === 'tab-schedule') fetchSchedule();
+                if (targetTab === 'tab-booking-form') loadBookingForm();
                 if (targetTab === 'tab-bookings') fetchBookings();
                 if (targetTab === 'tab-booking-history') fetchBookingHistory();
                 if (targetTab === 'tab-operations') fetchOperationsData();
@@ -534,6 +535,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-refresh-schedule').onclick = () => fetchSchedule();
         document.getElementById('btn-refresh-bookings').onclick = () => fetchBookings();
         
+        const btnRefreshBookingForm = document.getElementById('btn-refresh-booking-form');
+        if (btnRefreshBookingForm) btnRefreshBookingForm.onclick = () => loadBookingForm({ forceRefresh: true });
+
+        const bkCourtSelect = document.getElementById('bk-court-id');
+        if (bkCourtSelect) {
+            bkCourtSelect.onchange = () => updateBookingCourtCard();
+        }
+        const bkDateInput = document.getElementById('bk-date');
+        if (bkDateInput) {
+            bkDateInput.onchange = () => updateBookingCourtCard();
+        }
+
         const btnRefreshHistory = document.getElementById('btn-refresh-history');
         if (btnRefreshHistory) btnRefreshHistory.onclick = () => fetchBookingHistory();
         
@@ -1778,13 +1791,18 @@ document.addEventListener('DOMContentLoaded', () => {
         cols = 8,
         isTableTbody = false
     }) {
+        let iconHtml = icon || "⚽";
+        if (typeof iconHtml === 'string' && (iconHtml.startsWith('fa-') || iconHtml.startsWith('fa '))) {
+            iconHtml = `<i class="fa-solid ${iconHtml}"></i>`;
+        }
+
         const loaderBox = `
             <div class="schedule-loader-box" style="margin: 6px 0; width: 100%;">
                 <div class="radar-scanner-wrapper">
                     <div class="radar-rings">
                         <div class="radar-ring-outer"></div>
                         <div class="radar-ring-inner"></div>
-                        <div class="radar-center-ball">${icon}</div>
+                        <div class="radar-center-ball">${iconHtml}</div>
                     </div>
                     <div class="radar-info">
                         <div class="radar-title">
@@ -1800,7 +1818,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
 
-                ${type === 'cards' ? `
+                ${type === 'form' ? `
+                    <div class="skeleton-form-grid">
+                        <div class="skeleton-form-row">
+                            <div class="skeleton-form-field"></div>
+                            <div class="skeleton-form-field"></div>
+                        </div>
+                        <div class="skeleton-form-row">
+                            <div class="skeleton-form-field"></div>
+                            <div class="skeleton-form-field"></div>
+                        </div>
+                        <div class="skeleton-form-row">
+                            <div class="skeleton-form-field"></div>
+                            <div class="skeleton-form-field"></div>
+                        </div>
+                        <div class="skeleton-form-row full">
+                            <div class="skeleton-form-field full" style="height: 50px;"></div>
+                        </div>
+                        <div class="skeleton-form-btn"></div>
+                    </div>
+                ` : type === 'cards' ? `
                     <div class="skeleton-matrix-grid">
                         ${[1, 2, 3, 4].map(() => `
                             <div class="skeleton-slot-card" style="padding: 14px 18px;">
@@ -1849,6 +1886,114 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             clear: () => timerIds.forEach(id => clearTimeout(id))
         };
+    }
+
+    let bookingFormTimers = null;
+    let lockModalTimers = null;
+
+    function updateBookingCourtCard() {
+        const card = document.getElementById('booking-court-status-card');
+        const bkCourt = document.getElementById('bk-court-id');
+        const bkDate = document.getElementById('bk-date');
+        if (!card || !bkCourt) return;
+
+        const courtId = bkCourt.value;
+        const court = (courtsList || []).find(c => c.ma === courtId);
+        if (!court) {
+            card.style.display = 'none';
+            return;
+        }
+
+        const dateVal = bkDate ? bkDate.value : '';
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isToday = (dateVal === todayStr);
+
+        card.innerHTML = `
+            <div class="cs-left">
+                <div class="cs-icon">
+                    <i class="fa-solid fa-futbol"></i>
+                </div>
+                <div class="cs-info">
+                    <h4>${court.ten_san} <span style="font-weight: 400; color: #93c5fd;">(${court.loai_san ? court.loai_san.ten_loai : 'Tiêu chuẩn'})</span></h4>
+                    <p>
+                        <i class="fa-regular fa-clock text-primary"></i> Khóa giữ chỗ tự động <strong>10 phút</strong> • Mức cọc quy định: <strong class="text-success">100.000 ₫</strong>
+                        ${dateVal ? ` • Ngày đá: <strong style="color: #fff;">${dateVal}${isToday ? ' (Hôm nay)' : ''}</strong>` : ''}
+                    </p>
+                </div>
+            </div>
+            <div class="cs-badge">
+                <span class="radar-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+                <span>Khả dụng nhận lịch</span>
+            </div>
+        `;
+        card.style.display = 'flex';
+    }
+
+    async function loadBookingForm(options = {}) {
+        const radarBox = document.getElementById('booking-radar-box');
+        const formEl = document.getElementById('form-create-booking');
+        const courtCard = document.getElementById('booking-court-status-card');
+        const btnRefresh = document.getElementById('btn-refresh-booking-form');
+        const dateInput = document.getElementById('bk-date');
+
+        if (btnRefresh) {
+            btnRefresh.disabled = true;
+            btnRefresh.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Đang quét...`;
+        }
+
+        if (bookingFormTimers) bookingFormTimers.clear();
+
+        if (dateInput && !dateInput.value) {
+            dateInput.value = currentSelectedDate || new Date().toISOString().split('T')[0];
+        }
+
+        if (radarBox) {
+            radarBox.style.display = 'block';
+            radarBox.innerHTML = buildRadarScannerHtml({
+                title: "Đang Quét Dữ Liệu Sân & Khung Giờ Khả Dụng",
+                badge: "VENUE RADAR",
+                icon: "⚽",
+                stepMsg: "Đang kết nối ma trận sân bãi và quy chế tiền cọc...",
+                stepTextId: "bk-radar-step-text",
+                progressInnerId: "bk-radar-progress-inner",
+                type: "form"
+            });
+        }
+
+        if (courtCard) courtCard.style.display = 'none';
+        if (formEl) formEl.style.display = 'none';
+
+        bookingFormTimers = createRadarStepTimers("bk-radar-progress-inner", "bk-radar-step-text", [
+            { delay: 180, width: "45%", html: '<i class="fa-solid fa-stadium text-neon"></i> Đang nạp danh mục sân bóng và kiểm tra giờ hoạt động...' },
+            { delay: 480, width: "75%", html: '<i class="fa-solid fa-shield-halved text-success"></i> Xác minh chính sách giữ chỗ 10 phút & mức cọc cố định...' },
+            { delay: 780, width: "100%", html: '<i class="fa-solid fa-circle-check text-success"></i> Sân sẵn sàng nhận lịch! Vui lòng chọn giờ bóng lăn.' }
+        ]);
+
+        const delayPromise = new Promise(resolve => setTimeout(resolve, 820));
+
+        try {
+            if (!courtsList || courtsList.length === 0 || options.forceRefresh) {
+                await Promise.all([fetchCourts(), delayPromise]);
+            } else {
+                await delayPromise;
+            }
+        } catch (err) {
+            console.error("Lỗi khi quét dữ liệu đặt sân:", err);
+        } finally {
+            if (bookingFormTimers) bookingFormTimers.clear();
+            if (radarBox) {
+                radarBox.innerHTML = '';
+                radarBox.style.display = 'none';
+            }
+            if (formEl) {
+                formEl.style.display = 'block';
+            }
+            if (btnRefresh) {
+                btnRefresh.disabled = false;
+                btnRefresh.innerHTML = `<i class="fa-solid fa-rotate"></i> Làm mới sân`;
+            }
+            updateBookingCourtCard();
+        }
     }
     
     async function fetchSchedule() {
@@ -2434,24 +2579,79 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Thời gian đặt sân tối đa mỗi ca là 4 tiếng (240 phút)", "warning");
             return;
         }
+
+        const btnSubmit = document.getElementById('btn-submit-booking');
+        const lockModal = document.getElementById('booking-lock-radar-modal');
+        const lockStepText = document.getElementById('lock-radar-step-text');
+        const lockProgress = document.getElementById('lock-radar-progress');
+        const prevCourt = document.getElementById('lock-prev-court');
+        const prevTime = document.getElementById('lock-prev-time');
+        const prevDeposit = document.getElementById('lock-prev-deposit');
+        
+        const courtSelect = document.getElementById('bk-court-id');
+        const courtName = (courtSelect && courtSelect.selectedIndex >= 0) ? courtSelect.options[courtSelect.selectedIndex].text : data.ma_san;
+
+        if (prevCourt) prevCourt.textContent = courtName;
+        if (prevTime) prevTime.textContent = `${data.gio_bat_dau.slice(0, 5)} - ${data.gio_ket_thuc.slice(0, 5)} (${data.ngay_da})`;
+        if (prevDeposit) prevDeposit.textContent = `${data.tien_coc.toLocaleString('vi-VN')} ₫`;
+
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Đang khóa giữ sân...</span>`;
+        }
+
+        if (lockModal) {
+            lockModal.style.display = 'flex';
+            if (lockProgress) lockProgress.style.width = '25%';
+            if (lockStepText) lockStepText.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> Đang xác minh tính khả dụng của sân bóng...`;
+        }
+
+        if (lockModalTimers) lockModalTimers.clear();
+        lockModalTimers = createRadarStepTimers("lock-radar-progress", "lock-radar-step-text", [
+            { delay: 280, width: "65%", html: '<i class="fa-solid fa-lock text-neon"></i> Đang kích hoạt phiên khóa chống trùng lịch (Hold Lock 10 phút)...' },
+            { delay: 650, width: "90%", html: '<i class="fa-solid fa-qrcode text-success"></i> Đang tạo đơn đặt sân & khởi tạo cổng mã QR đặt cọc...' }
+        ]);
+
+        const minDelayPromise = new Promise(resolve => setTimeout(resolve, 900));
         
         try {
-            const res = await fetch('/api/dat-san/booking', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(data)
-            });
+            const [res] = await Promise.all([
+                fetch('/api/dat-san/booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                }),
+                minDelayPromise
+            ]);
             
             if (!res.ok) {
+                if (lockModalTimers) lockModalTimers.clear();
+                if (lockModal) lockModal.style.display = 'none';
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = `<i class="fa-solid fa-check"></i> <span>Xác Nhận Giữ Sân</span>`;
+                }
                 const err = await res.json();
                 showToast(err.detail || "Không thể đặt giữ sân", "error");
                 return;
             }
             
             const booking = await res.json();
+            
+            if (lockModalTimers) lockModalTimers.clear();
+            if (lockProgress) lockProgress.style.width = '100%';
+            if (lockStepText) lockStepText.innerHTML = `<i class="fa-solid fa-circle-check text-success"></i> Đã giữ sân thành công! Mã đơn: <strong>${booking.ma_don}</strong>`;
+
+            await new Promise(resolve => setTimeout(resolve, 350));
+            if (lockModal) lockModal.style.display = 'none';
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-check"></i> <span>Xác Nhận Giữ Sân</span>`;
+            }
+
             showToast(`Giữ sân thành công! Mã đơn: ${booking.ma_don}`);
             
             // Reset form
@@ -2469,6 +2669,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 300);
             }
         } catch (e) {
+            if (lockModalTimers) lockModalTimers.clear();
+            if (lockModal) lockModal.style.display = 'none';
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-check"></i> <span>Xác Nhận Giữ Sân</span>`;
+            }
             showToast("Lỗi kết nối đến máy chủ", "error");
         }
     }
