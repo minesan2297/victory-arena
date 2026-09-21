@@ -132,12 +132,15 @@ class AIService:
             r'\b(chinh tri|bau cu|tong thong|thu tuong|chien tranh|quan su|dang cong san)\b',
             r'\b(chung khoan|co phieu|tien ao|crypto|bitcoin|btc|eth|dau tu|lo de|xo so|soi cau)\b',
             r'\b(chuyen cuoi|chuyen ma|bai tho|lam tho|viet tho|bai van)\b',
-            r'\b(dich|translate|tieng anh|tieng trung|tieng nhat)\b',
+            r'\b(dich thuat|dich sang|dich giup|translate|tieng anh|tieng trung|tieng nhat)\b',
             r'\b(nguoi yeu|yeu toi|to tinh|hen ho|tan gai|tan trai)\b',
             r'\b(an gi|an com|an uong)\b',
         ]
         for pat in off_topic_patterns:
             if re.search(pat, p_norm):
+                # Ngoại lệ an toàn: Nếu từ khóa là "dich vu" thì không coi là "dich thuat"
+                if "dich vu" in p_norm and pat == r'\b(dich thuat|dich sang|dich giup|translate|tieng anh|tieng trung|tieng nhat)\b':
+                    continue
                 return False, "out_of_scope"
 
         # 2. Danh mục từ khóa hợp lệ thuộc nghiệp vụ sân bóng
