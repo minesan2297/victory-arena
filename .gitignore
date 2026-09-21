@@ -46,3 +46,9 @@ npm-debug.log*
 Thumbs.db
 desktop.ini
 
+# Internal reports & Prompt docs (do not upload to Github)
+DANH_SACH_PROMPT_CHUAN_KY_THUAT.md
+PROMPT_EXPERIMENTS.md
+AI_CODE_REVIEW_EVIDENCE.md
+
+

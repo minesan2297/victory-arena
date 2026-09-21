@@ -58,7 +58,11 @@ class AIService:
                 model_name=settings.gemini_model,
                 system_instruction=system_instruction
             )
-            response = model.generate_content(user_prompt)
+            # Giới hạn timeout 10s để chống treo hệ thống (Tiêu chí 7 - KT3)
+            response = model.generate_content(
+                user_prompt,
+                request_options={"timeout": 10.0}
+            )
             duration = int((pytime.perf_counter() - start_perf) * 1000)
             
             # Ghi nhận log AI request thành công
@@ -75,12 +79,21 @@ class AIService:
             return response.text
         except Exception as e:
             duration = int((pytime.perf_counter() - start_perf) * 1000)
+            err_msg = str(e)
+            # Nhận diện lỗi Rate Limit (429) hoặc Timeout (Tiêu chí 7 - KT3)
+            if "429" in err_msg or "ResourceExhausted" in err_msg:
+                log_err = f"[RATE_LIMIT_429] Vượt hạn mức gọi Gemini API: {err_msg}"
+            elif "timeout" in err_msg.lower() or "deadline" in err_msg.lower():
+                log_err = f"[TIMEOUT_10S] Yêu cầu tới Gemini API vượt quá 10 giây: {err_msg}"
+            else:
+                log_err = f"[AI_ERROR] {err_msg}"
+
             # Ghi nhận log AI request lỗi
             ai_req = AIRequest(
                 ai_config_id=ai_config.ai_config_id,
                 kieu_goi=kieu_goi.value,
                 prompt_input=user_prompt,
-                ket_qua=str(e),
+                ket_qua=log_err,
                 thoi_gian_xu_ly_ms=duration,
                 trang_thai=TrangThaiAI.ERROR.value
             )

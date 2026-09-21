@@ -158,3 +158,123 @@ def test_ai_consult_service_and_policy_inquiries(db_session):
     assert "Victory Arena" in res_greeting.assistant_message
     assert res_greeting.analyzed_intent.get("intent") == "general_greeting"
 
+
+def test_ai_consult_all_courts_fully_booked(db_session):
+    """
+    [TIÊU CHÍ 8 - KT3] KIỂM THỬ TÌNH HUỐNG HẾT SÂN (100% SLOTS KÍN LỊCH):
+    Khi tất cả khung giờ trong ngày của loại sân yêu cầu đã bị đặt kín hoặc bảo trì:
+    - AI phải nhận diện chính xác co_san_phu_hop == False.
+    - Danh sách recommended_slots phải rỗng.
+    - AI không được bịa đặt sân trống (ảo giác), phải phản hồi nhã nhặn thông báo kín lịch và gợi ý ngày/sân khác.
+    """
+    customer = db_session.query(TaiKhoan).first()
+    s7 = db_session.query(San).filter(San.ma == "SAN7-VANG").first()
+    test_date = date(2026, 10, 15)
+
+    # 9 khung giờ hoạt động chuẩn
+    fixed_slots = [
+        (time(6, 0), time(7, 30)),
+        (time(7, 30), time(9, 0)),
+        (time(9, 0), time(10, 30)),
+        (time(14, 0), time(15, 30)),
+        (time(15, 30), time(17, 0)),
+        (time(17, 0), time(18, 30)),
+        (time(18, 30), time(20, 0)),
+        (time(20, 0), time(21, 30)),
+        (time(21, 30), time(23, 0))
+    ]
+
+    # Đặt kín toàn bộ 9 slots của Sân 7
+    for idx, (start, end) in enumerate(fixed_slots):
+        ma_don = f"DS-FULL-{idx}"
+        booking = DatSan(
+            ma_don=ma_don,
+            ma_khach_hang=customer.tai_khoan_id,
+            ma_san=s7.ma,
+            ngay_da=test_date,
+            gio_bat_dau=start,
+            gio_ket_thuc=end,
+            tien_coc=150000.0,
+            trang_thai="da_xac_nhan"
+        )
+        db_session.add(booking)
+        db_session.flush()
+
+        lich = LichDat(
+            san_id=s7.ma,
+            ma_don=ma_don,
+            loai_lich="thue_san",
+            bat_dau=datetime.combine(test_date, start),
+            ket_thuc=datetime.combine(test_date, end)
+        )
+        db_session.add(lich)
+    db_session.commit()
+
+    # Khách hỏi đặt sân 7 vào ngày đã kín
+    prompt = "Tôi muốn tìm sân 7 người tối nay để đá trận phủi"
+    res = AIService.consult_pitch(db_session, user_prompt=prompt, ngay_mong_muon=test_date)
+
+    # Khẳng định chất lượng AI
+    assert res.co_san_phu_hop is False
+    assert len(res.recommended_slots) == 0
+    # Phản hồi phải nêu rõ đã kín lịch / bảo trì hoặc gợi ý ngày khác
+    msg = res.assistant_message.lower()
+    assert any(keyword in msg for keyword in ["kín lịch", "hết", "bảo trì", "ngày khác", "khác"])
+
+
+def test_ai_consult_missing_data_empty_database(db_session):
+    """
+    [TIÊU CHÍ 8 - KT3] KIỂM THỬ TÌNH HUỐNG DỮ LIỆU THIẾU (CSDL KHÔNG CÓ SÂN NÀO):
+    Khi hệ thống chưa có sân nào hoặc bảng sân bị rỗng:
+    - AI không được crash/quăng Exception 500.
+    - AI phản hồi an toàn, xác định co_san_phu_hop == False.
+    """
+    # Xóa sạch dữ liệu bảng Bảng giá, Lịch đặt, Sân
+    db_session.query(LichDat).delete()
+    db_session.query(DatSan).delete()
+    db_session.query(BangGia).delete()
+    db_session.query(San).delete()
+    db_session.commit()
+
+    prompt = "Tôi cần tìm sân bóng 7 người tối nay"
+    res = AIService.consult_pitch(db_session, user_prompt=prompt, ngay_mong_muon=date.today())
+
+    assert res.co_san_phu_hop is False
+    assert len(res.recommended_slots) == 0
+    assert "Xin lỗi! Điều này không nằm trọng phạm vi" not in res.assistant_message
+    assert len(res.assistant_message) > 0
+
+
+def test_ai_consult_missing_parameters_and_vague_query(db_session):
+    """
+    [TIÊU CHÍ 8 - KT3] KIỂM THỬ DỮ LIỆU ĐẦU VÀO THIẾU / CÂU HỎI MƠ HỒ:
+    Khách hỏi câu thiếu ngày giờ và không nêu loại sân (vd: "Đặt sân bóng"):
+    - AI tự suy luận ngày hiện tại (ngay_mong_muon=None).
+    - Tự động ưu tiên loại sân mặc định (Sân 7) và gợi ý lịch trống nếu có.
+    - Không bị lỗi hệ thống.
+    """
+    prompt = "Cho tôi đặt sân bóng với"
+    # Không truyền ngay_mong_muon -> AI tự lấy ngày hôm nay
+    res = AIService.consult_pitch(db_session, user_prompt=prompt, ngay_mong_muon=None)
+
+    assert res.analyzed_intent.get("intent") == "pitch_booking"
+    assert res.analyzed_intent.get("loai_san") == "Sân 7"
+    assert len(res.assistant_message) > 0
+
+
+def test_ai_consult_edge_empty_and_whitespace_prompt(db_session):
+    """
+    [TIÊU CHÍ 8 - KT3] KIỂM THỬ TRƯỜNG HỢP BIÊN (PROMPT RỖNG, DẤU CÁCH HOẶC QUÁ NGẮN):
+    Khi người dùng gửi chuỗi rỗng "", dấu cách "   " hoặc 1 ký tự:
+    - AI phải xác định là out_of_scope ngay lập tức.
+    - Trả về thông báo từ chối lịch sự chuẩn quy tắc.
+    """
+    invalid_prompts = ["", "   ", "a", " ? "]
+    for p in invalid_prompts:
+        res = AIService.consult_pitch(db_session, user_prompt=p)
+        assert res.co_san_phu_hop is False
+        assert len(res.recommended_slots) == 0
+        assert res.analyzed_intent.get("intent") == "out_of_scope"
+        assert res.assistant_message == "Xin lỗi! Điều này không nằm trọng phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
+
+
