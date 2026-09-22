@@ -11,15 +11,15 @@ echo.
 
 cd /d "%~dp0"
 
-echo Dang khoi dong Web Server tren cong 3000...
+echo Dang khoi dong Web Server tren cong 3000 (Lang nghe tren tat ca card mang)...
 echo Dia chi truy cap: http://127.0.0.1:3000
 echo.
-echo Luu y: Dam bao Backend API dang chay tai http://127.0.0.1:8000
+echo Luu y: Dam bao Backend API dang chay tai cong 8000
 echo (De dung server, nhan Ctrl + C hoac dong cua so nay)
 echo ========================================================================
 echo.
 
 start "" "http://127.0.0.1:3000"
 
-python -m http.server 3000 --bind 127.0.0.1
+python -m http.server 3000
 pause

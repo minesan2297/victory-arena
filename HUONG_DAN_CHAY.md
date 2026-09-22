@@ -1,9 +1,9 @@
 # HƯỚNG DẪN VẬN HÀNH HỆ THỐNG VICTORY ARENA v2.0
 **Nhóm 20 — Lớp K23C CNTT | GVHD: ThS. Nguyễn Tuấn Anh**
 
-Hệ thống được thiết kế theo kiến trúc phân tách chuyên nghiệp (**Decoupled Architecture**):
-- **Phân hệ Backend (FastAPI RESTful API):** Cổng `8000` (Tài liệu OpenAPI tại `/docs`)
-- **Phân hệ Frontend (Single Page Application):** Cổng `3000`
+Hệ thống được thiết kế theo kiến trúc phân tách hiện đại (**Decoupled Architecture**), đồng thời hỗ trợ cả mô hình **All-in-One**:
+- **Phân hệ Backend (FastAPI RESTful API):** Cổng `8000` (Tài liệu OpenAPI tại `/docs`, tích hợp sẵn Web SPA tại `/`)
+- **Phân hệ Frontend (Single Page Application):** Cổng `3000` (hoặc Live Server cổng `5500`, hoặc chạy thẳng cổng `8000`)
 
 ---
 
@@ -11,16 +11,30 @@ Hệ thống được thiết kế theo kiến trúc phân tách chuyên nghiệ
 
 - Bấm đúp chuột vào file: **`CHAY_HE_THONG.bat`** (tại thư mục gốc).
 - Kịch bản sẽ tự động:
-  1. Kiểm tra môi trường Python và cài đặt thư viện phụ thuộc.
+  1. Kiểm tra môi trường Python và tự cài đặt thư viện nếu máy mới chưa có.
   2. Nạp dữ liệu cơ sở dữ liệu (5 sân bóng tiêu chuẩn, biểu giá và các tài khoản mẫu).
-  3. Khởi động song song 2 cửa sổ tiến trình:
-     - **Backend Server:** `http://127.0.0.1:8000`
-     - **Frontend Web:** `http://127.0.0.1:3000`
-  4. Tự động mở trình duyệt web tại `http://127.0.0.1:3000`.
+  3. Khởi động song song 2 cửa sổ tiến trình (bind `0.0.0.0` để các máy khác cùng mạng truy cập được):
+     - **Backend Server:** `http://127.0.0.1:8000` (hoặc `http://<IP-May-Ban>:8000`)
+     - **Frontend Web:** `http://127.0.0.1:3000` (hoặc `http://<IP-May-Ban>:3000`)
+  4. Tự động hiển thị địa chỉ IP mạng LAN và mở trình duyệt web tại `http://127.0.0.1:3000`.
 
 ---
 
-## 💻 Cách 2: Khởi động Độc lập Từng Phân hệ
+## 🌐 Cách 2: Đưa Chương Trình Cho Người Khác Sử Dụng
+
+### Trường hợp A: Người khác kết nối từ điện thoại / máy tính khác qua cùng mạng WiFi/LAN
+1. Trên máy của bạn, chạy file **`CHAY_HE_THONG.bat`**.
+2. Nhìn vào cửa sổ khởi động, hệ thống sẽ in ra địa chỉ IP của bạn (ví dụ: `http://192.168.1.15:3000` hoặc `http://192.168.1.15:8000`).
+3. Gửi địa chỉ đó cho bạn bè/thầy cô mở trên trình duyệt của họ.
+4. Hệ thống đã được cấu hình **Dynamic Hostname Interceptor** và **Full CORS**, các thiết bị khác đăng nhập mượt mà không bao giờ bị lỗi kết nối máy chủ!
+
+### Trường hợp B: Người khác sao chép (copy) toàn bộ thư mục mã nguồn về máy tính của họ
+1. Người đó chỉ cần mở thư mục và nhấp đúp vào **`CHAY_HE_THONG.bat`**.
+2. Hệ thống sẽ tự động phát hiện Python, cài đặt thư viện thiếu (nếu có), tự động nạp cơ sở dữ liệu `mini_victory.db` đầy đủ tài khoản, và mở trình duyệt web lên sẵn sàng sử dụng.
+
+---
+
+## 💻 Cách 3: Khởi động Độc lập Từng Phân hệ
 
 ### 1. Khởi động Phân hệ Backend:
 - **Tự động:** Bấm đúp vào `backend/chay_backend.bat`.
@@ -29,9 +43,10 @@ Hệ thống được thiết kế theo kiến trúc phân tách chuyên nghiệ
   cd backend
   python -m pip install -r requirements.txt
   python seed_data.py
-  python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+  python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
   ```
-- **Tài liệu API Backend:**
+- **Tài liệu API Backend & Web SPA:**
+  - Giao diện Web All-in-One: [http://127.0.0.1:8000](http://127.0.0.1:8000)
   - Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
   - ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
@@ -40,8 +55,7 @@ Hệ thống được thiết kế theo kiến trúc phân tách chuyên nghiệ
 - **Thủ công qua Terminal:**
   ```powershell
   cd frontend
-  python -m http.server 3000 --bind 127.0.0.1
-  # Hoặc dùng NodeJS: npm start
+  python -m http.server 3000
   ```
 - **Giao diện Web:** [http://127.0.0.1:3000](http://127.0.0.1:3000)
 
@@ -64,4 +78,4 @@ Hệ thống được thiết kế theo kiến trúc phân tách chuyên nghiệ
 cd backend
 python -m pytest -v
 ```
-*(Toàn bộ 11/11 ca kiểm thử chuyên sâu về Auth, Booking, Chống trùng lịch Overlap toán học, Giữ chỗ 10 phút, Hoàn tiền cọc và AI đều PASS 100%).*
+*(Toàn bộ các ca kiểm thử chuyên sâu về Auth, Booking, Chống trùng lịch Overlap toán học, Giữ chỗ 10 phút, Hoàn tiền cọc và AI đều PASS 100%).*

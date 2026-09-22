@@ -1,6 +1,11 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from typing import Optional
+
+# Xác định đường dẫn thư mục backend và CSDL mặc định tuyệt đối
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_DB_FILE = BACKEND_DIR / "mini_victory.db"
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
@@ -12,8 +17,8 @@ class Settings(BaseSettings):
     host: str = '0.0.0.0'
     port: int = 8000
     
-    # Database
-    database_url: str = 'sqlite:///./mini_victory.db'
+    # Database - Sử dụng đường dẫn tuyệt đối ổn định, tránh tạo DB rỗng khi chạy từ thư mục khác
+    database_url: str = f"sqlite:///{DEFAULT_DB_FILE.as_posix()}"
     
     # JWT Auth
     jwt_secret_key: str = 'footy-arena-secret-key-nhom20-2026'

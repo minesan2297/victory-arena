@@ -27,16 +27,17 @@ if not exist "mini_victory.db" (
 )
 echo.
 
-echo [3/3] Khoi dong May chu FastAPI tren cong 8000...
-echo - API Base URL:      http://127.0.0.1:8000
-echo - OpenAPI Swagger:   http://127.0.0.1:8000/docs
-echo - ReDoc Spec:        http://127.0.0.1:8000/redoc
+echo [3/3] Khoi dong May chu FastAPI tren cong 8000 (Lang nghe tren 0.0.0.0)...
+echo - Web SPA All-in-One: http://127.0.0.1:8000
+echo - API Base URL:       http://127.0.0.1:8000/api
+echo - OpenAPI Swagger:    http://127.0.0.1:8000/docs
+echo - ReDoc Spec:         http://127.0.0.1:8000/redoc
 echo.
 echo (De dung may chu, nhan Ctrl + C hoac dong cua so nay)
 echo ========================================================================
 echo.
 
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 pause
 exit /b 0
 

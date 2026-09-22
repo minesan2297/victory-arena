@@ -5,7 +5,7 @@ color 0A
 
 echo ========================================================================
 echo   VICTORY ARENA v2.0 - HE THONG QUAN LY SAN BONG DA TICH HOP AI
-echo   Kien truc Tach biet: Frontend (Port 3000) ^& Backend (Port 8000)
+echo   Kien truc Linh hoat: Ho tro chay Song song (3000 & 8000) hoac All-in-One (8000)
 echo   Nhom 20 - K23C CNTT - GVHD: ThS. Nguyen Tuan Anh
 echo ========================================================================
 echo.
@@ -50,9 +50,14 @@ goto :start_servers
 
 :start_servers
 echo.
-echo [4/4] Dang khoi dong song song ca 2 tien trinh:
-echo  1. Backend RESTful API:  http://127.0.0.1:8000  (Tai lieu: /docs)
-echo  2. Frontend Web Client:   http://127.0.0.1:3000
+echo [4/4] Dang khoi dong He thong (Lang nghe tren tat ca cac card mang 0.0.0.0):
+echo  - May cuc bo (Localhost):  http://127.0.0.1:3000  hoac  http://127.0.0.1:8000
+echo  - Backend API & Swagger:   http://127.0.0.1:8000/docs
+echo.
+echo  * LUU Y KHI CHIA SE CHO NGUOI KHAC TRONG CUNG MANG WIFI / LAN:
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /r /c:"IPv4 Address" /c:"Dia chi IPv4"') do (
+    echo    + Link cho nguoi khac truy cap: http:%%a:3000 hoac http:%%a:8000
+)
 echo.
 echo [INFO] Tai khoan Quan tri (ADMIN): admin / Mat khau: admin123
 echo [INFO] Tai khoan Nhan vien (STAFF): staff / Mat khau: staff123
@@ -61,11 +66,11 @@ echo [INFO] Tai khoan Test cua ban: test01 / Mat khau: 123456
 echo ========================================================================
 echo.
 
-:: Khoi dong Backend Server tren port 8000 o cua so rieng
-start "Victory Arena - Backend Server (Port 8000)" cmd /k "cd /d ""%~dp0backend"" && title Backend API (Port 8000) && color 0A && echo Dang chay Backend API tren http://127.0.0.1:8000 ... && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload"
+:: Khoi dong Backend Server tren port 8000 (bind 0.0.0.0 de cho phep cac thiet bi khac ket noi)
+start "Victory Arena - Backend Server (Port 8000)" cmd /k "cd /d ""%~dp0backend"" && title Backend API (Port 8000) && color 0A && echo Dang chay Backend API tren http://0.0.0.0:8000 ... && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-:: Khoi dong Frontend Server tren port 3000 o cua so rieng
-start "Victory Arena - Frontend Web (Port 3000)" cmd /k "cd /d ""%~dp0frontend"" && title Frontend Web (Port 3000) && color 0B && echo Dang phuc vu Frontend tren http://127.0.0.1:3000 ... && python -m http.server 3000 --bind 127.0.0.1"
+:: Khoi dong Frontend Server tren port 3000 (bind 0.0.0.0 cho phep thiet bi khac trong mang truy cap)
+start "Victory Arena - Frontend Web (Port 3000)" cmd /k "cd /d ""%~dp0frontend"" && title Frontend Web (Port 3000) && color 0B && echo Dang phuc vu Frontend tren cong 3000 (0.0.0.0) ... && python -m http.server 3000"
 
 :: Cho 2 giay de hai server khoi dong on dinh roi mo trinh duyet
 timeout /t 2 /nobreak >nul

@@ -352,14 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
             await wait(450);
             
             // Reset door & mascot
-            if (doorBtn) doorBtn.classList.remove('dooropen', 'walking', 'out');
-            if (huskyGuard) huskyGuard.classList.remove('is-happy');
-            
             checkAuth();
         } catch (err) {
+            console.error('[Victory Arena] Lỗi kết nối API đăng nhập:', err);
             if (doorBtn) doorBtn.classList.remove('dooropen', 'walking', 'out');
-            showAuthAlert("Lỗi kết nối máy chủ. Vui lòng thử lại!");
-            showToast("Lỗi kết nối máy chủ", "error");
+            const targetServer = window.API_CONFIG ? (window.API_CONFIG.BASE_URL || window.location.origin) : 'http://127.0.0.1:8000';
+            showAuthAlert(`Lỗi kết nối máy chủ (${targetServer}). Vui lòng đảm bảo Backend API đang chạy!`);
+            showToast("Không thể kết nối máy chủ", "error");
         }
     });
 
@@ -451,10 +450,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Switch tab & prefill username
             btnTabLogin.click();
             if (loginUsernameInput) loginUsernameInput.value = username;
-            if (loginPasswordInput) loginPasswordInput.focus();
         } catch (err) {
-            showAuthAlert("Lỗi kết nối máy chủ");
-            showToast("Lỗi kết nối máy chủ", "error");
+            console.error('[Victory Arena] Lỗi kết nối API đăng ký:', err);
+            const targetServer = window.API_CONFIG ? (window.API_CONFIG.BASE_URL || window.location.origin) : 'http://127.0.0.1:8000';
+            showAuthAlert(`Lỗi kết nối máy chủ (${targetServer}). Vui lòng đảm bảo Backend API đang chạy!`);
+            showToast("Không thể kết nối máy chủ", "error");
         }
     });
 
