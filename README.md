@@ -1,7 +1,7 @@
 # HỆ THỐNG QUẢN LÝ SÂN THỂ THAO CHO THUÊ TÍCH HỢP AI (VICTORY ARENA v2.0)
 
 * **Học phần:** Phân tích Thiết kế và Phát triển Hệ thống Thông tin
-* **Đề tài:** Hệ thống Quản lý Sân thể thao cho thuê có tích hợp AI (Bài kiểm tra thường xuyên 2)
+* **Đề tài:** Hệ thống Quản lý Sân thể thao cho thuê có tích hợp AI
 * **Đơn vị thực hiện:** Nhóm 20 — Lớp K23C CNTT, Khoa Công nghệ Thông tin
 * **Giảng viên hướng dẫn:** ThS. Nguyễn Tuấn Anh
 * **Chuẩn mã nguồn:** **Python PEP 8** (Kiến trúc phân tầng Layered Architecture, Type Hints, Pydantic v2)

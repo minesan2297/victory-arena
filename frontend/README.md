@@ -1,6 +1,6 @@
 # PHÂN HỆ FRONTEND — VICTORY ARENA v2.0
 
-* **Học phần:** Phân tích Thiết kế và Phát triển Hệ thống Thông tin (Bài kiểm tra thường xuyên 2)
+* **Học phần:** Phân tích Thiết kế và Phát triển Hệ thống Thông tin
 * **Đơn vị phát triển:** Nhóm 20 — Lớp K23C CNTT
 * **Giảng viên hướng dẫn:** ThS. Nguyễn Tuấn Anh
 * **Công nghệ:** HTML5 Semantic, Cyberpunk/Glassmorphism CSS3, JavaScript ES6+ SPA, FontAwesome 6, Husky Guard Mascot SVG
