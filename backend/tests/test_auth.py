@@ -275,3 +275,53 @@ def test_doi_mat_khau_tc7_mat_khau_hien_tai_de_trong(authenticated_client):
     }, headers=headers)
     assert res.status_code == 422
     assert 'mật khẩu hiện tại' in res.json()['detail'].lower()
+
+
+def test_doi_mat_khau_thuc_su_luu_vao_db(client_and_db):
+    """Xác minh mật khẩu mới thực sự được lưu vào database:
+    Sau khi đổi mật khẩu thành công, đăng nhập với mật khẩu cũ phải thất bại,
+    đăng nhập với mật khẩu mới phải thành công.
+    """
+    client, session = client_and_db
+
+    # 1. Đăng ký tài khoản
+    client.post('/api/auth/register', json={
+        'ten_dang_nhap': 'dbverifyuser',
+        'mat_khau': 'OldPass123',
+        'ho_ten': 'DB Verify User',
+        'so_dien_thoai': '0911222333'
+    })
+
+    # 2. Đăng nhập lấy token
+    res_login = client.post('/api/auth/login', json={
+        'ten_dang_nhap': 'dbverifyuser',
+        'mat_khau': 'OldPass123'
+    })
+    assert res_login.status_code == 200
+    token = res_login.json()['access_token']
+    headers = {'Authorization': f'Bearer {token}'}
+
+    # 3. Đổi mật khẩu
+    res_change = client.post('/api/auth/change-password', json={
+        'mat_khau_hien_tai': 'OldPass123',
+        'mat_khau_moi': 'NewPass456',
+        'xac_nhan_mat_khau_moi': 'NewPass456'
+    }, headers=headers)
+    assert res_change.status_code == 200
+    assert res_change.json()['message'] == 'Đổi mật khẩu thành công'
+
+    # 4. Đăng nhập bằng mật khẩu CŨ → PHẢI THẤT BẠI (xác minh DB đã cập nhật)
+    res_old = client.post('/api/auth/login', json={
+        'ten_dang_nhap': 'dbverifyuser',
+        'mat_khau': 'OldPass123'
+    })
+    assert res_old.status_code == 401, "Mật khẩu cũ vẫn hoạt động — DB chưa được cập nhật!"
+
+    # 5. Đăng nhập bằng mật khẩu MỚI → PHẢI THÀNH CÔNG
+    res_new = client.post('/api/auth/login', json={
+        'ten_dang_nhap': 'dbverifyuser',
+        'mat_khau': 'NewPass456'
+    })
+    assert res_new.status_code == 200, "Mật khẩu mới không hoạt động — DB chưa lưu đúng!"
+    assert 'access_token' in res_new.json()
+

@@ -83,16 +83,32 @@ class AuthService:
         TC5: Mật khẩu mới không hợp lệ (C2=F) — bị chặn tại schema validator
         TC6: Mật khẩu hiện tại sai (C1=F) — xử lý tại đây
         TC7: Mật khẩu hiện tại để trống (C1=B) — bị chặn tại schema validator
+
+        LƯU Ý: current_user được lấy từ get_current_user dependency (session riêng).
+        Phải re-fetch qua db session hiện tại để tránh lỗi DetachedInstanceError
+        và đảm bảo db.commit() lưu đúng vào database.
         """
+        # Re-fetch user qua db session hiện tại để tránh session mismatch
+        user = db.query(TaiKhoan).filter(
+            TaiKhoan.tai_khoan_id == current_user.tai_khoan_id
+        ).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tài khoản không tồn tại"
+            )
+
         # TC6: Kiểm tra mật khẩu hiện tại có đúng không
-        if not verify_password(data.mat_khau_hien_tai, current_user.mat_khau_hash):
+        if not verify_password(data.mat_khau_hien_tai, user.mat_khau_hash):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Mật khẩu hiện tại không đúng"
             )
 
-        # TC1: Tất cả hợp lệ — cập nhật mật khẩu
-        current_user.mat_khau_hash = hash_password(data.mat_khau_moi)
+        # TC1: Tất cả hợp lệ — cập nhật mật khẩu và lưu vào database
+        user.mat_khau_hash = hash_password(data.mat_khau_moi)
         db.commit()
+        db.refresh(user)
         return {"message": "Đổi mật khẩu thành công"}
+
 
