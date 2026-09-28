@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas.auth_schema import RegisterRequest, LoginRequest, TokenResponse, UserResponse
+from app.schemas.auth_schema import (
+    RegisterRequest, LoginRequest, TokenResponse, UserResponse,
+    DoiMatKhauRequest, DoiMatKhauResponse
+)
 from app.services.auth_service import AuthService
 from app.auth.dependencies import get_current_user
 from app.models.tai_khoan import TaiKhoan
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
 
 @router.post("/register", response_model=UserResponse)
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
@@ -22,9 +26,11 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         trang_thai=user.trang_thai
     )
 
+
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     return AuthService.login(db, data)
+
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: TaiKhoan = Depends(get_current_user)):
@@ -39,3 +45,19 @@ def get_me(current_user: TaiKhoan = Depends(get_current_user)):
         diem_uy_tin=current_user.diem_uy_tin,
         trang_thai=current_user.trang_thai
     )
+
+
+@router.post("/change-password", response_model=DoiMatKhauResponse)
+def doi_mat_khau(
+    data: DoiMatKhauRequest,
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(get_current_user)
+):
+    """Đổi mật khẩu tài khoản đang đăng nhập.
+
+    - C1 (mat_khau_hien_tai): T=khớp DB, F=sai, B=để trống
+    - C2 (mat_khau_moi): T=hợp lệ, F=không hợp lệ (< 6 ký tự), B=để trống
+    - C3 (xac_nhan_mat_khau_moi): T=khớp, F=không khớp, B=để trống
+    """
+    result = AuthService.doi_mat_khau(db, current_user, data)
+    return DoiMatKhauResponse(message=result["message"])

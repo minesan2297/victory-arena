@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.tai_khoan import TaiKhoan, VaiTro
 from app.models.enums import VaiTroEnum
-from app.schemas.auth_schema import RegisterRequest, LoginRequest, TokenResponse
+from app.schemas.auth_schema import RegisterRequest, LoginRequest, TokenResponse, DoiMatKhauRequest
 from app.auth.security import hash_password, verify_password, create_access_token
 
 class AuthService:
@@ -71,3 +71,28 @@ class AuthService:
             ho_ten=user.ho_ten,
             vai_tro=user.vai_tro.ten_vai_tro
         )
+
+    @staticmethod
+    def doi_mat_khau(db: Session, current_user: TaiKhoan, data: DoiMatKhauRequest) -> dict:
+        """Đổi mật khẩu — xử lý đầy đủ 7 test case trong tài liệu kiểm thử.
+        
+        TC1: Thành công (C1=T, C2=T, C3=T)
+        TC2: Xác nhận không khớp (C3=F) — bị chặn tại schema validator
+        TC3: Xác nhận để trống (C3=B) — bị chặn tại schema validator
+        TC4: Mật khẩu mới để trống (C2=B) — bị chặn tại schema validator
+        TC5: Mật khẩu mới không hợp lệ (C2=F) — bị chặn tại schema validator
+        TC6: Mật khẩu hiện tại sai (C1=F) — xử lý tại đây
+        TC7: Mật khẩu hiện tại để trống (C1=B) — bị chặn tại schema validator
+        """
+        # TC6: Kiểm tra mật khẩu hiện tại có đúng không
+        if not verify_password(data.mat_khau_hien_tai, current_user.mat_khau_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mật khẩu hiện tại không đúng"
+            )
+
+        # TC1: Tất cả hợp lệ — cập nhật mật khẩu
+        current_user.mat_khau_hash = hash_password(data.mat_khau_moi)
+        db.commit()
+        return {"message": "Đổi mật khẩu thành công"}
+

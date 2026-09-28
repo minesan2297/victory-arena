@@ -3847,3 +3847,225 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<div class="ai-markdown-content">${html}</div>`;
     }
 });
+
+// ============================================================
+// MODULE: Đổi Mật Khẩu (Change Password)
+// Khớp với 7 test case trong tài liệu kiểm thử
+// ============================================================
+
+(function initDoiMatKhauModule() {
+    const modalEl = document.getElementById('modal-doi-mat-khau');
+    const btnOpen = document.getElementById('btn-open-doi-mat-khau');
+    const btnClose = document.getElementById('btn-close-doi-mat-khau');
+    const form = document.getElementById('form-doi-mat-khau');
+    const errorBox = document.getElementById('doi-mat-khau-error');
+    const errorText = document.getElementById('doi-mat-khau-error-text');
+    const successBox = document.getElementById('doi-mat-khau-success');
+    const submitBtn = document.getElementById('btn-submit-doi-mat-khau');
+
+    if (!modalEl) return; // Guard: chưa render
+
+    /** Mở modal và reset form */
+    function openModal() {
+        if (form) form.reset();
+        hideMessages();
+        ['cp-current', 'cp-new', 'cp-confirm'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.borderColor = 'rgba(255,255,255,0.1)';
+        });
+        ['err-cp-current', 'err-cp-new', 'err-cp-confirm'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.style.display = 'none'; el.textContent = ''; }
+        });
+        modalEl.style.display = 'flex';
+        // Đóng modal profile nếu đang mở
+        const profileModal = document.getElementById('modal-user-profile');
+        if (profileModal) profileModal.style.display = 'none';
+    }
+
+    /** Đóng modal */
+    function closeModal() {
+        modalEl.style.display = 'none';
+    }
+
+    /** Ẩn cả 2 thông báo */
+    function hideMessages() {
+        if (errorBox) errorBox.style.display = 'none';
+        if (successBox) successBox.style.display = 'none';
+    }
+
+    /** Hiển thị lỗi tổng */
+    function showError(msg) {
+        if (errorText) errorText.textContent = msg;
+        if (errorBox) errorBox.style.display = 'block';
+        if (successBox) successBox.style.display = 'none';
+    }
+
+    /** Hiển thị thành công */
+    function showSuccess() {
+        if (successBox) successBox.style.display = 'block';
+        if (errorBox) errorBox.style.display = 'none';
+    }
+
+    /** Hiển thị lỗi field cụ thể */
+    function showFieldError(fieldId, errId, msg) {
+        const input = document.getElementById(fieldId);
+        const errEl = document.getElementById(errId);
+        if (input) input.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+        if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+        showError(msg);
+    }
+
+    /** Toggle eye password */
+    document.querySelectorAll('.cp-toggle-pw').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const icon = btn.querySelector('i');
+            if (!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            if (icon) {
+                icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+            }
+        });
+    });
+
+    // Reset border khi user gõ
+    ['cp-current', 'cp-new', 'cp-confirm'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                el.style.borderColor = 'rgba(255,255,255,0.1)';
+                const errId = 'err-' + id;
+                const errEl = document.getElementById(errId);
+                if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+                hideMessages();
+            });
+        }
+    });
+
+    // Mở modal khi nhấn nút trong profile
+    if (btnOpen) btnOpen.addEventListener('click', openModal);
+
+    // Đóng modal
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (modalEl) {
+        modalEl.addEventListener('click', (e) => {
+            if (e.target === modalEl) closeModal();
+        });
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalEl && modalEl.style.display !== 'none') closeModal();
+    });
+
+    /** Submit form đổi mật khẩu */
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+
+            const matKhauHienTai = (document.getElementById('cp-current') || {}).value || '';
+            const matKhauMoi = (document.getElementById('cp-new') || {}).value || '';
+            const xacNhan = (document.getElementById('cp-confirm') || {}).value || '';
+
+            // === Client-side validation khớp test case ===
+            // TC7: C1=B — Mật khẩu hiện tại để trống
+            if (!matKhauHienTai.trim()) {
+                showFieldError('cp-current', 'err-cp-current', 'Vui lòng nhập mật khẩu hiện tại');
+                return;
+            }
+            // TC4: C2=B — Mật khẩu mới để trống
+            if (!matKhauMoi.trim()) {
+                showFieldError('cp-new', 'err-cp-new', 'Vui lòng nhập mật khẩu mới');
+                return;
+            }
+            // TC5: C2=F — Mật khẩu mới không hợp lệ (< 6 ký tự)
+            if (matKhauMoi.trim().length < 6) {
+                showFieldError('cp-new', 'err-cp-new', 'Mật khẩu mới không hợp lệ (phải có ít nhất 6 ký tự)');
+                return;
+            }
+            // TC3: C3=B — Xác nhận mật khẩu để trống
+            if (!xacNhan.trim()) {
+                showFieldError('cp-confirm', 'err-cp-confirm', 'Vui lòng nhập xác nhận mật khẩu mới');
+                return;
+            }
+            // TC2: C3=F — Xác nhận không khớp
+            if (matKhauMoi !== xacNhan) {
+                showFieldError('cp-confirm', 'err-cp-confirm', 'Xác nhận mật khẩu mới không khớp với mật khẩu mới');
+                return;
+            }
+
+            // Gọi API
+            const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+            if (!token) {
+                showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+            }
+
+            try {
+                const API_BASE = (typeof window.API_BASE_URL !== 'undefined') ? window.API_BASE_URL : '';
+                const res = await fetch(API_BASE + '/api/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        mat_khau_hien_tai: matKhauHienTai,
+                        mat_khau_moi: matKhauMoi,
+                        xac_nhan_mat_khau_moi: xacNhan
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // TC1: Đổi mật khẩu thành công
+                    if (form) form.reset();
+                    showSuccess();
+                    setTimeout(() => closeModal(), 2200);
+                } else {
+                    const detail = data.detail || 'Đổi mật khẩu không thành công';
+                    if (typeof detail === 'string') {
+                        // TC6: Mật khẩu hiện tại không đúng
+                        if (detail.includes('không đúng') || detail.includes('hiện tại')) {
+                            showFieldError('cp-current', 'err-cp-current', detail);
+                        } else {
+                            showError(detail);
+                        }
+                    } else if (Array.isArray(detail)) {
+                        // Lỗi Pydantic từ server (backup cho TC2-TC5, TC7 nếu client pass)
+                        const firstErr = detail[0];
+                        const msg = (firstErr && firstErr.msg) ? firstErr.msg.replace('Value error, ', '') : 'Dữ liệu không hợp lệ';
+                        const fieldLoc = (firstErr && firstErr.loc) ? firstErr.loc.join('.') : '';
+                        if (fieldLoc.includes('mat_khau_hien_tai')) {
+                            showFieldError('cp-current', 'err-cp-current', msg);
+                        } else if (fieldLoc.includes('mat_khau_moi')) {
+                            showFieldError('cp-new', 'err-cp-new', msg);
+                        } else if (fieldLoc.includes('xac_nhan')) {
+                            showFieldError('cp-confirm', 'err-cp-confirm', msg);
+                        } else {
+                            showError(msg);
+                        }
+                    } else {
+                        showError('Đổi mật khẩu không thành công. Vui lòng thử lại.');
+                    }
+                }
+            } catch (err) {
+                console.error('[DoiMatKhau] Lỗi kết nối:', err);
+                showError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-key"></i> Xác Nhận Đổi Mật Khẩu';
+                }
+            }
+        });
+    }
+})();

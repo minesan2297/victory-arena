@@ -1,6 +1,7 @@
 import re
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing import Optional
+
 
 class LoginRequest(BaseModel):
     ten_dang_nhap: str
@@ -20,6 +21,7 @@ class LoginRequest(BaseModel):
         if not v or not v.strip():
             raise ValueError('Mật khẩu không được để trống hoặc chỉ chứa khoảng trắng')
         return v
+
 
 class RegisterRequest(BaseModel):
     ten_dang_nhap: str = Field(..., min_length=3, max_length=50)
@@ -78,12 +80,14 @@ class RegisterRequest(BaseModel):
             raise ValueError('Địa chỉ email không đúng định dạng')
         return v_clean.lower()
 
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = 'bearer'
     user_id: int
     ho_ten: str
     vai_tro: str
+
 
 class UserResponse(BaseModel):
     tai_khoan_id: int
@@ -96,3 +100,49 @@ class UserResponse(BaseModel):
     trang_thai: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DoiMatKhauRequest(BaseModel):
+    """Schema yêu cầu đổi mật khẩu — khớp với 7 test case trong tài liệu kiểm thử."""
+    mat_khau_hien_tai: str
+    mat_khau_moi: str
+    xac_nhan_mat_khau_moi: str
+
+    # TC7: Mật khẩu hiện tại để trống
+    @field_validator('mat_khau_hien_tai')
+    @classmethod
+    def validate_mat_khau_hien_tai(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError('Vui lòng nhập mật khẩu hiện tại')
+        return v
+
+    # TC4: Mật khẩu mới để trống | TC5: Mật khẩu mới không hợp lệ (< 6 ký tự)
+    @field_validator('mat_khau_moi')
+    @classmethod
+    def validate_mat_khau_moi(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError('Vui lòng nhập mật khẩu mới')
+        if len(v.strip()) < 6:
+            raise ValueError('Mật khẩu mới không hợp lệ (phải có ít nhất 6 ký tự)')
+        return v
+
+    # TC3: Xác nhận mật khẩu để trống
+    @field_validator('xac_nhan_mat_khau_moi')
+    @classmethod
+    def validate_xac_nhan(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError('Vui lòng nhập xác nhận mật khẩu mới')
+        return v
+
+    # TC2: Xác nhận mật khẩu không khớp
+    @model_validator(mode='after')
+    def check_passwords_match(self) -> 'DoiMatKhauRequest':
+        if (self.mat_khau_moi and self.xac_nhan_mat_khau_moi
+                and self.mat_khau_moi != self.xac_nhan_mat_khau_moi):
+            raise ValueError('Xác nhận mật khẩu mới không khớp với mật khẩu mới')
+        return self
+
+
+class DoiMatKhauResponse(BaseModel):
+    """Phản hồi sau khi đổi mật khẩu thành công."""
+    message: str = 'Đổi mật khẩu thành công'
