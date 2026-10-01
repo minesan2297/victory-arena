@@ -19,7 +19,7 @@ from app.routers import (
     ai_router,
     bao_cao_router
 )
-from app.services import start_lock_expiry_scheduler
+from app.tasks import start_lock_expiry_scheduler
 
 # Đảm bảo các models đã được nạp
 import app.models  # noqa: F401
@@ -37,7 +37,9 @@ def auto_seed_initial_data():
                 # Cơ sở dữ liệu rỗng, tự động gọi nạp dữ liệu mẫu
                 import importlib.util
                 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                seed_path = os.path.join(backend_dir, "seed_data.py")
+                seed_path = os.path.join(backend_dir, "scripts", "seed_data.py")
+                if not os.path.exists(seed_path):
+                    seed_path = os.path.join(backend_dir, "seed_data.py")
                 if os.path.exists(seed_path):
                     spec = importlib.util.spec_from_file_location("seed_data_mod", seed_path)
                     seed_mod = importlib.util.module_from_spec(spec)

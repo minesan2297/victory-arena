@@ -5,7 +5,7 @@ color 0A
 
 echo ========================================================================
 echo   VICTORY ARENA v2.0 - PHAN HE BACKEND RESTFUL API
-echo   Nhom 20 - K23C CNTT - GVHD: ThS. Nguyen Tuan Anh
+echo   Nhom 20 - K23C CNTT - GVHD: TS. Nguyen Tuan Anh
 echo ========================================================================
 echo.
 
@@ -19,11 +19,11 @@ python -c "import sys; print('[OK] Tim thay: Python ' + sys.version.split()[0])"
 echo.
 
 echo [2/3] Kiem tra co so du lieu...
-if not exist "mini_victory.db" (
-    echo [THONG BAO] Khoi tao co so du lieu mini_victory.db...
+if not exist "data\mini_victory.db" (
+    echo [THONG BAO] Khoi tao co so du lieu data\mini_victory.db...
     python seed_data.py
 ) else (
-    echo [OK] Co so du lieu mini_victory.db da san sang!
+    echo [OK] Co so du lieu data\mini_victory.db da san sang!
 )
 echo.
 

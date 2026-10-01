@@ -6,7 +6,7 @@ color 0A
 echo ========================================================================
 echo   VICTORY ARENA v2.0 - HE THONG QUAN LY SAN BONG DA TICH HOP AI
 echo   Kien truc Linh hoat: Ho tro chay Song song (3000 & 8000) hoac All-in-One (8000)
-echo   Nhom 20 - K23C CNTT - GVHD: ThS. Nguyen Tuan Anh
+echo   Nhom 20 - K23C CNTT - GVHD: TS. Nguyen Tuan Anh
 echo ========================================================================
 echo.
 
@@ -37,8 +37,8 @@ goto :check_db
 
 :check_db
 echo [3/4] Kiem tra co so du lieu Backend...
-if not exist "backend\mini_victory.db" goto :init_db
-echo [OK] Co so du lieu backend\mini_victory.db da san sang!
+if not exist "backend\data\mini_victory.db" goto :init_db
+echo [OK] Co so du lieu backend\data\mini_victory.db da san sang!
 goto :start_servers
 
 :init_db

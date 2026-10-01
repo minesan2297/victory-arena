@@ -17,7 +17,9 @@ from app.models.san import LoaiSan, San, BangGia
 from app.models.dat_san import DatSan, LichDat
 from app.models.hoa_don import HoaDon, ThanhToan, CheckIn
 from app.models.dich_vu import DanhMucDichVu, SuDungDichVu
-from app.models.ai_models import AIConfig, AIRequest, BaoCao, ThongBao
+from app.models.bao_cao import BaoCao
+from app.models.thong_bao import ThongBao
+from app.models.ai_models import AIConfig, AIRequest
 
 __all__ = [
     'VaiTroEnum',
@@ -44,8 +46,8 @@ __all__ = [
     'CheckIn',
     'DanhMucDichVu',
     'SuDungDichVu',
+    'BaoCao',
+    'ThongBao',
     'AIConfig',
     'AIRequest',
-    'BaoCao',
-    'ThongBao'
 ]

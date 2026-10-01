@@ -52,3 +52,13 @@ PROMPT_EXPERIMENTS.md
 AI_CODE_REVIEW_EVIDENCE.md
 
 
+
+# SQLite Databases & Local Data (Do not commit to Git)
+*.db
+*.sqlite
+*.sqlite3
+backend/data/*.db
+backend/mini_victory.db
+backend/sports_court.db
+mini_victory.db
+sports_court.db

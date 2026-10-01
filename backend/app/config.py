@@ -3,9 +3,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from typing import Optional
 
-# Xác định đường dẫn thư mục backend và CSDL mặc định tuyệt đối
+# Xác định đường dẫn thư mục backend và CSDL mặc định tuyệt đối (lưu trong backend/data/)
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_DB_FILE = BACKEND_DIR / "mini_victory.db"
+DATA_DIR = BACKEND_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DEFAULT_DB_FILE = DATA_DIR / "mini_victory.db"
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
