@@ -865,13 +865,25 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             let actionBtnHtml = '';
                             if (b.trang_thai === 'cho_coc') {
-                                badgeClass = 'badge-pending';
-                                stateText = 'CHỜ CỌC (10P)';
-                                actionBtnHtml = `
-                                    <button class="btn btn-xs btn-success" style="margin-top: 6px;" onclick="window.showQrPaymentModal('${b.ma_don}', ${b.tien_coc}, 'deposit')">
-                                        <i class="fa-solid fa-qrcode"></i> Trả Cọc QR
-                                    </button>
-                                `;
+                                const expDate = parseUtcDate(b.lock_expires_at);
+                                const isExpired = expDate ? (expDate.getTime() - Date.now() <= 0) : false;
+                                if (isExpired) {
+                                    badgeClass = 'badge-danger';
+                                    stateText = 'ĐÃ HẾT HẠN';
+                                    actionBtnHtml = `
+                                        <button class="btn btn-xs btn-outline-danger" style="margin-top: 6px;" disabled title="Hạn giữ chỗ 10 phút đã hết hạn">
+                                            <i class="fa-solid fa-ban"></i> Đã Hết Hạn
+                                        </button>
+                                    `;
+                                } else {
+                                    badgeClass = 'badge-pending';
+                                    stateText = 'CHỜ CỌC (10P)';
+                                    actionBtnHtml = `
+                                        <button class="btn btn-xs btn-success" style="margin-top: 6px;" onclick="window.showQrPaymentModal('${b.ma_don}', ${b.tien_coc}, 'deposit')">
+                                            <i class="fa-solid fa-qrcode"></i> Trả Cọc QR
+                                        </button>
+                                    `;
+                                }
                             }
                             
                             const pitchName = b.san ? b.san.ten_san : b.ma_san;
@@ -1203,10 +1215,22 @@ document.addEventListener('DOMContentLoaded', () => {
             let badgeClass = 'badge-confirmed';
             let statusIcon = '<i class="fa-solid fa-circle-check"></i>';
 
-            if (data.trang_thai === 'cho_coc') {
+            let isDetailExpired = false;
+            if (data.trang_thai === 'cho_coc' && data.lock_expires_at) {
+                const expDate = parseUtcDate(data.lock_expires_at);
+                if (expDate && (expDate.getTime() - Date.now() <= 0)) {
+                    isDetailExpired = true;
+                }
+            }
+
+            if (isDetailExpired) {
+                statusText = 'ĐÃ HẾT HẠN GIỮ CHỖ';
+                badgeClass = 'badge-danger';
+                statusIcon = '<i class="fa-solid fa-clock-rotate-left"></i>';
+            } else if (data.trang_thai === 'cho_coc') {
                 statusText = 'CHỜ ĐẶT CỌC (10P)';
                 badgeClass = 'badge-pending';
-                statusIcon = '<i class="fa-solid fa-clock-rotate-left"></i>';
+                statusIcon = '<i class="fa-solid fa-clock"></i>';
             } else if (data.trang_thai === 'dang_da') {
                 statusText = 'ĐANG THI ĐẤU';
                 badgeClass = 'badge-playing';
@@ -1364,23 +1388,31 @@ document.addEventListener('DOMContentLoaded', () => {
             actionsContainer.innerHTML = '';
 
             if (data.trang_thai === 'cho_coc') {
-                actionsContainer.innerHTML += `
-                    <button class="btn btn-sm btn-success" onclick="window.closeBookingDetailModal(); window.showQrPaymentModal('${data.ma_don}', ${data.tien_coc}, 'deposit');">
-                        <i class="fa-solid fa-qrcode"></i> Thanh Toán Cọc QR
-                    </button>
-                `;
-                if (currentUser.vai_tro !== 'CUSTOMER') {
+                if (isDetailExpired) {
                     actionsContainer.innerHTML += `
-                        <button class="btn btn-sm btn-primary" onclick="window.closeBookingDetailModal(); window.confirmDepositPrompt('${data.ma_don}', ${data.tien_coc});">
-                            <i class="fa-solid fa-circle-check"></i> Duyệt Tiền Cọc
+                        <button class="btn btn-sm btn-outline-danger" disabled title="Hạn giữ chỗ 10 phút đã hết">
+                            <i class="fa-solid fa-ban"></i> Đã Hết Hạn Giữ Chỗ
+                        </button>
+                    `;
+                } else {
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-sm btn-success" onclick="window.closeBookingDetailModal(); window.showQrPaymentModal('${data.ma_don}', ${data.tien_coc}, 'deposit');">
+                            <i class="fa-solid fa-qrcode"></i> Thanh Toán Cọc QR
+                        </button>
+                    `;
+                    if (currentUser.vai_tro !== 'CUSTOMER') {
+                        actionsContainer.innerHTML += `
+                            <button class="btn btn-sm btn-primary" onclick="window.closeBookingDetailModal(); window.confirmDepositPrompt('${data.ma_don}', ${data.tien_coc});">
+                                <i class="fa-solid fa-circle-check"></i> Duyệt Tiền Cọc
+                            </button>
+                        `;
+                    }
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-sm btn-danger" onclick="window.closeBookingDetailModal(); window.cancelBookingPrompt('${data.ma_don}');">
+                            <i class="fa-solid fa-xmark"></i> Hủy Đơn
                         </button>
                     `;
                 }
-                actionsContainer.innerHTML += `
-                    <button class="btn btn-sm btn-danger" onclick="window.closeBookingDetailModal(); window.cancelBookingPrompt('${data.ma_don}');">
-                        <i class="fa-solid fa-xmark"></i> Hủy Đơn
-                    </button>
-                `;
             } else if (data.trang_thai === 'da_xac_nhan') {
                 if (currentUser.vai_tro !== 'CUSTOMER') {
                     actionsContainer.innerHTML += `
@@ -2248,33 +2280,46 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let html = "";
             activeBookings.forEach(b => {
-                // Trạng thái badge
-                let statusBadge = "";
-                if (b.trang_thai === 'cho_coc') statusBadge = `<span class="badge badge-warning"><i class="fa-regular fa-clock"></i> Chờ cọc</span>`;
-                else if (b.trang_thai === 'da_xac_nhan') statusBadge = `<span class="badge badge-success"><i class="fa-solid fa-check"></i> Đã xác nhận</span>`;
-                else if (b.trang_thai === 'dang_da') statusBadge = `<span class="badge badge-primary"><i class="fa-solid fa-person-running"></i> Đang thi đấu</span>`;
-                
                 // Hạn giữ chỗ
                 let expTimer = "";
+                let isExpired = false;
                 if (b.trang_thai === 'cho_coc' && b.lock_expires_at) {
-                    const diffMs = new Date(b.lock_expires_at) - new Date();
+                    const expDate = parseUtcDate(b.lock_expires_at);
+                    const diffMs = expDate ? (expDate.getTime() - Date.now()) : 0;
                     if (diffMs > 0) {
                         const mins = Math.floor(diffMs / 60000);
                         const secs = Math.floor((diffMs % 60000) / 1000);
-                        expTimer = `<div class="lock-timer" style="color: #ef4444; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-stopwatch"></i> Còn ${mins}m ${secs}s</div>`;
+                        expTimer = `<div class="lock-timer live-table-timer" data-expires="${expDate.toISOString()}" style="color: #ef4444; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-stopwatch fa-spin"></i> Còn <span class="table-timer-text">${mins}m ${secs}s</span></div>`;
                     } else {
-                        expTimer = `<div class="lock-timer" style="color: #6b7280; font-size: 11px;"><i class="fa-solid fa-triangle-exclamation"></i> Hết hạn lock</div>`;
+                        isExpired = true;
+                        expTimer = `<div class="lock-timer" style="color: #ef4444; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> Đã hết hạn giữ chỗ</div>`;
                     }
+                }
+
+                // Trạng thái badge
+                let statusBadge = "";
+                if (isExpired) {
+                    statusBadge = `<span class="badge badge-danger"><i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn</span>`;
+                } else if (b.trang_thai === 'cho_coc') {
+                    statusBadge = `<span class="badge badge-warning"><i class="fa-regular fa-clock"></i> Chờ cọc</span>`;
+                } else if (b.trang_thai === 'da_xac_nhan') {
+                    statusBadge = `<span class="badge badge-success"><i class="fa-solid fa-check"></i> Đã xác nhận</span>`;
+                } else if (b.trang_thai === 'dang_da') {
+                    statusBadge = `<span class="badge badge-primary"><i class="fa-solid fa-person-running"></i> Đang thi đấu</span>`;
                 }
                 
                 // Nút thao tác
                 let actions = "";
                 if (b.trang_thai === 'cho_coc') {
-                    actions += `<button class="btn btn-xs btn-success btn-action" onclick="window.showQrPaymentModal('${b.ma_don}', ${b.tien_coc}, 'deposit')" title="Xem mã QR thanh toán cọc"><i class="fa-solid fa-qrcode"></i> Thanh toán QR</button> `;
+                    if (isExpired) {
+                        actions += `<button class="btn btn-xs btn-outline-danger btn-action" disabled title="Thời gian giữ chỗ 10 phút đã hết hạn"><i class="fa-solid fa-ban"></i> Đã hết hạn</button> `;
+                    } else {
+                        actions += `<button class="btn btn-xs btn-success btn-action" onclick="window.showQrPaymentModal('${b.ma_don}', ${b.tien_coc}, 'deposit')" title="Xem mã QR thanh toán cọc"><i class="fa-solid fa-qrcode"></i> Thanh toán QR</button> `;
+                    }
                 }
 
                 if (currentUser.vai_tro !== 'CUSTOMER') {
-                    if (b.trang_thai === 'cho_coc') {
+                    if (b.trang_thai === 'cho_coc' && !isExpired) {
                         actions += `<button class="btn btn-xs btn-primary btn-action" onclick="window.confirmDepositPrompt('${b.ma_don}', ${b.tien_coc})"><i class="fa-solid fa-circle-check"></i> Duyệt cọc</button> `;
                     }
                     if (b.trang_thai === 'da_xac_nhan') {
@@ -2282,7 +2327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 
-                if (b.trang_thai === 'cho_coc' || b.trang_thai === 'da_xac_nhan') {
+                if ((b.trang_thai === 'cho_coc' || b.trang_thai === 'da_xac_nhan') && !isExpired) {
                     actions += `<button class="btn btn-xs btn-danger btn-action" onclick="window.cancelBookingPrompt('${b.ma_don}')"><i class="fa-solid fa-xmark"></i> Hủy đơn</button>`;
                 }
                 
@@ -2307,6 +2352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             });
             tableBody.innerHTML = html;
+            startTableCountdownTicker();
         } catch (e) {
             radarTimers.clear();
             if (btnRefresh) {
@@ -2315,6 +2361,53 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Lỗi tải danh sách sân đã đặt.</td></tr>`;
         }
+    }
+
+    let tableTimerInterval = null;
+    function startTableCountdownTicker() {
+        if (tableTimerInterval) {
+            clearInterval(tableTimerInterval);
+            tableTimerInterval = null;
+        }
+        const timerEls = document.querySelectorAll('.live-table-timer');
+        if (!timerEls.length) return;
+
+        tableTimerInterval = setInterval(() => {
+            let hasActive = false;
+            document.querySelectorAll('.live-table-timer').forEach(el => {
+                const expStr = el.getAttribute('data-expires');
+                if (!expStr) return;
+                const exp = new Date(expStr);
+                const diff = exp.getTime() - Date.now();
+                if (diff <= 0) {
+                    el.className = 'lock-timer';
+                    el.style.color = '#ef4444';
+                    el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Đã hết hạn giữ chỗ';
+                    const tr = el.closest('tr');
+                    if (tr) {
+                        const statusTd = tr.children[6];
+                        if (statusTd) statusTd.innerHTML = '<span class="badge badge-danger"><i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn</span>';
+                        const actionsTd = tr.children[7];
+                        if (actionsTd) {
+                            const qrBtn = actionsTd.querySelector('.btn-success');
+                            if (qrBtn) {
+                                qrBtn.outerHTML = '<button class="btn btn-xs btn-outline-danger btn-action" disabled title="Thời gian giữ chỗ 10 phút đã hết hạn"><i class="fa-solid fa-ban"></i> Đã hết hạn</button>';
+                            }
+                        }
+                    }
+                } else {
+                    hasActive = true;
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    const textEl = el.querySelector('.table-timer-text');
+                    if (textEl) textEl.textContent = `${mins}m ${secs}s`;
+                }
+            });
+            if (!hasActive) {
+                clearInterval(tableTimerInterval);
+                tableTimerInterval = null;
+            }
+        }, 1000);
     }
 
     async function fetchBookingHistory() {
@@ -3597,19 +3690,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 currentQrInfo = await res.json();
             } else {
-                const memo = type === 'deposit' ? `COC ${maDon}` : `HD ${maDon}`;
-                currentQrInfo = {
-                    ma_don: maDon,
-                    so_tien: amount,
-                    noi_dung: memo,
-                    ngan_hang: 'MBBank (Ngân Hàng Quân Đội)',
-                    so_tai_khoan: '0988123456',
-                    chu_tai_khoan: 'SAN BONG VICTORY ARENA',
-                    vietqr_url: `https://img.vietqr.io/image/MB-0988123456-compact2.png?amount=${amount}&addInfo=${memo}&accountName=SAN%20BONG%20VICTORY%20ARENA`,
-                    momo_qr_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=2|99|0988123456|SAN%20BONG%20VICTORY%20ARENA|sanbongvictory@gmail.com|0|0|${amount}|${memo}|transfer_myqr`,
-                    vnpay_qr_url: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=VNPAYQR://pay?merchant=VICTORYARENA&amount=${amount}&orderId=${maDon}&desc=${memo}`,
-                    con_lai_giay: 600
-                };
+                const errData = await res.json().catch(() => ({}));
+                const errMsg = errData.detail || 'Không thể tạo mã QR thanh toán';
+                showToast(`❌ ${errMsg}`, 'error');
+                if (type === 'deposit') {
+                    currentQrInfo = {
+                        ma_don: maDon,
+                        so_tien: amount,
+                        noi_dung: `COC ${maDon}`,
+                        ngan_hang: 'MBBank (Ngân Hàng Quân Đội)',
+                        so_tai_khoan: '0988123456',
+                        chu_tai_khoan: 'SAN BONG VICTORY ARENA',
+                        vietqr_url: '',
+                        momo_qr_url: '',
+                        vnpay_qr_url: '',
+                        con_lai_giay: 0
+                    };
+                } else {
+                    return;
+                }
             }
         } catch (e) {
             console.error("Lỗi lấy thông tin QR:", e);
@@ -3709,7 +3808,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (type === 'deposit') {
                 timerBox.style.display = 'flex';
-                let remaining = currentQrInfo.con_lai_giay !== undefined ? currentQrInfo.con_lai_giay : 600;
+                let remaining = 0;
+                if (currentQrInfo.lock_expires_at) {
+                    const expDate = parseUtcDate(currentQrInfo.lock_expires_at);
+                    if (expDate) {
+                        const diff = Math.floor((expDate.getTime() - Date.now()) / 1000);
+                        remaining = Math.max(0, diff);
+                    }
+                } else if (currentQrInfo.con_lai_giay !== undefined) {
+                    remaining = Math.max(0, currentQrInfo.con_lai_giay);
+                }
                 if (qrCountdownInterval) clearInterval(qrCountdownInterval);
 
                 if (remaining <= 0) {
@@ -3870,6 +3978,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const parts = str.split('-');
         if (parts.length !== 3) return str;
         return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    
+    function parseUtcDate(str) {
+        if (!str) return null;
+        if (typeof str === 'string' && !str.endsWith('Z') && !str.includes('+')) {
+            return new Date(str + 'Z');
+        }
+        return new Date(str);
     }
     
     function showToast(message, type = 'success') {

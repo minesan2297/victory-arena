@@ -557,4 +557,74 @@ def test_reschedule_validation(db_session):
     assert "tối thiểu là 30 phút" in exc_short.value.detail
 
 
+def test_expired_booking_loophole_prevention(db_session):
+    """Kiểm tra chặt chẽ việc ngăn chặn các lỗ hổng liên quan đến đơn giữ chỗ hết hạn:
+    1. Không thể tạo mã QR thanh toán cọc khi đơn đã hết hạn (trả về 400).
+    2. Không thể giả lập sandbox pay khi đơn đã hết hạn (trả về 400 và giải phóng LichDat).
+    3. Không thể đổi lịch cho đơn đã hết hạn (trả về 400 và giải phóng LichDat).
+    4. Sau khi đơn hết hạn bị từ chối, slot sân ngay lập tức được giải phóng để khách khác có thể đặt.
+    """
+    from datetime import timedelta
+    from app.services.dat_san_service import get_utc_now
+    from app.models.dat_san import LichDat
+
+    customer = db_session.query(TaiKhoan).join(TaiKhoan.vai_tro).filter(VaiTro.ten_vai_tro == "CUSTOMER").first()
+    target_date = date.today() + timedelta(days=5)
+
+    # 1. Tạo đơn chờ cọc
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=target_date,
+        gio_bat_dau=time(14, 0),
+        gio_ket_thuc=time(15, 30),
+        tien_coc=100000.0
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+    assert booking.trang_thai == "cho_coc"
+    assert booking.lock_expires_at is not None
+
+    # 2. Giả lập hết hạn giữ chỗ (lock_expires_at lùi về 1 phút trước)
+    booking.lock_expires_at = get_utc_now() - timedelta(minutes=1)
+    db_session.commit()
+
+    # 3. Thử tạo QR đặt cọc -> Phải ném lỗi 400
+    with pytest.raises(HTTPException) as exc_qr:
+        DatSanService.generate_deposit_qr(db_session, booking.ma_don)
+    assert exc_qr.value.status_code == 400
+    assert "hết hạn" in exc_qr.value.detail.lower()
+
+    # Kiểm tra trạng thái đã bị chuyển sang 'da_huy' và LichDat đã bị xóa
+    db_session.refresh(booking)
+    assert booking.trang_thai == "da_huy"
+    assert booking.lock_expires_at is None
+    assert db_session.query(LichDat).filter(LichDat.ma_don == booking.ma_don).count() == 0
+
+    # 4. Thử giả lập sandbox QR pay với đơn đã hủy -> Phải ném lỗi 400
+    with pytest.raises(HTTPException) as exc_sandbox:
+        DatSanService.sandbox_qr_pay(db_session, booking.ma_don)
+    assert exc_sandbox.value.status_code == 400
+
+    # 5. Thử đổi lịch với đơn đã hủy -> Phải ném lỗi 400
+    with pytest.raises(HTTPException) as exc_reschedule:
+        DatSanService.doi_lich(db_session, DoiLichRequest(
+            ma_don=booking.ma_don,
+            gio_bat_dau_moi=time(16, 0),
+            gio_ket_thuc_moi=time(17, 30)
+        ))
+    assert exc_reschedule.value.status_code == 400
+
+    # 6. Người khác ngay lập tức có thể đặt đúng khung giờ này do LichDat đã được giải phóng
+    booking2_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=target_date,
+        gio_bat_dau=time(14, 0),
+        gio_ket_thuc=time(15, 30),
+        tien_coc=100000.0
+    )
+    booking2 = DatSanService.create_booking(db_session, booking2_in, customer.tai_khoan_id)
+    assert booking2.ma_don != booking.ma_don
+    assert booking2.trang_thai == "cho_coc"
+
+
+
 

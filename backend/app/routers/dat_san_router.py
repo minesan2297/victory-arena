@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import date
-from typing import List
+from datetime import date, datetime, timezone
+from typing import List, Optional
 from app.database import get_db
 from app.schemas.dat_san_schema import (
     DatSanCreate, DatSanResponse, DatSanDetailResponse, DichVuItemDetail,
@@ -9,11 +9,21 @@ from app.schemas.dat_san_schema import (
     QRPaymentInfo, SandboxQRPayRequest
 )
 from app.services.dat_san_service import DatSanService
+from app.tasks.lock_expiry import check_and_expire_bookings
 from app.auth.dependencies import get_current_user, require_staff_or_admin
 from app.models.tai_khoan import TaiKhoan
 from app.models.dat_san import DatSan
 
 router = APIRouter(prefix="/api/dat-san", tags=["Đặt sân"])
+
+
+def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
 
 def to_booking_response(booking: DatSan) -> DatSanResponse:
     return DatSanResponse(
@@ -25,12 +35,13 @@ def to_booking_response(booking: DatSan) -> DatSanResponse:
         gio_ket_thuc=booking.gio_ket_thuc,
         tien_coc=booking.tien_coc,
         trang_thai=booking.trang_thai,
-        lock_expires_at=booking.lock_expires_at,
+        lock_expires_at=ensure_utc(booking.lock_expires_at),
         ghi_chu=booking.ghi_chu,
-        ngay_tao=booking.ngay_tao,
+        ngay_tao=ensure_utc(booking.ngay_tao),
         san=booking.san,
         khach_hang_ten=booking.khach_hang.ho_ten if booking.khach_hang else None
     )
+
 
 @router.get("/schedule", response_model=LichSanResponse)
 def get_schedule(
@@ -38,13 +49,18 @@ def get_schedule(
     san_id: str = Query(None),
     db: Session = Depends(get_db)
 ):
+    check_and_expire_bookings(db)
     return DatSanService.get_day_schedule(db, ngay, san_id)
+
 
 @router.get("/bookings", response_model=List[DatSanResponse])
 def get_bookings(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
+    # Đồng bộ tự động hủy đơn hết hạn giữ chỗ ngay khi người dùng truy vấn danh sách
+    check_and_expire_bookings(db)
+    
     # Nếu là customer, chỉ xem của chính họ. Staff/Admin xem hết.
     if current_user.vai_tro.ten_vai_tro == "CUSTOMER":
         bookings = db.query(DatSan).filter(DatSan.ma_khach_hang == current_user.tai_khoan_id).all()
@@ -67,6 +83,7 @@ def confirm_deposit(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(require_staff_or_admin)
 ):
+    check_and_expire_bookings(db)
     booking = DatSanService.xac_nhan_coc(db, data.ma_don, data.so_tien, data.phuong_thuc)
     return to_booking_response(booking)
 
@@ -76,6 +93,7 @@ def reschedule(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
+    check_and_expire_bookings(db)
     # Kiểm tra quyền: chỉ Admin, Staff hoặc chính khách hàng của đơn đặt
     booking = db.query(DatSan).filter(DatSan.ma_don == data.ma_don).first()
     if not booking:
@@ -93,6 +111,7 @@ def cancel_booking(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
+    check_and_expire_bookings(db)
     # Kiểm tra quyền
     booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
     if not booking:
@@ -111,6 +130,7 @@ def get_deposit_qr(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
+    check_and_expire_bookings(db)
     booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
     if not booking:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
@@ -124,6 +144,7 @@ def sandbox_qr_pay(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
+    check_and_expire_bookings(db)
     booking = db.query(DatSan).filter(DatSan.ma_don == data.ma_don).first()
     if not booking:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
@@ -138,6 +159,7 @@ def get_booking_detail(
     db: Session = Depends(get_db),
     current_user: TaiKhoan = Depends(get_current_user)
 ):
+    check_and_expire_bookings(db)
     booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
     if not booking:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
@@ -203,15 +225,15 @@ def get_booking_detail(
         gio_ket_thuc=booking.gio_ket_thuc,
         tien_coc=booking.tien_coc,
         trang_thai=booking.trang_thai,
-        lock_expires_at=booking.lock_expires_at,
+        lock_expires_at=ensure_utc(booking.lock_expires_at),
         ghi_chu=booking.ghi_chu,
-        ngay_tao=booking.ngay_tao,
+        ngay_tao=ensure_utc(booking.ngay_tao),
         tien_san=tien_san,
         tong_dich_vu=tong_dich_vu,
         tien_coc_da_tru=tien_coc_da_tru,
         tong_thanh_toan=tong_thanh_toan,
-        check_in_thuc_te=check_in_thuc_te,
-        check_out_thuc_te=check_out_thuc_te,
+        check_in_thuc_te=ensure_utc(check_in_thuc_te),
+        check_out_thuc_te=ensure_utc(check_out_thuc_te),
         dich_vus=dich_vus,
         phuong_thuc_coc=phuong_thuc_coc
     )
