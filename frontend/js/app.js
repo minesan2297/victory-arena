@@ -865,8 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             let actionBtnHtml = '';
                             if (b.trang_thai === 'cho_coc') {
-                                const expDate = parseUtcDate(b.lock_expires_at);
-                                const isExpired = expDate ? (expDate.getTime() - Date.now() <= 0) : false;
+                                const isExpired = isBookingExpired(b);
                                 if (isExpired) {
                                     badgeClass = 'badge-danger';
                                     stateText = 'ĐÃ HẾT HẠN';
@@ -1215,13 +1214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let badgeClass = 'badge-confirmed';
             let statusIcon = '<i class="fa-solid fa-circle-check"></i>';
 
-            let isDetailExpired = false;
-            if (data.trang_thai === 'cho_coc' && data.lock_expires_at) {
-                const expDate = parseUtcDate(data.lock_expires_at);
-                if (expDate && (expDate.getTime() - Date.now() <= 0)) {
-                    isDetailExpired = true;
-                }
-            }
+            const isDetailExpired = isBookingExpired(data);
 
             if (isDetailExpired) {
                 statusText = 'ĐÃ HẾT HẠN GIỮ CHỖ';
@@ -2282,16 +2275,16 @@ document.addEventListener('DOMContentLoaded', () => {
             activeBookings.forEach(b => {
                 // Hạn giữ chỗ
                 let expTimer = "";
-                let isExpired = false;
+                const isExpired = isBookingExpired(b);
+                const remainingSecs = getBookingRemainingSeconds(b);
+
                 if (b.trang_thai === 'cho_coc' && b.lock_expires_at) {
-                    const expDate = parseUtcDate(b.lock_expires_at);
-                    const diffMs = expDate ? (expDate.getTime() - Date.now()) : 0;
-                    if (diffMs > 0) {
-                        const mins = Math.floor(diffMs / 60000);
-                        const secs = Math.floor((diffMs % 60000) / 1000);
+                    if (!isExpired && remainingSecs > 0) {
+                        const mins = Math.floor(remainingSecs / 60);
+                        const secs = remainingSecs % 60;
+                        const expDate = parseUtcDate(b.lock_expires_at);
                         expTimer = `<div class="lock-timer live-table-timer" data-expires="${expDate.toISOString()}" style="color: #ef4444; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-stopwatch fa-spin"></i> Còn <span class="table-timer-text">${mins}m ${secs}s</span></div>`;
                     } else {
-                        isExpired = true;
                         expTimer = `<div class="lock-timer" style="color: #ef4444; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> Đã hết hạn giữ chỗ</div>`;
                     }
                 }
@@ -2346,8 +2339,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${formatDateString(b.ngay_da)}</td>
                         <td>${timeStr}</td>
                         <td>${b.tien_coc.toLocaleString()} ₫</td>
-                        <td>${statusBadge}</td>
-                        <td>${actions}</td>
+                        <td class="col-status">${statusBadge}</td>
+                        <td class="col-actions">${actions}</td>
                     </tr>
                 `;
             });
@@ -2385,9 +2378,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Đã hết hạn giữ chỗ';
                     const tr = el.closest('tr');
                     if (tr) {
-                        const statusTd = tr.children[6];
+                        const statusTd = tr.querySelector('.col-status');
                         if (statusTd) statusTd.innerHTML = '<span class="badge badge-danger"><i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn</span>';
-                        const actionsTd = tr.children[7];
+                        const actionsTd = tr.querySelector('.col-actions');
                         if (actionsTd) {
                             const qrBtn = actionsTd.querySelector('.btn-success');
                             if (qrBtn) {
@@ -3810,11 +3803,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 timerBox.style.display = 'flex';
                 let remaining = 0;
                 if (currentQrInfo.lock_expires_at) {
-                    const expDate = parseUtcDate(currentQrInfo.lock_expires_at);
-                    if (expDate) {
-                        const diff = Math.floor((expDate.getTime() - Date.now()) / 1000);
-                        remaining = Math.max(0, diff);
-                    }
+                    remaining = getBookingRemainingSeconds(currentQrInfo);
                 } else if (currentQrInfo.con_lai_giay !== undefined) {
                     remaining = Math.max(0, currentQrInfo.con_lai_giay);
                 }
@@ -3986,6 +3975,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return new Date(str + 'Z');
         }
         return new Date(str);
+    }
+    
+    function isBookingExpired(booking) {
+        if (!booking || booking.trang_thai !== 'cho_coc' || !booking.lock_expires_at) return false;
+        const expDate = parseUtcDate(booking.lock_expires_at);
+        return expDate ? (expDate.getTime() - Date.now() <= 0) : false;
+    }
+    
+    function getBookingRemainingSeconds(booking) {
+        if (!booking || !booking.lock_expires_at) return 0;
+        const expDate = parseUtcDate(booking.lock_expires_at);
+        if (!expDate) return 0;
+        return Math.max(0, Math.floor((expDate.getTime() - Date.now()) / 1000));
     }
     
     function showToast(message, type = 'success') {

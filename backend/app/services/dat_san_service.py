@@ -99,6 +99,37 @@ class DatSanService:
         return False
 
     @staticmethod
+    def expire_booking_if_needed(db: Session, booking: DatSan) -> bool:
+        """Kiểm tra và tự động hủy đơn giữ chỗ nếu đã quá thời hạn 10 phút.
+        
+        Returns:
+            bool: True nếu đơn đã quá hạn và vừa bị hủy, False nếu đơn vẫn hợp lệ.
+        """
+        if not booking:
+            return False
+            
+        if booking.trang_thai == 'cho_coc' and booking.lock_expires_at and get_utc_now() > booking.lock_expires_at:
+            now = get_utc_now()
+            booking.trang_thai = 'da_huy'
+            booking.lock_expires_at = None
+            booking.ngay_cap_nhat = now
+            booking.ghi_chu = (booking.ghi_chu or "") + " [Tự động hủy do quá hạn giữ chỗ 10 phút]"
+            db.query(LichDat).filter(LichDat.ma_don == booking.ma_don).delete()
+            notif_exp = ThongBao(
+                tai_khoan_id=booking.ma_khach_hang,
+                ma_don=booking.ma_don,
+                noi_dung=f"⏰ [HẾT HẠN GIỮ CHỖ] Đơn đặt sân {booking.ma_don} đã bị tự động hủy do quá thời gian giữ chỗ 10 phút chưa thanh toán cọc.",
+                kenh_gui='web',
+                trang_thai_gui='da_gui',
+                da_doc=False,
+                ngay_gui=now
+            )
+            db.add(notif_exp)
+            db.commit()
+            return True
+        return False
+
+    @staticmethod
     def create_booking(db: Session, data: DatSanCreate, current_user_id: int) -> DatSan:
         # Tự động hủy các đơn hết hạn trước khi xử lý đặt mới
         check_and_expire_bookings(db)
@@ -244,24 +275,7 @@ class DatSanService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Đơn đặt sân không ở trạng thái Chờ cọc")
             
         # Kiểm tra lock hết hạn
-        if booking.lock_expires_at and get_utc_now() > booking.lock_expires_at:
-            now = get_utc_now()
-            booking.trang_thai = 'da_huy'
-            booking.lock_expires_at = None
-            booking.ngay_cap_nhat = now
-            booking.ghi_chu = (booking.ghi_chu or "") + " [Tự động hủy do quá hạn giữ chỗ 10 phút]"
-            db.query(LichDat).filter(LichDat.ma_don == ma_don).delete()
-            notif_exp = ThongBao(
-                tai_khoan_id=booking.ma_khach_hang,
-                ma_don=booking.ma_don,
-                noi_dung=f"⏰ [HẾT HẠN GIỮ CHỖ] Đơn đặt sân {booking.ma_don} đã bị tự động hủy do quá thời gian giữ chỗ 10 phút chưa thanh toán cọc.",
-                kenh_gui='web',
-                trang_thai_gui='da_gui',
-                da_doc=False,
-                ngay_gui=now
-            )
-            db.add(notif_exp)
-            db.commit()
+        if DatSanService.expire_booking_if_needed(db, booking):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Giờ giữ chỗ (lock 10 phút) đã hết hạn")
             
         # Tính tiền sân để kiểm tra cận trên/dưới cọc hợp lý
@@ -313,24 +327,7 @@ class DatSanService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ được đổi lịch cho đơn ở trạng thái Chờ cọc hoặc Đã xác nhận")
             
         # Kiểm tra quá hạn lock 10 phút
-        if booking.trang_thai == 'cho_coc' and booking.lock_expires_at and get_utc_now() > booking.lock_expires_at:
-            now = get_utc_now()
-            booking.trang_thai = 'da_huy'
-            booking.lock_expires_at = None
-            booking.ngay_cap_nhat = now
-            booking.ghi_chu = (booking.ghi_chu or "") + " [Tự động hủy do quá hạn giữ chỗ 10 phút]"
-            db.query(LichDat).filter(LichDat.ma_don == booking.ma_don).delete()
-            notif_exp = ThongBao(
-                tai_khoan_id=booking.ma_khach_hang,
-                ma_don=booking.ma_don,
-                noi_dung=f"⏰ [HẾT HẠN GIỮ CHỖ] Đơn đặt sân {booking.ma_don} đã bị tự động hủy do quá thời gian giữ chỗ 10 phút chưa thanh toán cọc.",
-                kenh_gui='web',
-                trang_thai_gui='da_gui',
-                da_doc=False,
-                ngay_gui=now
-            )
-            db.add(notif_exp)
-            db.commit()
+        if DatSanService.expire_booking_if_needed(db, booking):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Đơn đặt sân đã quá thời gian giữ chỗ 10 phút và đã bị hủy, không thể đổi lịch.")
             
         # Các thông tin mới (hoặc giữ cũ)
@@ -472,24 +469,7 @@ class DatSanService:
             )
             
         # Kiểm tra quá hạn lock 10 phút
-        if booking.trang_thai == 'cho_coc' and booking.lock_expires_at and get_utc_now() > booking.lock_expires_at:
-            now = get_utc_now()
-            booking.trang_thai = 'da_huy'
-            booking.lock_expires_at = None
-            booking.ngay_cap_nhat = now
-            booking.ghi_chu = (booking.ghi_chu or "") + " [Tự động hủy do quá hạn giữ chỗ 10 phút]"
-            db.query(LichDat).filter(LichDat.ma_don == ma_don).delete()
-            notif_exp = ThongBao(
-                tai_khoan_id=booking.ma_khach_hang,
-                ma_don=booking.ma_don,
-                noi_dung=f"⏰ [HẾT HẠN GIỮ CHỖ] Đơn đặt sân {booking.ma_don} đã bị tự động hủy do quá thời gian giữ chỗ 10 phút chưa thanh toán cọc.",
-                kenh_gui='web',
-                trang_thai_gui='da_gui',
-                da_doc=False,
-                ngay_gui=now
-            )
-            db.add(notif_exp)
-            db.commit()
+        if DatSanService.expire_booking_if_needed(db, booking):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Thời gian giữ chỗ 10 phút đã hết hạn. Đơn đặt sân đã tự động bị hủy."
@@ -551,24 +531,7 @@ class DatSanService:
         if booking.trang_thai != 'cho_coc':
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Đơn đặt sân không ở trạng thái Chờ cọc")
             
-        if booking.lock_expires_at and get_utc_now() > booking.lock_expires_at:
-            now = get_utc_now()
-            booking.trang_thai = 'da_huy'
-            booking.lock_expires_at = None
-            booking.ngay_cap_nhat = now
-            booking.ghi_chu = (booking.ghi_chu or "") + " [Tự động hủy do quá hạn giữ chỗ 10 phút]"
-            db.query(LichDat).filter(LichDat.ma_don == ma_don).delete()
-            notif_exp = ThongBao(
-                tai_khoan_id=booking.ma_khach_hang,
-                ma_don=booking.ma_don,
-                noi_dung=f"⏰ [HẾT HẠN GIỮ CHỖ] Đơn đặt sân {booking.ma_don} đã bị tự động hủy do quá thời gian giữ chỗ 10 phút chưa thanh toán cọc.",
-                kenh_gui='web',
-                trang_thai_gui='da_gui',
-                da_doc=False,
-                ngay_gui=now
-            )
-            db.add(notif_exp)
-            db.commit()
+        if DatSanService.expire_booking_if_needed(db, booking):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thời hạn 10 phút giữ sân đã hết hạn")
             
         amount = int(booking.tien_coc)
