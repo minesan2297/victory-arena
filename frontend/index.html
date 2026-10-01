@@ -1216,10 +1216,25 @@
                 </div>
 
                 <!-- Khu vực hiển thị mã QR -->
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; padding: 16px; border-radius: var(--radius-lg); margin-bottom: 16px;">
+                <div id="qr-display-container" class="qr-container-box">
                     <img id="qr-image-display" src="" alt="Mã QR Thanh Toán" style="width: 240px; height: 240px; object-fit: contain; display: block; border-radius: 8px;">
                     <div id="qr-badge-method" style="margin-top: 8px; font-size: 0.78rem; font-weight: 700; color: #1e293b; background: #e2e8f0; padding: 4px 10px; border-radius: 20px;">
                         Quét mã bằng app ngân hàng bất kỳ (VietQR 24/7)
+                    </div>
+
+                    <!-- LỚP PHỦ ANIMATION HẾT HẠN (EXPIRED OVERLAY) -->
+                    <div id="qr-expired-overlay" class="qr-expired-overlay" style="display: none;">
+                        <div class="qr-expired-card">
+                            <div class="qr-expired-icon-wrap">
+                                <div class="qr-pulse-ring"></div>
+                                <i class="fa-solid fa-clock-rotate-left qr-expired-icon"></i>
+                            </div>
+                            <h4 class="qr-expired-title">MÃ QR ĐÃ HẾT HẠN</h4>
+                            <p class="qr-expired-desc">Đã quá thời gian giữ chỗ 10 phút. Lịch sân đã được tự động giải phóng để bảo đảm tính công bằng.</p>
+                            <button type="button" class="btn btn-sm btn-rebook-neon" id="btn-rebook-expired-qr">
+                                <i class="fa-solid fa-arrow-rotate-right"></i> Chọn Khung Giờ Mới
+                            </button>
+                        </div>
                     </div>
                 </div>
 

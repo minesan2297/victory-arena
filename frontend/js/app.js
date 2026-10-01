@@ -3626,32 +3626,117 @@ document.addEventListener('DOMContentLoaded', () => {
             // Chọn tab mặc định VietQR
             selectQrMethod('vietqr');
 
-            // Xử lý countdown lock 10 phút
-            const timerBox = document.getElementById('qr-timer-box');
-            if (type === 'deposit' && currentQrInfo.con_lai_giay > 0) {
-                timerBox.style.display = 'flex';
-                let remaining = currentQrInfo.con_lai_giay;
-                if (qrCountdownInterval) clearInterval(qrCountdownInterval);
-                
-                const updateTimerDisplay = () => {
-                    if (remaining <= 0) {
-                        clearInterval(qrCountdownInterval);
-                        document.getElementById('qr-countdown').innerText = '00:00 (Hết hạn)';
-                        showToast('Đã hết hạn 10 phút giữ chỗ. Đơn đặt sân có thể bị hủy!', 'warning');
-                        return;
+            // Quản lý trạng thái và animation Hết hạn đặt cọc chuyên nghiệp
+            function setQrModalExpired(isExpired, maDon) {
+                const qrContainer = document.getElementById('qr-display-container');
+                const expiredOverlay = document.getElementById('qr-expired-overlay');
+                const timerBox = document.getElementById('qr-timer-box');
+                const btnSandbox = document.getElementById('btn-sandbox-qr-pay');
+                const btnDone = document.getElementById('btn-done-qr-pay');
+
+                if (isExpired) {
+                    if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+                    if (qrContainer) qrContainer.classList.add('is-expired');
+                    if (expiredOverlay) expiredOverlay.style.display = 'flex';
+                    if (timerBox) {
+                        timerBox.style.display = 'flex';
+                        timerBox.classList.add('timer-expired-animate');
+                        timerBox.innerHTML = `
+                            <span style="font-size: 0.85rem; color: #fca5a5; font-weight: 700;">
+                                <i class="fa-solid fa-triangle-exclamation fa-beat text-danger"></i> Thời gian giữ chỗ:
+                            </span>
+                            <strong id="qr-countdown" style="font-size: 1.05rem; color: #ef4444; font-family: monospace; font-weight: 800;">
+                                00:00 (ĐÃ HẾT HẠN)
+                            </strong>
+                        `;
                     }
-                    const m = String(Math.floor(remaining / 60)).padStart(2, '0');
-                    const s = String(remaining % 60).padStart(2, '0');
-                    document.getElementById('qr-countdown').innerText = `${m}:${s}`;
-                    remaining--;
+                    if (btnSandbox) {
+                        btnSandbox.disabled = true;
+                        btnSandbox.style.opacity = '0.35';
+                        btnSandbox.style.cursor = 'not-allowed';
+                        btnSandbox.style.pointerEvents = 'none';
+                        btnSandbox.innerHTML = '<i class="fa-solid fa-ban"></i> Đơn Đã Hết Hạn (Không thể giả lập)';
+                    }
+                    if (btnDone) {
+                        btnDone.disabled = true;
+                        btnDone.style.opacity = '0.35';
+                        btnDone.style.cursor = 'not-allowed';
+                        btnDone.style.pointerEvents = 'none';
+                    }
+                    showToast('⏰ Đã quá thời hạn 10 phút giữ chỗ. Đơn đặt sân đã được tự động giải phóng!', 'error');
+
+                    // Tự động làm mới danh sách đơn để cập nhật trạng thái hủy
+                    if (typeof fetchBookings === 'function') fetchBookings();
+                } else {
+                    if (qrContainer) qrContainer.classList.remove('is-expired');
+                    if (expiredOverlay) expiredOverlay.style.display = 'none';
+                    if (timerBox) {
+                        timerBox.classList.remove('timer-expired-animate');
+                        timerBox.innerHTML = `
+                            <span style="font-size: 0.85rem; color: #fca5a5;"><i class="fa-regular fa-clock"></i> Thời gian giữ chỗ (Lock):</span>
+                            <strong id="qr-countdown" style="font-size: 1.1rem; color: #ef4444; font-family: monospace;">10:00</strong>
+                        `;
+                    }
+                    if (btnSandbox) {
+                        btnSandbox.disabled = false;
+                        btnSandbox.style.opacity = '1';
+                        btnSandbox.style.cursor = 'pointer';
+                        btnSandbox.style.pointerEvents = 'auto';
+                        btnSandbox.innerHTML = '<i class="fa-solid fa-bolt"></i> Giả Lập Quét Thành Công (Sandbox Test)';
+                    }
+                    if (btnDone) {
+                        btnDone.disabled = false;
+                        btnDone.style.opacity = '1';
+                        btnDone.style.cursor = 'pointer';
+                        btnDone.style.pointerEvents = 'auto';
+                    }
+                }
+            }
+
+            // Gắn sự kiện nút Đặt lại khung giờ mới trên overlay
+            const btnRebookExpired = document.getElementById('btn-rebook-expired-qr');
+            if (btnRebookExpired) {
+                btnRebookExpired.onclick = () => {
+                    if (typeof window.closeQrModal === 'function') window.closeQrModal();
+                    const scheduleNav = document.querySelector('[data-tab="tab-schedule"]');
+                    if (scheduleNav) scheduleNav.click();
                 };
-                updateTimerDisplay();
-                qrCountdownInterval = setInterval(updateTimerDisplay, 1000);
+            }
+
+            // Xử lý countdown lock 10 phút & Kích hoạt animation khi hết hạn
+            const timerBox = document.getElementById('qr-timer-box');
+            setQrModalExpired(false);
+
+            if (type === 'deposit') {
+                timerBox.style.display = 'flex';
+                let remaining = currentQrInfo.con_lai_giay !== undefined ? currentQrInfo.con_lai_giay : 600;
+                if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+
+                if (remaining <= 0) {
+                    // Đơn đã hết hạn ngay khi mở modal
+                    setQrModalExpired(true, maDon);
+                } else {
+                    const updateTimerDisplay = () => {
+                        if (remaining <= 0) {
+                            clearInterval(qrCountdownInterval);
+                            setQrModalExpired(true, maDon);
+                            return;
+                        }
+                        const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+                        const s = String(remaining % 60).padStart(2, '0');
+                        const countEl = document.getElementById('qr-countdown');
+                        if (countEl) countEl.innerText = `${m}:${s}`;
+                        remaining--;
+                    };
+                    updateTimerDisplay();
+                    qrCountdownInterval = setInterval(updateTimerDisplay, 1000);
+                }
             } else {
                 timerBox.style.display = 'none';
                 if (qrCountdownInterval) clearInterval(qrCountdownInterval);
             }
         }
+
 
         // Hiện modal
         modal.style.display = 'flex';
@@ -3731,6 +3816,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     async function handleSandboxQrPay() {
+        const qrContainer = document.getElementById('qr-display-container');
+        if (qrContainer && qrContainer.classList.contains('is-expired')) {
+            showToast("Đơn đặt sân đã quá hạn 10 phút và không thể thanh toán! Vui lòng chọn khung giờ mới.", "error");
+            return;
+        }
+
         if (!currentQrInfo || !currentQrInfo.ma_don) {
             showToast("Không tìm thấy thông tin đơn đặt sân!", "error");
             return;

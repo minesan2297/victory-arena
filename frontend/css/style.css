@@ -3537,3 +3537,194 @@ input.input-invalid {
 
 
 
+
+/* ============================================================
+   HIỆU ỨNG CHUYÊN NGHIỆP: THANH TOÁN HẾT HẠN (QR PAYMENT EXPIRED)
+   ============================================================ */
+
+/* Khung hiển thị QR code */
+.qr-container-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Khi hết hạn: Làm mờ ảnh QR và chuyển trắng đen */
+.qr-container-box.is-expired #qr-image-display,
+.qr-container-box.is-expired #qr-badge-method {
+    filter: blur(4px) grayscale(100%) brightness(0.6) !important;
+    opacity: 0.15 !important;
+    transform: scale(0.95);
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Lớp phủ Frosted Glass sang trọng */
+.qr-expired-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 17, 32, 0.90);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    z-index: 10;
+    animation: expiredFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes expiredFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Card nội dung hết hạn */
+.qr-expired-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 300px;
+    animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpFade {
+    0% {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Icon đồng hồ hết hạn với hiệu ứng rung chuông cảnh báo */
+.qr-expired-icon-wrap {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.28) 0%, rgba(153, 27, 27, 0.45) 100%);
+    border: 2px solid rgba(239, 68, 68, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.qr-expired-icon {
+    font-size: 2rem;
+    color: #ef4444;
+    animation: iconBellShake 3s infinite ease-in-out;
+}
+
+@keyframes iconBellShake {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    10% { transform: rotate(-16deg) scale(1.1); }
+    20% { transform: rotate(14deg) scale(1.1); }
+    30% { transform: rotate(-10deg); }
+    40% { transform: rotate(8deg); }
+    50% { transform: rotate(0deg); }
+}
+
+/* Vòng sóng radar phát xung vô tận */
+.qr-pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(239, 68, 68, 0.65);
+    animation: radarRipple 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    pointer-events: none;
+}
+
+@keyframes radarRipple {
+    0% {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.85);
+        opacity: 0;
+    }
+}
+
+.qr-expired-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #f87171;
+    letter-spacing: 1px;
+    margin: 0 0 6px 0;
+    text-transform: uppercase;
+    text-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+}
+
+.qr-expired-desc {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    line-height: 1.45;
+    margin: 0 0 14px 0;
+}
+
+/* Thanh đồng hồ đếm ngược rung cảnh báo */
+.timer-expired-animate {
+    animation: timerShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both, timerPulseRed 2s infinite alternate;
+}
+
+@keyframes timerShake {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(3px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@keyframes timerPulseRed {
+    0% {
+        background: rgba(239, 68, 68, 0.15) !important;
+        border-color: rgba(239, 68, 68, 0.5) !important;
+        box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+    }
+    100% {
+        background: rgba(239, 68, 68, 0.3) !important;
+        border-color: rgba(239, 68, 68, 0.9) !important;
+        box-shadow: 0 0 18px rgba(239, 68, 68, 0.45);
+    }
+}
+
+/* Nút đặt lại khung giờ mới có hiệu ứng neon */
+.btn-rebook-neon {
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(56, 189, 248, 0.6) !important;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.4) !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+}
+
+.btn-rebook-neon:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.7) !important;
+    filter: brightness(1.15) !important;
+}
