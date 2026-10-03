@@ -1,32 +1,48 @@
-import re
-import unicodedata
-import time as pytime
-from sqlalchemy.orm import Session
-from fastapi import HTTPException
-from datetime import datetime, date, time, timezone, timedelta
 import json
-from typing import Optional, List, Tuple
+import re
+import time as pytime
+import unicodedata
+from datetime import date, datetime, time, timedelta, timezone
+from typing import Optional, Tuple
+
+from fastapi import HTTPException
 import google.generativeai as genai
+from sqlalchemy.orm import Session
+
 from app.config import get_settings
 from app.models.ai_models import AIConfig, AIRequest, BaoCao, ThongBao
-from app.models.dat_san import DatSan, LichDat
-from app.models.san import San
+from app.models.dat_san import DatSan
 from app.models.dich_vu import DanhMucDichVu
+from app.models.enums import KenhGui, KieuGoiAI, TrangThaiAI, TrangThaiGui
 from app.models.hoa_don import ThanhToan
-from app.models.enums import KieuGoiAI, KenhGui, TrangThaiGui, TrangThaiAI
-from app.schemas.ai_schema import RecommendedSlot, AIConsultResponse, AIReminderResponse, AIReportResponse
+from app.models.san import San
+from app.schemas.ai_schema import (
+    AIConsultResponse,
+    AIReminderResponse,
+    AIReportResponse,
+    RecommendedSlot,
+)
 from app.services.dat_san_service import DatSanService
 
+# Các hằng số hệ thống chuẩn Clean Code
+DEFAULT_GEMINI_TIMEOUT_SECONDS: float = 10.0
+SLOTS_PER_COURT_PER_DAY: int = 9
+DEFAULT_PEAK_HOURS: list[str] = ["17:00-18:30", "18:30-20:00", "20:00-21:30"]
+OUT_OF_SCOPE_RESPONSE: str = (
+    "Xin lỗi! Điều này không nằm trong phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
+)
+
+
 def get_utc_now() -> datetime:
+    """Trả về thời gian UTC hiện tại dạng naive datetime."""
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
-OUT_OF_SCOPE_RESPONSE = "Xin lỗi! Điều này không nằm trong phạm vi của tôi! Xin lỗi và cảm ơn bạn đã đặt câu hỏi"
 
 class AIService:
     @classmethod
     def _call_gemini(cls, db: Session, kieu_goi: KieuGoiAI, system_instruction: str, user_prompt: str) -> Optional[str]:
         settings = get_settings()
-        
+
         ai_config = db.query(AIConfig).first()
         if not ai_config:
             ai_config = AIConfig(
@@ -37,7 +53,7 @@ class AIService:
             db.add(ai_config)
             db.commit()
             db.refresh(ai_config)
-            
+
         if not settings.gemini_api_key or settings.gemini_api_key == "YOUR_GEMINI_API_KEY_HERE":
             # Ghi nhận log AI request lỗi thiếu API key
             ai_req = AIRequest(
@@ -50,7 +66,7 @@ class AIService:
             db.add(ai_req)
             db.commit()
             return None
-            
+
         start_perf = pytime.perf_counter()
         try:
             genai.configure(api_key=settings.gemini_api_key)
@@ -64,7 +80,7 @@ class AIService:
                 request_options={"timeout": 10.0}
             )
             duration = int((pytime.perf_counter() - start_perf) * 1000)
-            
+
             # Ghi nhận log AI request thành công
             ai_req = AIRequest(
                 ai_config_id=ai_config.ai_config_id,
@@ -224,7 +240,9 @@ class AIService:
         Trích xuất ngày đá bóng mong muốn từ câu hỏi của người dùng:
         - "ngày mai", "mai", "tối mai", "sáng mai", "chiều mai" -> ref_date + 1 ngày
         - "ngày kia", "ngày mốt", "mốt" -> ref_date + 2 ngày
-        - "hôm nay", "tối nay", "chiều nay" -> date.today()
+        - "hôm nay", "tối nay", "chiều nay" -> ref_date (hôm nay)
+        - "cuối tuần", "cuoi tuan" -> thứ 7 gần nhất (hoặc CN nếu hôm nay là T7)
+        - "thứ 2", "t2", "thu hai" ... "thứ 7", "t7", "chủ nhật", "cn" -> ngày thứ đó gần nhất
         - Định dạng ngày dd/mm hoặc dd/mm/yyyy
         """
         today = date.today()
@@ -232,7 +250,7 @@ class AIService:
         p_norm = cls._remove_accents(user_prompt.strip().lower())
 
         # 1. Từ khóa tương đối chỉ ngày kia / ngày mốt
-        if any(k in p_norm for k in ['ngay kia', 'ngay mot', 'mốt']):
+        if any(k in p_norm for k in ['ngay kia', 'ngay mot', 'mot']):
             return ref_date + timedelta(days=2)
 
         # 2. Từ khóa tương đối chỉ ngày mai / mai
@@ -245,7 +263,37 @@ class AIService:
         if any(k in p_norm for k in ['hom nay', 'toi nay', 'chieu nay', 'sang nay', 'trua nay', 'nay con']):
             return ref_date
 
-        # 4. Định dạng ngày cụ thể dd/mm hoặc dd/mm/yyyy
+        # 4. Cuối tuần -> thứ 7 gần nhất (weekday=5), nếu hôm nay đã là T7 thì lấy CN (weekday=6)
+        if any(k in p_norm for k in ['cuoi tuan', 'cuoi tuan nay', 'cuoi tuan sau']):
+            days_ahead = (5 - ref_date.weekday()) % 7  # 5 = Thứ Bảy (Saturday)
+            if days_ahead == 0:
+                # Hôm nay là T7, hỏi cuối tuần -> lấy CN ngay hôm nay hoặc T7 tuần sau
+                # Nếu 'tuan sau' thì T7 kế tiếp (+7 ngày), còn không thì lấy ngày này
+                if 'cuoi tuan sau' in p_norm:
+                    days_ahead = 7
+            return ref_date + timedelta(days=days_ahead)
+
+        # 5. Thứ cụ thể trong tuần: thứ 2 -> weekday 0, thứ 3 -> 1, ... thứ 7 -> 5, CN -> 6
+        weekday_map = {
+            'thu 2': 0, 'thu hai': 0, 't2': 0,
+            'thu 3': 1, 'thu ba': 1, 't3': 1,
+            'thu 4': 2, 'thu tu': 2, 't4': 2,
+            'thu 5': 3, 'thu nam': 3, 't5': 3,
+            'thu 6': 4, 'thu sau': 4, 't6': 4,
+            'thu 7': 5, 'thu bay': 5, 't7': 5,
+            'chu nhat': 6, 'cn': 6,
+        }
+        # Ưu tiên khớp chuỗi dài trước (tránh "t7" khớp trước "thu 7")
+        for keyword in sorted(weekday_map.keys(), key=len, reverse=True):
+            # Kiểm tra với word boundary cho các từ ngắn như t2, cn
+            if re.search(r'\b' + re.escape(keyword) + r'\b', p_norm):
+                target_weekday = weekday_map[keyword]
+                days_ahead = (target_weekday - ref_date.weekday()) % 7
+                if days_ahead == 0:
+                    days_ahead = 7  # Hôm nay đúng thứ đó -> lấy tuần kế tiếp
+                return ref_date + timedelta(days=days_ahead)
+
+        # 6. Định dạng ngày cụ thể dd/mm hoặc dd/mm/yyyy
         m = re.search(r'\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{4}))?\b', p_norm)
         if m:
             day = int(m.group(1))
@@ -264,7 +312,7 @@ class AIService:
     def consult_pitch(cls, db: Session, user_prompt: str, ngay_mong_muon: Optional[date] = None) -> AIConsultResponse:
         # Tự động trích xuất ngày từ câu hỏi tự nhiên nếu có (VD: "ngày mai thì sao" -> ngày mai)
         query_date = cls.extract_target_date(user_prompt, ngay_mong_muon)
-        
+
         # 1. Kiểm tra phạm vi câu hỏi
         is_relevant, intent = cls.classify_user_prompt(user_prompt)
         if not is_relevant or intent == "out_of_scope":
@@ -448,13 +496,13 @@ class AIService:
         booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
         if not booking:
             raise HTTPException(status_code=404, detail="Không tìm thấy đơn đặt sân")
-            
+
         system_instruction = (
             "HỆ THỐNG: Victory Arena Automated Notification Engine (Phân hệ Tạo Tin Nhắn Tự Động).\n"
             "MỤC TIÊU: Dựa trên dữ liệu đơn đặt sân được cung cấp từ CSDL, soạn thảo thông điệp nhắc lịch thi đấu bóng đá ngắn gọn, "
             "chuẩn xác, đầy đủ các trường thông tin (Tên khách hàng, Tên sân, Ngày đá, Khung giờ, Số tiền cọc đã ghi nhận, và lưu ý chuẩn bị trước trận đấu)."
         )
-        
+
         context_data = {
             "khach_hang": booking.khach_hang.ho_ten,
             "ten_san": booking.san.ten_san,
@@ -462,9 +510,9 @@ class AIService:
             "khung_gio": f"{booking.gio_bat_dau.strftime('%H:%M')} - {booking.gio_ket_thuc.strftime('%H:%M')}",
             "tien_coc": booking.tien_coc
         }
-        
+
         llm_response = cls._call_gemini(db, KieuGoiAI.NOTIFY, system_instruction, json.dumps(context_data, ensure_ascii=False))
-        
+
         if llm_response:
             noi_dung = llm_response.strip()
         else:
@@ -473,7 +521,7 @@ class AIService:
                 f"Đội của mình có lịch hẹn ra sân tại {booking.san.ten_san} vào lúc {booking.gio_bat_dau.strftime('%H:%M')}-{booking.gio_ket_thuc.strftime('%H:%M')} ngày {booking.ngay_da.strftime('%d/%m/%Y')}. "
                 f"Số tiền cọc đã ghi nhận: {booking.tien_coc:,.0f}đ. Chúc đội mình có một trận đấu bùng nổ! ⚽🏟️"
             )
-            
+
         # Lưu vào bảng ThongBao
         new_notify = ThongBao(
             tai_khoan_id=booking.ma_khach_hang,
@@ -485,7 +533,7 @@ class AIService:
         )
         db.add(new_notify)
         db.commit()
-        
+
         return AIReminderResponse(
             ma_don=ma_don,
             noi_dung_tin_nhan=noi_dung,
@@ -503,26 +551,26 @@ class AIService:
             ThanhToan.thoi_gian <= datetime.combine(den_ngay, time.max)
         ).all()
         tong_doanh_thu = sum(p.so_tien for p in payments)
-        
+
         # 2. Tính tỷ lệ lấp đầy (số slots đã đặt / tổng slots hoạt động)
         total_bookings = db.query(DatSan).filter(
             DatSan.ngay_da >= tu_ngay,
             DatSan.ngay_da <= den_ngay,
             DatSan.trang_thai != 'da_huy'
         ).count()
-        
+
         total_courts = db.query(San).filter(San.trang_thai == 'active').count() or 1
         days_count = (den_ngay - tu_ngay).days + 1
         total_possible_slots = total_courts * days_count * 9 # 9 slots/ngày
         ty_le_lap_day = round((total_bookings / total_possible_slots) * 100, 2)
-        
+
         system_instruction = (
             "HỆ THỐNG: Victory Arena Business Intelligence & Revenue Engine (Phân hệ Phân Tích Dữ Liệu Kinh Doanh).\n"
             "MỤC TIÊU: Dựa trên các chỉ số doanh thu thực tế, tỷ lệ lấp đầy sân và số lượng đơn đặt trong kỳ báo cáo từ CSDL, "
             "tổng hợp đánh giá hiệu suất khai thác sân, chỉ rõ các khung giờ cao điểm, thấp điểm và đề xuất chiến lược khuyến mại (giảm giá 20-30% giờ thấp điểm) "
             "nhằm tối ưu hóa công suất vận hành cụm sân."
         )
-        
+
         context_data = {
             "tu_ngay": tu_ngay.strftime("%Y-%m-%d"),
             "den_ngay": den_ngay.strftime("%Y-%m-%d"),
@@ -530,9 +578,9 @@ class AIService:
             "ty_le_lap_day_phong_tram": ty_le_lap_day,
             "tong_don_dat": total_bookings
         }
-        
+
         llm_response = cls._call_gemini(db, KieuGoiAI.REPORT, system_instruction, json.dumps(context_data, ensure_ascii=False))
-        
+
         if llm_response:
             tom_tat = llm_response.strip()
         else:
@@ -541,7 +589,7 @@ class AIService:
                 f"Tổng doanh thu đạt: {tong_doanh_thu:,.0f}đ. Tỷ lệ lấp đầy trung bình đạt {ty_le_lap_day}%. "
                 f"Hiệu năng hoạt động ổn định ở các khung giờ vàng (17h30-20h), cần có các chương trình kích cầu giảm giá 20% vào khung trưa và sáng sớm."
             )
-            
+
         # Phân tích ra các đề xuất cụ thể (mẫu/hoặc parse từ LLM)
         khung_gio_cao_diem = ["17:00-18:30", "18:30-20:00", "20:00-21:30"]
         de_xuat = [
@@ -549,7 +597,7 @@ class AIService:
             "Tặng nước uống miễn phí cho các đội đặt sân khung trưa (14:00-15:30).",
             "Tăng cường chạy quảng cáo fanpage hướng tới đối tượng học sinh, sinh viên đá khung giờ chiều sớm."
         ]
-        
+
         # Lưu vào bảng BaoCao
         new_report = BaoCao(
             tu_ngay=tu_ngay,
@@ -562,7 +610,7 @@ class AIService:
         db.add(new_report)
         db.commit()
         db.refresh(new_report)
-        
+
         return AIReportResponse(
             bao_cao_id=new_report.bao_cao_id,
             tom_tat=tom_tat,
@@ -570,3 +618,4 @@ class AIService:
             khung_gio_cao_diem=khung_gio_cao_diem,
             de_xuat=de_xuat
         )
+
