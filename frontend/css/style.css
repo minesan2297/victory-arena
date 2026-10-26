@@ -1249,8 +1249,7 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
+    background-color: rgba(15, 23, 42, 0.96);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1258,9 +1257,9 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 }
 
 .login-card {
-    background: rgba(15, 23, 42, 0.82);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-xl);
     padding: 36px 32px;
@@ -2227,38 +2226,40 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
     position: absolute;
     top: -96px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
     z-index: var(--z-elevated);
     pointer-events: none;
     will-change: transform;
     backface-visibility: hidden;
+    animation: mascotIdleFloat 4s ease-in-out infinite;
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.husky-svg {
-    will-change: transform;
-    transform-origin: 100px 140px;
-    animation: mascotIdleBreathe 4s ease-in-out infinite;
-}
-
-@keyframes mascotIdleBreathe {
+@keyframes mascotIdleFloat {
     0%, 100% {
-        transform: translateY(0) scale(1);
+        transform: translate3d(-50%, 0, 0);
     }
     50% {
-        transform: translateY(-3.5px) scale(1.012);
+        transform: translate3d(-50%, -4px, 0);
     }
+}
+
+.husky-svg {
+    display: block;
+    overflow: visible;
 }
 
 .pupil-group {
+    transform-box: view-box;
     will-change: transform;
-    transition: transform 0.16s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .paw {
+    transform-box: view-box;
     will-change: transform;
     backface-visibility: hidden;
-    transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .paw-left {
@@ -2289,23 +2290,23 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 
 /* Mascot State: Happy (Success - smooth fluid bounce) */
 .husky-mascot.is-happy {
-    animation: happyBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite alternate;
+    animation: happyBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite alternate !important;
 }
 
 @keyframes happyBounce {
-    0% { transform: translateX(-50%) translateY(0) scale(1); }
-    100% { transform: translateX(-50%) translateY(-12px) scale(1.04); }
+    0% { transform: translate3d(-50%, 0, 0) scale(1); }
+    100% { transform: translate3d(-50%, -12px, 0) scale(1.04); }
 }
 
 /* Mascot State: Sad/Scared (Failed login - perfectly synchronized to 800ms JS wait) */
 .husky-mascot.is-sad {
-    animation: sadShake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+    animation: sadShake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards !important;
 }
 
 @keyframes sadShake {
-    0%, 100% { transform: translateX(-50%) rotate(0deg); }
-    15%, 55%, 85% { transform: translateX(-53%) rotate(-3deg); }
-    35%, 70% { transform: translateX(-47%) rotate(3deg); }
+    0%, 100% { transform: translate3d(-50%, 0, 0) rotate(0deg); }
+    15%, 55%, 85% { transform: translate3d(-53%, 0, 0) rotate(-3deg); }
+    35%, 70% { transform: translate3d(-47%, 0, 0) rotate(3deg); }
 }
 
 #main-login-card.shake {
@@ -3162,12 +3163,11 @@ input.input-invalid {
 .radar-progress-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #00f0ff, #10b981, #00f0ff);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg, #00f0ff, #10b981);
     border-radius: 6px;
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
-    transition: width 0.35s ease-out;
-    animation: gradientMove 1.5s linear infinite;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: width;
 }
 
 /* Realistic Skeleton Grid */
@@ -3187,6 +3187,7 @@ input.input-invalid {
     align-items: center;
     position: relative;
     overflow: hidden;
+    contain: paint;
 }
 
 .skeleton-slot-card::after {
@@ -3249,6 +3250,7 @@ input.input-invalid {
     gap: 16px;
     position: relative;
     overflow: hidden;
+    contain: paint;
     width: 100%;
 }
 
@@ -3305,6 +3307,7 @@ input.input-invalid {
     border-radius: var(--radius-md);
     position: relative;
     overflow: hidden;
+    contain: paint;
 }
 
 .skeleton-form-field::after {
@@ -3324,6 +3327,7 @@ input.input-invalid {
     background: rgba(16, 185, 129, 0.22);
     position: relative;
     overflow: hidden;
+    contain: paint;
 }
 
 .skeleton-form-btn::after {
@@ -3429,8 +3433,8 @@ input.input-invalid {
 }
 
 @keyframes shimmerSweep {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% { transform: translate3d(-100%, 0, 0); }
+    100% { transform: translate3d(100%, 0, 0); }
 }
 
 @keyframes matrixSlotsFadeIn {
@@ -5414,10 +5418,14 @@ html[data-theme="light"] .logout-msg-sub {
 
 /* Login Overlay & Card */
 html[data-theme="light"] .login-overlay {
-    background-color: rgba(241, 245, 249, 0.95);
+    background-color: #f1f5f9;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 html[data-theme="light"] .login-card {
     background-color: #ffffff;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1px solid #cbd5e1;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 }
