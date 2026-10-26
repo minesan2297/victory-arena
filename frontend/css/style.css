@@ -546,7 +546,6 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 .tab-content.active {
     display: block;
     animation: tabContentEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    will-change: opacity, transform;
 }
 
 @keyframes tabContentEnter {
@@ -1257,9 +1256,7 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 }
 
 .login-card {
-    background: rgba(15, 23, 42, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: #0f172a;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-xl);
     padding: 36px 32px;
@@ -2226,87 +2223,59 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
     position: absolute;
     top: -96px;
     left: 50%;
-    transform: translate3d(-50%, 0, 0);
-    z-index: var(--z-elevated);
+    transform: translateX(-50%);
+    z-index: 10;
     pointer-events: none;
-    will-change: transform;
-    backface-visibility: hidden;
-    animation: mascotIdleFloat 4s ease-in-out infinite;
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes mascotIdleFloat {
-    0%, 100% {
-        transform: translate3d(-50%, 0, 0);
-    }
-    50% {
-        transform: translate3d(-50%, -4px, 0);
-    }
-}
-
-.husky-svg {
-    display: block;
-    overflow: visible;
+    transition: transform 0.3s ease;
 }
 
 .pupil-group {
-    transform-box: view-box;
-    will-change: transform;
-    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.1s ease-out;
 }
 
 .paw {
-    transform-box: view-box;
-    will-change: transform;
-    backface-visibility: hidden;
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-box: fill-box;
+    transform-origin: center center;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.paw-left {
-    transform-origin: 50px 155px;
-}
-
-.paw-right {
-    transform-origin: 150px 155px;
-}
-
-/* Mascot State: Covering Eyes (Password mode - precise, fluid coverage) */
+/* Mascot State: Covering Eyes (Password mode) */
 .husky-mascot.is-covering #paw-left {
-    transform: translate(22px, -67px) rotate(18deg) scale(1.12) !important;
+    transform: translate(22px, -67px) scale(1.15) rotate(22deg) !important;
 }
 
 .husky-mascot.is-covering #paw-right {
-    transform: translate(-22px, -67px) rotate(-18deg) scale(1.12) !important;
+    transform: translate(-22px, -67px) scale(1.15) rotate(-22deg) !important;
 }
 
 /* Mascot State: Peeking (Password eye toggled open) */
 .husky-mascot.is-peeking #paw-left {
-    transform: translate(12px, -40px) rotate(8deg) scale(1.05) !important;
+    transform: translate(10px, -42px) rotate(10deg) !important;
 }
 
 .husky-mascot.is-peeking #paw-right {
-    transform: translate(-12px, -40px) rotate(-8deg) scale(1.05) !important;
+    transform: translate(-10px, -42px) rotate(-10deg) !important;
 }
 
-/* Mascot State: Happy (Success - smooth fluid bounce) */
+/* Mascot State: Happy (Success) */
 .husky-mascot.is-happy {
-    animation: happyBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite alternate !important;
+    animation: happyBounce 0.6s ease infinite alternate;
 }
 
 @keyframes happyBounce {
-    0% { transform: translate3d(-50%, 0, 0) scale(1); }
-    100% { transform: translate3d(-50%, -12px, 0) scale(1.04); }
+    0% { transform: translateX(-50%) translateY(0) scale(1); }
+    100% { transform: translateX(-50%) translateY(-14px) scale(1.05); }
 }
 
-/* Mascot State: Sad/Scared (Failed login - perfectly synchronized to 800ms JS wait) */
+/* Mascot State: Sad/Scared (Failed login) */
 .husky-mascot.is-sad {
-    animation: sadShake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards !important;
+    animation: sadShake 0.4s ease-in-out;
 }
 
 @keyframes sadShake {
-    0%, 100% { transform: translate3d(-50%, 0, 0) rotate(0deg); }
-    15%, 55%, 85% { transform: translate3d(-53%, 0, 0) rotate(-3deg); }
-    35%, 70% { transform: translate3d(-47%, 0, 0) rotate(3deg); }
+    0%, 100% { transform: translateX(-50%) rotate(0deg); }
+    20%, 60% { transform: translateX(-54%) rotate(-4deg); }
+    40%, 80% { transform: translateX(-46%) rotate(4deg); }
 }
 
 #main-login-card.shake {
@@ -4279,43 +4248,17 @@ input.input-invalid {
 }
 
 .login-screen-enter {
-    animation: loginOverlayFadeIn 0.3s ease-out forwards;
+    animation: loginEnterAnim 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.login-screen-enter .login-card {
-    animation: loginCardSpringUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    will-change: transform, opacity;
-}
-
-.login-screen-enter .husky-mascot {
-    animation: mascotPopIn 0.45s cubic-bezier(0.2, 1.15, 0.4, 1) 0.05s both;
-    will-change: transform, opacity;
-}
-
-@keyframes loginOverlayFadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-}
-
-@keyframes loginCardSpringUp {
+@keyframes loginEnterAnim {
     0% {
         opacity: 0;
-        transform: translateY(16px) scale(0.97);
+        transform: scale(1.03);
     }
     100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes mascotPopIn {
-    0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(14px) scale(0.86);
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(1);
+        transform: scale(1);
     }
 }
 
