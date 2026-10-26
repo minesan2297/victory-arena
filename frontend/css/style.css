@@ -4039,13 +4039,20 @@ input.input-invalid {
     overflow: hidden;
 }
 
+/* AI Slot Conflict Alert Box */
+.ai-slot-alert-box {
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--danger);
+}
+
 /* Modal Open / Close Transition Effects */
 .modal-anim-enter {
     animation: modalEnterSpring 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
 .modal-anim-leave {
-    animation: modalLeaveFade 0.22s ease-in forwards !important;
+    animation: modalLeaveFade 0.18s ease-in forwards !important;
 }
 
 @keyframes modalEnterSpring {
@@ -4262,6 +4269,53 @@ input.input-invalid {
         box-shadow: 0 0 22px rgba(0, 240, 255, 0.55);
         transform: rotate(-6deg) scale(1.06);
     }
+}
+
+/* Change Password Form Controls */
+.cp-input {
+    width: 100%;
+    padding: 11px 42px 11px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 0.92rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color var(--dur-fast) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-smooth);
+}
+
+.cp-input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-light) !important;
+}
+
+.cp-btn-submit {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+    transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-smooth);
+    box-shadow: 0 4px 14px var(--primary-light);
+}
+
+.cp-btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px var(--primary-glow);
+}
+
+.cp-btn-submit:active {
+    transform: translateY(0);
 }
 
 /* Input Focus Glow */
@@ -5292,6 +5346,46 @@ html[data-theme="light"] .login-card {
     background-color: #ffffff;
     border: 1px solid #cbd5e1;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+/* AI Slot Conflict Modal Light Mode */
+html[data-theme="light"] .ai-slot-alert-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #dc2626;
+}
+
+/* QR Expired Overlay in Light Mode */
+html[data-theme="light"] .qr-expired-overlay {
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .qr-expired-desc {
+    color: #475569;
+}
+html[data-theme="light"] .qr-expired-card {
+    color: #0f172a;
+}
+
+/* Chatbot Message Bubbles in Light Mode */
+html[data-theme="light"] .chatbot-message.ai .msg-text {
+    background: #f1f5f9;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY & PREFERS-REDUCED-MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 
