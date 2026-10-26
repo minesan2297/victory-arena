@@ -120,14 +120,145 @@ document.addEventListener('DOMContentLoaded', () => {
         initApp();
     }
     
-    function logout() {
+    // ============================================================
+    // LOGOUT & CONFIRMATION WITH ANIMATIONS
+    // ============================================================
+    function confirmLogout() {
+        const modal = document.getElementById('modal-confirm-logout');
+        const targetName = document.getElementById('logout-target-name');
+        if (targetName && currentUser) {
+            targetName.textContent = currentUser.ho_ten || currentUser.ten_dang_nhap || 'Quý khách';
+        }
+        if (modal) {
+            const card = document.getElementById('modal-confirm-logout-card') || modal.querySelector('.modal-card');
+            if (card) {
+                card.classList.remove('modal-anim-leave');
+                card.classList.add('modal-anim-enter');
+            }
+            modal.style.display = 'flex';
+        } else {
+            executeLogout(false);
+        }
+    }
+
+    function closeLogoutModal() {
+        const modal = document.getElementById('modal-confirm-logout');
+        if (!modal) return;
+        const card = document.getElementById('modal-confirm-logout-card') || modal.querySelector('.modal-card');
+        if (card) {
+            card.classList.remove('modal-anim-enter');
+            card.classList.add('modal-anim-leave');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                card.classList.remove('modal-anim-leave');
+            }, 200);
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+
+    async function executeLogout(forced = false) {
+        const modal = document.getElementById('modal-confirm-logout');
+        const overlay = document.getElementById('logout-transition-overlay');
+        const btnConfirm = document.getElementById('btn-confirm-logout');
+
+        if (btnConfirm) {
+            btnConfirm.disabled = true;
+            btnConfirm.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang đăng xuất...';
+        }
+
+        if (!forced && overlay) {
+            overlay.classList.add('active');
+            await wait(450);
+        }
+
+        if (modal) modal.style.display = 'none';
+        if (btnConfirm) {
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = '<i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng Xuất Ngay';
+        }
+
+        // Dọn dẹp token & session
         localStorage.removeItem('token');
+        localStorage.removeItem('auth_token');
         token = null;
         currentUser = null;
-        showLogin();
+
+        // Exit animation cho ứng dụng
+        if (appInterface) {
+            appInterface.classList.add('app-exit-fade');
+        }
+
+        await wait(280);
+
+        if (appInterface) {
+            appInterface.style.display = 'none';
+            appInterface.classList.remove('app-exit-fade');
+        }
+
+        if (loginScreen) {
+            loginScreen.style.display = 'flex';
+            loginScreen.classList.remove('login-screen-enter');
+            void loginScreen.offsetWidth; // trigger reflow
+            loginScreen.classList.add('login-screen-enter');
+        }
+
+        if (huskyGuard) {
+            huskyGuard.classList.remove('is-covering', 'is-peeking', 'is-sad');
+            huskyGuard.classList.add('is-happy');
+            setTimeout(() => {
+                if (huskyGuard) huskyGuard.classList.remove('is-happy');
+            }, 1800);
+        }
+
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+
+        if (typeof showToast === 'function') {
+            showToast("Đã đăng xuất an toàn. Hẹn gặp lại bạn!", "info");
+        }
     }
-    
-    document.getElementById('btn-logout').addEventListener('click', logout);
+
+    function logout(forced = false) {
+        if (forced) {
+            executeLogout(true);
+        } else {
+            confirmLogout();
+        }
+    }
+
+    const btnLogoutHeader = document.getElementById('btn-logout');
+    if (btnLogoutHeader) {
+        btnLogoutHeader.addEventListener('click', (e) => {
+            e.stopPropagation();
+            confirmLogout();
+        });
+    }
+
+    const btnCancelLogoutEl = document.getElementById('btn-cancel-logout');
+    if (btnCancelLogoutEl) {
+        btnCancelLogoutEl.addEventListener('click', closeLogoutModal);
+    }
+
+    const btnConfirmLogoutEl = document.getElementById('btn-confirm-logout');
+    if (btnConfirmLogoutEl) {
+        btnConfirmLogoutEl.addEventListener('click', () => executeLogout(false));
+    }
+
+    const modalConfirmLogoutEl = document.getElementById('modal-confirm-logout');
+    if (modalConfirmLogoutEl) {
+        modalConfirmLogoutEl.addEventListener('click', (e) => {
+            if (e.target === modalConfirmLogoutEl) closeLogoutModal();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const m = document.getElementById('modal-confirm-logout');
+            if (m && m.style.display !== 'none') closeLogoutModal();
+        }
+    });
     
     // Auth Tab Switch
     const btnTabLogin = document.getElementById('btn-tab-login');
@@ -4072,60 +4203,163 @@ document.addEventListener('DOMContentLoaded', () => {
     const successBox = document.getElementById('doi-mat-khau-success');
     const submitBtn = document.getElementById('btn-submit-doi-mat-khau');
 
+    const cardEl = document.getElementById('modal-doi-mat-khau-card') || modalEl.querySelector('.modal-card');
+    const strengthWrap = document.getElementById('cp-strength-wrap');
+    const strengthBar = document.getElementById('cp-strength-bar');
+    const strengthLabel = document.getElementById('cp-strength-label');
+
     if (!modalEl) return; // Guard: chưa render
 
-    /** Mở modal và reset form */
+    /** Hàm rung lắc trường dữ liệu bị lỗi */
+    function shakeField(fieldId) {
+        const el = document.getElementById(fieldId);
+        if (!el) return;
+        el.classList.remove('cp-input-shake');
+        void el.offsetWidth; // trigger reflow
+        el.classList.add('cp-input-shake');
+        el.focus();
+        setTimeout(() => el.classList.remove('cp-input-shake'), 450);
+    }
+
+    /** Mở modal và reset form cùng animation mượt mà */
     function openModal() {
         if (form) form.reset();
         hideMessages();
+        resetStrengthMeter();
+
         ['cp-current', 'cp-new', 'cp-confirm'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.style.borderColor = 'rgba(255,255,255,0.1)';
+            if (el) {
+                el.style.borderColor = 'rgba(255,255,255,0.1)';
+                el.classList.remove('cp-input-shake');
+            }
         });
         ['err-cp-current', 'err-cp-new', 'err-cp-confirm'].forEach(id => {
             const el = document.getElementById(id);
             if (el) { el.style.display = 'none'; el.textContent = ''; }
         });
+
+        if (cardEl) {
+            cardEl.classList.remove('modal-anim-leave');
+            cardEl.classList.add('modal-anim-enter');
+        }
         modalEl.style.display = 'flex';
+
         // Đóng modal profile nếu đang mở
         const profileModal = document.getElementById('modal-user-profile');
         if (profileModal) profileModal.style.display = 'none';
     }
 
-    /** Đóng modal */
+    /** Đóng modal cùng animation fade-out / scale-down */
     function closeModal() {
-        modalEl.style.display = 'none';
+        if (!modalEl || modalEl.style.display === 'none') return;
+        if (cardEl) {
+            cardEl.classList.remove('modal-anim-enter');
+            cardEl.classList.add('modal-anim-leave');
+            setTimeout(() => {
+                modalEl.style.display = 'none';
+                cardEl.classList.remove('modal-anim-leave');
+            }, 200);
+        } else {
+            modalEl.style.display = 'none';
+        }
     }
 
     /** Ẩn cả 2 thông báo */
     function hideMessages() {
-        if (errorBox) errorBox.style.display = 'none';
-        if (successBox) successBox.style.display = 'none';
+        if (errorBox) {
+            errorBox.style.display = 'none';
+            errorBox.classList.remove('cp-alert-drop');
+        }
+        if (successBox) {
+            successBox.style.display = 'none';
+            successBox.classList.remove('cp-success-celebrate');
+        }
     }
 
-    /** Hiển thị lỗi tổng */
+    /** Hiển thị lỗi tổng có animation drop */
     function showError(msg) {
         if (errorText) errorText.textContent = msg;
-        if (errorBox) errorBox.style.display = 'block';
+        if (errorBox) {
+            errorBox.style.display = 'block';
+            errorBox.classList.remove('cp-alert-drop');
+            void errorBox.offsetWidth; // trigger reflow
+            errorBox.classList.add('cp-alert-drop');
+        }
         if (successBox) successBox.style.display = 'none';
     }
 
-    /** Hiển thị thành công */
+    /** Hiển thị thành công cùng hiệu ứng ăn mừng */
     function showSuccess() {
-        if (successBox) successBox.style.display = 'block';
+        if (successBox) {
+            successBox.style.display = 'block';
+            successBox.classList.remove('cp-success-celebrate');
+            void successBox.offsetWidth; // trigger reflow
+            successBox.classList.add('cp-success-celebrate');
+        }
         if (errorBox) errorBox.style.display = 'none';
     }
 
-    /** Hiển thị lỗi field cụ thể */
+    /** Hiển thị lỗi field cụ thể + kích hoạt animation rung lắc */
     function showFieldError(fieldId, errId, msg) {
         const input = document.getElementById(fieldId);
         const errEl = document.getElementById(errId);
-        if (input) input.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+        if (input) input.style.borderColor = 'rgba(239, 68, 68, 0.7)';
         if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+        shakeField(fieldId);
         showError(msg);
     }
 
-    /** Toggle eye password */
+    /** Reset thang đo độ mạnh mật khẩu */
+    function resetStrengthMeter() {
+        if (!strengthWrap || !strengthBar || !strengthLabel) return;
+        strengthWrap.style.display = 'none';
+        strengthBar.style.width = '0%';
+        strengthBar.style.background = 'transparent';
+        strengthLabel.textContent = 'Độ mạnh: --';
+        strengthLabel.style.color = 'var(--text-muted)';
+    }
+
+    /** Cập nhật thang đo độ mạnh mật khẩu theo thời gian thực */
+    function updatePasswordStrength(val) {
+        if (!strengthWrap || !strengthBar || !strengthLabel) return;
+        if (!val || val.length === 0) {
+            resetStrengthMeter();
+            return;
+        }
+
+        strengthWrap.style.display = 'flex';
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        if (val.length < 6) {
+            strengthBar.style.width = '25%';
+            strengthBar.style.background = '#ef4444';
+            strengthLabel.textContent = 'Quá yếu (< 6)';
+            strengthLabel.style.color = '#ef4444';
+        } else if (score <= 2) {
+            strengthBar.style.width = '45%';
+            strengthBar.style.background = '#f59e0b';
+            strengthLabel.textContent = 'Trung bình';
+            strengthLabel.style.color = '#f59e0b';
+        } else if (score <= 4) {
+            strengthBar.style.width = '75%';
+            strengthBar.style.background = '#38bdf8';
+            strengthLabel.textContent = 'Khá mạnh';
+            strengthLabel.style.color = '#38bdf8';
+        } else {
+            strengthBar.style.width = '100%';
+            strengthBar.style.background = '#10b981';
+            strengthLabel.textContent = 'Rất mạnh ✨';
+            strengthLabel.style.color = '#10b981';
+        }
+    }
+
+    /** Toggle eye password có animation xoay icon */
     document.querySelectorAll('.cp-toggle-pw').forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
@@ -4135,21 +4369,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
             if (icon) {
-                icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+                icon.classList.remove('cp-eye-flip');
+                void icon.offsetWidth; // trigger reflow
+                icon.className = (isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye') + ' cp-eye-flip';
             }
         });
     });
 
-    // Reset border khi user gõ
+    // Reset border và cập nhật strength khi user gõ
     ['cp-current', 'cp-new', 'cp-confirm'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', () => {
                 el.style.borderColor = 'rgba(255,255,255,0.1)';
+                el.classList.remove('cp-input-shake');
                 const errId = 'err-' + id;
                 const errEl = document.getElementById(errId);
                 if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
                 hideMessages();
+
+                if (id === 'cp-new') {
+                    updatePasswordStrength(el.value);
+                }
             });
         }
     });
@@ -4168,7 +4409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && modalEl && modalEl.style.display !== 'none') closeModal();
     });
 
-    /** Submit form đổi mật khẩu */
+    /** Submit form đổi mật khẩu với animation phản hồi toàn diện */
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -4206,7 +4447,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Gọi API
-            const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+            const token = localStorage.getItem('token') || localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
             if (!token) {
                 showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
                 return;
@@ -4214,7 +4455,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý bảo mật...';
             }
 
             try {
@@ -4235,10 +4476,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    // TC1: Đổi mật khẩu thành công
+                    // TC1: Đổi mật khẩu thành công - Animation hiệu ứng ăn mừng
                     if (form) form.reset();
+                    resetStrengthMeter();
                     showSuccess();
-                    setTimeout(() => closeModal(), 2200);
+
+                    if (submitBtn) {
+                        submitBtn.classList.add('btn-submit-success-ripple');
+                        submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Đổi Mật Khẩu Thành Công!';
+                    }
+
+                    setTimeout(() => {
+                        closeModal();
+                        if (submitBtn) {
+                            submitBtn.classList.remove('btn-submit-success-ripple');
+                            submitBtn.innerHTML = '<i class="fa-solid fa-key"></i> Xác Nhận Đổi Mật Khẩu';
+                        }
+                        if (typeof showToast === 'function') {
+                            showToast('Đổi mật khẩu thành công! Tài khoản của bạn đã được bảo vệ.', 'success');
+                        }
+                    }, 2200);
                 } else {
                     const detail = data.detail || 'Đổi mật khẩu không thành công';
                     if (typeof detail === 'string') {
@@ -4270,7 +4527,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('[DoiMatKhau] Lỗi kết nối:', err);
                 showError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối.');
             } finally {
-                if (submitBtn) {
+                if (submitBtn && !submitBtn.classList.contains('btn-submit-success-ripple')) {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fa-solid fa-key"></i> Xác Nhận Đổi Mật Khẩu';
                 }
@@ -4278,3 +4535,124 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 })();
+
+// ==========================================================================
+// THEME SWITCHER MODULE (DARK / LIGHT MODE)
+// Chuẩn thiết kế Pill Button (🌙 Tối / ☀️ Sáng) theo yêu cầu người dùng
+// ==========================================================================
+(function initThemeModule() {
+    function getStoredTheme() {
+        try {
+            return localStorage.getItem('va_theme') || 'dark';
+        } catch (e) {
+            return 'dark';
+        }
+    }
+
+    function setStoredTheme(theme) {
+        try {
+            localStorage.setItem('va_theme', theme);
+        } catch (e) {
+            console.warn('[Theme] Không thể lưu theme vào localStorage:', e);
+        }
+    }
+
+    function updateToggleButton(btnId, iconId, textId, currentTheme) {
+        const btn = document.getElementById(btnId);
+        const iconEl = document.getElementById(iconId);
+        const textEl = document.getElementById(textId);
+
+        if (!btn && !iconEl && !textEl) return;
+
+        if (currentTheme === 'light') {
+            // Khi đang ở giao diện Sáng: Nút hiển thị "🌙 Tối" khớp chuẩn 100% hình ảnh người dùng tải lên
+            if (iconEl) iconEl.textContent = '🌙';
+            if (textEl) textEl.textContent = 'Tối';
+            if (btn) {
+                btn.setAttribute('title', 'Chuyển sang giao diện Tối (Dark Mode)');
+                btn.setAttribute('aria-label', 'Chuyển sang giao diện Tối');
+            }
+        } else {
+            // Khi đang ở giao diện Tối: Nút hiển thị "☀️ Sáng"
+            if (iconEl) iconEl.textContent = '☀️';
+            if (textEl) textEl.textContent = 'Sáng';
+            if (btn) {
+                btn.setAttribute('title', 'Chuyển sang giao diện Sáng (Light Mode)');
+                btn.setAttribute('aria-label', 'Chuyển sang giao diện Sáng');
+            }
+        }
+    }
+
+    function animateIcon(iconId) {
+        const iconEl = document.getElementById(iconId);
+        if (iconEl) {
+            iconEl.classList.remove('theme-icon-rotate');
+            void iconEl.offsetWidth; // trigger reflow
+            iconEl.classList.add('theme-icon-rotate');
+        }
+    }
+
+    function applyTheme(theme, isUserAction = false) {
+        const validTheme = (theme === 'light') ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', validTheme);
+        setStoredTheme(validTheme);
+
+        updateToggleButton('btn-theme-toggle', 'theme-toggle-icon', 'theme-toggle-text', validTheme);
+        updateToggleButton('btn-theme-toggle-login', 'login-theme-toggle-icon', 'login-theme-toggle-text', validTheme);
+
+        if (isUserAction) {
+            animateIcon('theme-toggle-icon');
+            animateIcon('login-theme-toggle-icon');
+            if (typeof showToast === 'function') {
+                if (validTheme === 'light') {
+                    showToast('Đã chuyển sang giao diện Sáng ☀️', 'info');
+                } else {
+                    showToast('Đã chuyển sang giao diện Tối 🌙', 'info');
+                }
+            }
+        }
+    }
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || getStoredTheme();
+        const nextTheme = (currentTheme === 'light') ? 'dark' : 'light';
+        applyTheme(nextTheme, true);
+    }
+
+    // Gắn sự kiện click cho các nút chuyển đổi
+    function bindEvents() {
+        const topbarBtn = document.getElementById('btn-theme-toggle');
+        const loginBtn = document.getElementById('btn-theme-toggle-login');
+
+        if (topbarBtn) {
+            topbarBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleTheme();
+            });
+        }
+
+        if (loginBtn) {
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleTheme();
+            });
+        }
+
+        // Áp dụng theme đã lưu ngay lập tức
+        applyTheme(getStoredTheme(), false);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindEvents);
+    } else {
+        bindEvents();
+    }
+
+    // Expose ra window để tương tác nếu cần
+    window.VictoryArenaTheme = {
+        applyTheme,
+        toggleTheme,
+        getStoredTheme
+    };
+})();
+

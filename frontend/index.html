@@ -14,10 +14,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css?v=2.5.0">
+    <!-- Theme Initializer (Prevent theme flicker / FOUC) -->
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('va_theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body>
     <!-- LOGIN INTERFACE OVERLAY -->
     <div class="login-overlay" id="login-screen">
+        <!-- Login Screen Theme Switcher Pill -->
+        <button type="button" class="btn-theme-toggle btn-theme-toggle-login" id="btn-theme-toggle-login" title="Chuyển đổi giao diện Sáng / Tối">
+            <span class="theme-toggle-icon" id="login-theme-toggle-icon">☀️</span>
+            <span class="theme-toggle-text" id="login-theme-toggle-text">Sáng</span>
+        </button>
         <div class="login-wrapper">
             <!-- HUSKY AI GUARD MASCOT SVG -->
             <div class="husky-mascot" id="husky-guard">
@@ -289,6 +303,12 @@
                 </div>
 
                 <div class="topbar-actions">
+                    <!-- Theme Toggle Switcher Pill (Matching user screenshot) -->
+                    <button type="button" class="btn-theme-toggle" id="btn-theme-toggle" title="Chuyển đổi giao diện Sáng / Tối">
+                        <span class="theme-toggle-icon" id="theme-toggle-icon">☀️</span>
+                        <span class="theme-toggle-text" id="theme-toggle-text">Sáng</span>
+                    </button>
+
                     <div class="date-picker-wrapper">
                         <i class="fa-regular fa-calendar"></i>
                         <input type="date" id="query-date-input">
@@ -1687,16 +1707,47 @@
         </div>
     </div>
 
+    <!-- Modal Xác Nhận Đăng Xuất -->
+    <div class="modal-overlay" id="modal-confirm-logout" style="display: none; z-index: 100000; align-items: center; justify-content: center;">
+        <div class="modal-card logout-modal-card" id="modal-confirm-logout-card">
+            <div class="logout-icon-bubble">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 800; color: #fff;">Xác Nhận Đăng Xuất</h3>
+            <p style="margin: 0 0 22px 0; font-size: 0.88rem; color: #94a3b8; line-height: 1.55;">
+                Bạn có chắc chắn muốn đăng xuất khỏi tài khoản <strong id="logout-target-name" style="color: #38bdf8;">--</strong> không? Phiên làm việc của bạn sẽ được đóng an toàn.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="logout-btn-cancel" id="btn-cancel-logout">
+                    <i class="fa-solid fa-arrow-left"></i> Ở Lại
+                </button>
+                <button type="button" class="logout-btn-confirm" id="btn-confirm-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng Xuất Ngay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Safe Logout Transition Overlay -->
+    <div class="logout-transition-overlay" id="logout-transition-overlay">
+        <div class="logout-loader-ring"></div>
+        <div class="logout-msg-main" id="logout-transition-title">Đang Đăng Xuất An Toàn...</div>
+        <div class="logout-msg-sub">
+            <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
+            <span id="logout-transition-desc">Hẹn gặp lại bạn tại Victory Arena! ⚽</span>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 
     <!-- Modal Đổi Mật Khẩu -->
     <div class="modal-overlay" id="modal-doi-mat-khau" style="display: none;">
-        <div class="modal-card" style="max-width: 460px; width: 95%; border: 1px solid rgba(0, 240, 255, 0.25); background: linear-gradient(145deg, #0d1527 0%, #080d1a 100%); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 240, 255, 0.1); border-radius: 18px; overflow: hidden;">
+        <div class="modal-card" id="modal-doi-mat-khau-card" style="max-width: 460px; width: 95%; border: 1px solid rgba(0, 240, 255, 0.25); background: linear-gradient(145deg, #0d1527 0%, #080d1a 100%); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 240, 255, 0.1); border-radius: 18px; overflow: hidden;">
             <!-- Header -->
             <div style="padding: 20px 24px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(0, 240, 255, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="cp-key-badge">
                         <i class="fa-solid fa-key"></i>
                     </div>
                     <div>
@@ -1709,12 +1760,19 @@
 
             <!-- Body Form -->
             <div class="modal-body" style="padding: 22px 24px;">
-                <div id="doi-mat-khau-error" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; color: #f87171; font-size: 0.84rem; margin-bottom: 18px; display: none;">
+                <div id="doi-mat-khau-error" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; color: #f87171; font-size: 0.84rem; margin-bottom: 18px;">
                     <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
                     <span id="doi-mat-khau-error-text"></span>
                 </div>
-                <div id="doi-mat-khau-success" style="display: none; padding: 10px 14px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; color: #34d399; font-size: 0.84rem; margin-bottom: 18px;">
-                    <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> Đổi mật khẩu thành công!
+                <div id="doi-mat-khau-success" style="display: none; padding: 14px 16px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; color: #34d399; font-size: 0.88rem; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: center; gap: 10px; font-weight: 700;">
+                        <i class="fa-solid fa-circle-check" style="font-size: 1.25rem; color: #10b981;"></i>
+                        <span>Đổi mật khẩu thành công!</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: #a7f3d0; margin-top: 4px;">
+                        Mật khẩu mới đã được cập nhật. Cửa sổ sẽ tự động đóng sau giây lát...
+                    </div>
+                    <div class="cp-timer-progress"></div>
                 </div>
 
                 <form id="form-doi-mat-khau" autocomplete="off">
@@ -1745,6 +1803,13 @@
                                 <i class="fa-regular fa-eye"></i>
                             </button>
                         </div>
+                        <!-- Password Strength Indicator -->
+                        <div class="cp-strength-wrapper" id="cp-strength-wrap" style="display: none;">
+                            <div class="cp-strength-bar-bg">
+                                <div class="cp-strength-bar-fill" id="cp-strength-bar"></div>
+                            </div>
+                            <span class="cp-strength-text" id="cp-strength-label">Độ mạnh: --</span>
+                        </div>
                         <div class="cp-field-error" id="err-cp-new" style="display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"></div>
                     </div>
 
@@ -1764,7 +1829,7 @@
                     </div>
 
                     <button type="submit" id="btn-submit-doi-mat-khau"
-                        style="width: 100%; padding: 13px; background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); border: none; border-radius: 10px; color: #000; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px; transition: all 0.2s;">
+                        style="width: 100%; padding: 13px; background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); border: none; border-radius: 10px; color: #000; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px; transition: all 0.25s ease;">
                         <i class="fa-solid fa-key"></i> Xác Nhận Đổi Mật Khẩu
                     </button>
                 </form>

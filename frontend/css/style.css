@@ -1151,11 +1151,11 @@ body {
 
 /* Invoice details - POS Ticket Design */
 .invoice-box {
-    background-color: #060913;
-    border: 1px dashed rgba(255, 255, 255, 0.15);
+    background-color: var(--bg-main);
+    border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
     padding: 24px;
-    color: #e2e8f0;
+    color: var(--text-main);
     position: relative;
     box-shadow: var(--shadow-sm);
 }
@@ -1165,7 +1165,7 @@ body {
     position: absolute;
     width: 16px;
     height: 16px;
-    background-color: #0d1527; /* Khớp với nền modal-card */
+    background-color: var(--bg-card); /* Khớp với nền modal-card */
     border-radius: 50%;
     top: 55%;
 }
@@ -3728,3 +3728,801 @@ input.input-invalid {
     box-shadow: 0 0 25px rgba(14, 165, 233, 0.7) !important;
     filter: brightness(1.15) !important;
 }
+
+/* ==========================================================================
+   LOGOUT CONFIRMATION & SAFE LOGOUT TRANSITION ANIMATIONS
+   ========================================================================== */
+
+/* Logout Confirmation Modal Overlay & Card */
+.logout-modal-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 15, 29, 0.98) 100%) !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(239, 68, 68, 0.15) !important;
+    border-radius: 20px !important;
+    max-width: 440px !important;
+    width: 92% !important;
+    padding: 28px 24px !important;
+    text-align: center !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Modal Open / Close Transition Effects */
+.modal-anim-enter {
+    animation: modalEnterSpring 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.modal-anim-leave {
+    animation: modalLeaveFade 0.22s ease-in forwards !important;
+}
+
+@keyframes modalEnterSpring {
+    0% {
+        opacity: 0;
+        transform: translateY(-22px) scale(0.94);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modalLeaveFade {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(16px) scale(0.95);
+    }
+}
+
+/* Animated Logout Icon Bubble */
+.logout-icon-bubble {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    margin: 0 auto 18px;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.05) 70%);
+    border: 2px solid rgba(239, 68, 68, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.35);
+    animation: logoutBubblePulse 2.4s infinite ease-in-out;
+}
+
+.logout-icon-bubble i {
+    font-size: 2.1rem;
+    color: #f87171;
+    transition: transform 0.3s ease;
+}
+
+.logout-modal-card:hover .logout-icon-bubble i {
+    transform: translateX(4px);
+}
+
+@keyframes logoutBubblePulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+    }
+    50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 35px rgba(239, 68, 68, 0.55);
+    }
+}
+
+/* Logout Actions Buttons */
+.logout-btn-cancel {
+    padding: 10px 22px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.logout-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.logout-btn-confirm {
+    padding: 10px 24px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logout-btn-confirm:hover {
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.55);
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+/* Safe Logout Fullscreen Transition Overlay */
+.logout-transition-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.97) 0%, rgba(6, 9, 19, 0.99) 100%);
+    backdrop-filter: blur(12px);
+    z-index: 999999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.logout-transition-overlay.active {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.logout-loader-ring {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid rgba(16, 185, 129, 0.15);
+    border-top-color: #10b981;
+    border-right-color: #38bdf8;
+    animation: logoutSpin 0.9s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+    margin-bottom: 20px;
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+}
+
+@keyframes logoutSpin {
+    to { transform: rotate(360deg); }
+}
+
+.logout-msg-main {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.logout-msg-sub {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* App Exit & Login Screen Enter Transitions */
+.app-exit-fade {
+    animation: appExitAnim 0.35s ease-out forwards;
+}
+
+@keyframes appExitAnim {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+}
+
+.login-screen-enter {
+    animation: loginEnterAnim 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes loginEnterAnim {
+    0% {
+        opacity: 0;
+        transform: scale(1.03);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ==========================================================================
+   CHANGE PASSWORD ANIMATIONS & MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* Key Icon Ambient Pulse */
+.cp-key-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+    animation: keyBadgePulse 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes keyBadgePulse {
+    0% {
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        transform: rotate(0deg) scale(1);
+    }
+    100% {
+        box-shadow: 0 0 22px rgba(0, 240, 255, 0.55);
+        transform: rotate(-6deg) scale(1.06);
+    }
+}
+
+/* Input Focus Glow */
+#modal-doi-mat-khau input:focus {
+    border-color: rgba(0, 240, 255, 0.6) !important;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2) !important;
+}
+
+/* Error Shake Effect on Invalid Inputs */
+.cp-input-shake {
+    animation: cpInputShake 0.42s ease-in-out !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.4) !important;
+}
+
+@keyframes cpInputShake {
+    0%, 100% { transform: translateX(0); }
+    15%, 55%, 85% { transform: translateX(-6px); }
+    35%, 75% { transform: translateX(6px); }
+}
+
+/* Drop Alert Slide Down */
+.cp-alert-drop {
+    animation: cpAlertDrop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cpAlertDrop {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Eye Toggle Icon Flip Animation */
+.cp-eye-flip {
+    animation: eyeIconFlip 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes eyeIconFlip {
+    0% { transform: scale(0.6) rotate(-90deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Password Strength Indicator inside Modal */
+.cp-strength-wrapper {
+    margin-top: 7px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cp-strength-bar-bg {
+    flex: 1;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cp-strength-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.35s ease, background 0.35s ease;
+}
+
+.cp-strength-text {
+    font-size: 0.72rem;
+    font-weight: 700;
+    transition: color 0.3s ease;
+    min-width: 75px;
+    text-align: right;
+}
+
+/* Celebration Success Badge & Countdown */
+.cp-success-celebrate {
+    animation: cpSuccessPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes cpSuccessPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.cp-timer-progress {
+    height: 3px;
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    border-radius: 2px;
+    width: 100%;
+    margin-top: 8px;
+    animation: cpProgressDrain 2.2s linear forwards;
+}
+
+@keyframes cpProgressDrain {
+    0% { width: 100%; }
+    100% { width: 0%; }
+}
+
+/* Submit Button Success Ripple */
+.btn-submit-success-ripple {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.6) !important;
+    animation: successButtonPulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes successButtonPulse {
+    0% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+    100% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.8); }
+}
+
+/* ==========================================================================
+   THEME SWITCHER & LIGHT MODE SYSTEM (VICTORY ARENA)
+   Khớp chuẩn thiết kế Pill Button (🌙 Tối / ☀️ Sáng)
+   ========================================================================== */
+
+/* 1. Pill Theme Switcher Button */
+.btn-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-family: var(--font-main);
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    outline: none;
+}
+
+.btn-theme-toggle:hover {
+    background-color: var(--bg-card-hover);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.btn-theme-toggle:active {
+    transform: scale(0.95);
+}
+
+.btn-theme-toggle .theme-toggle-icon {
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-block;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-theme-toggle:hover .theme-toggle-icon {
+    transform: rotate(20deg) scale(1.15);
+}
+
+/* Icon rotation animation when toggled */
+.theme-toggle-icon.theme-icon-rotate {
+    animation: iconPopSpin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes iconPopSpin {
+    0% { transform: scale(0.6) rotate(-45deg); opacity: 0.4; }
+    50% { transform: scale(1.25) rotate(25deg); opacity: 0.9; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Login screen theme toggle button */
+.btn-theme-toggle-login {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    z-index: 10001;
+    background-color: rgba(13, 21, 39, 0.8);
+    backdrop-filter: blur(8px);
+}
+
+/* 2. Light Theme Design System (data-theme="light") */
+html[data-theme="light"] {
+    --primary: #059669;
+    --primary-hover: #047857;
+    --primary-light: rgba(5, 150, 105, 0.08);
+    --secondary: #4f46e5;
+    --secondary-hover: #4338ca;
+    --accent: #d97706;
+    --danger: #dc2626;
+    --danger-light: rgba(220, 38, 38, 0.08);
+
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --bg-subtle: #e2e8f0;
+
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-dark: #020617;
+
+    --border-color: #e2e8f0;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+    --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.12);
+}
+
+/* 3. Light Mode Theme Switcher Button - EXACT MATCH to user uploaded image (🌙 Tối) */
+html[data-theme="light"] .btn-theme-toggle {
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="light"] .btn-theme-toggle:hover {
+    background-color: #e2e8f0;
+    border-color: #94a3b8;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] .btn-theme-toggle-login {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 4. Light Mode Component Specific Styling */
+html[data-theme="light"] body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+}
+
+html[data-theme="light"] .sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="light"] .brand {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .nav-item {
+    color: #475569;
+}
+
+html[data-theme="light"] .nav-item:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+html[data-theme="light"] .nav-item.active {
+    background: #ecfdf5;
+    color: #059669;
+    border-left: 3px solid #059669;
+}
+
+html[data-theme="light"] .sidebar-footer {
+    border-top: 1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .date-picker-wrapper {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+}
+
+html[data-theme="light"] .date-picker-wrapper input[type="date"] {
+    color: #0f172a;
+}
+
+html[data-theme="light"] .topbar-notification {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+}
+
+html[data-theme="light"] .topbar-notification:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+html[data-theme="light"] .topbar-user-profile {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="light"] .topbar-user-profile:hover {
+    background: #f8fafc;
+    border-color: #059669;
+}
+
+html[data-theme="light"] .topbar-avatar {
+    background-color: #e2e8f0;
+    color: #059669;
+    border: 1px solid #cbd5e1;
+}
+
+html[data-theme="light"] .panel {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="light"] .kpi-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="light"] .court-row {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+html[data-theme="light"] .court-name-tag {
+    color: #0f172a;
+}
+
+html[data-theme="light"] .court-type-pill {
+    background: rgba(79, 70, 229, 0.1);
+    color: #4338ca;
+}
+
+/* Light Theme Court Slots */
+html[data-theme="light"] .slot-card.available {
+    background-color: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+}
+
+html[data-theme="light"] .slot-card.available:hover {
+    background-color: #d1fae5;
+    border-color: #6ee7b7;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.15);
+}
+
+html[data-theme="light"] .slot-card.booked {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+html[data-theme="light"] .slot-card.booked:hover {
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.15);
+}
+
+html[data-theme="light"] .slot-card.locked {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+    color: #b45309;
+}
+
+html[data-theme="light"] .slot-card.locked:hover {
+    background-color: #fef3c7;
+    border-color: #fcd34d;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+}
+
+html[data-theme="light"] .slot-card.maintenance {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: #64748b;
+}
+
+/* Light Theme Data Tables */
+html[data-theme="light"] .data-table th {
+    background-color: #f8fafc;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .data-table td {
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+}
+
+html[data-theme="light"] .data-table tr:hover td {
+    background-color: #f8fafc;
+}
+
+html[data-theme="light"] .service-table th {
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .service-table td {
+    border-bottom: 1px dashed #e2e8f0;
+    color: #1e293b;
+}
+
+/* Light Theme Form Controls */
+html[data-theme="light"] .form-group input,
+html[data-theme="light"] .form-group select,
+html[data-theme="light"] .filter-group select,
+html[data-theme="light"] .ai-input-box textarea,
+html[data-theme="light"] .modal-body input,
+html[data-theme="light"] .modal-body select {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+}
+
+html[data-theme="light"] .form-group input:focus,
+html[data-theme="light"] .form-group select:focus,
+html[data-theme="light"] .filter-group select:focus,
+html[data-theme="light"] .ai-input-box textarea:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+/* Light Theme Modals */
+html[data-theme="light"] .modal-card {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+    color: #0f172a;
+}
+
+html[data-theme="light"] .modal-header {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .modal-footer {
+    border-top: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+html[data-theme="light"] .notification-dropdown {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+}
+
+html[data-theme="light"] .notif-dropdown-header {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+html[data-theme="light"] .notif-dropdown-footer {
+    border-top: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+html[data-theme="light"] .notif-item {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+html[data-theme="light"] .notif-item:hover {
+    background-color: #f8fafc;
+}
+
+html[data-theme="light"] .notif-item.unread {
+    background-color: #f0fdf4;
+}
+
+html[data-theme="light"] .ai-message-bubble {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #1e293b;
+}
+
+html[data-theme="light"] .btn-secondary {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+html[data-theme="light"] .btn-secondary:hover {
+    background-color: #cbd5e1;
+}
+
+html[data-theme="light"] .btn-outline {
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+html[data-theme="light"] .btn-outline:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+html[data-theme="light"] .btn-outline.active {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #059669;
+}
+
+html[data-theme="light"] .logout-modal-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+}
+
+html[data-theme="light"] .logout-modal-card h3 {
+    color: #0f172a !important;
+}
+
+html[data-theme="light"] .logout-modal-card p {
+    color: #64748b !important;
+}
+
+html[data-theme="light"] .logout-btn-cancel {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+}
+
+html[data-theme="light"] .logout-btn-cancel:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+html[data-theme="light"] #modal-doi-mat-khau-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="light"] #modal-doi-mat-khau-card h3 {
+    color: #0f172a !important;
+}
+
+html[data-theme="light"] #modal-doi-mat-khau-card label {
+    color: #475569 !important;
+}
+
+html[data-theme="light"] #modal-doi-mat-khau-card input {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+html[data-theme="light"] .login-overlay {
+    background-color: rgba(241, 245, 249, 0.95);
+}
+
+html[data-theme="light"] .login-card {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+
