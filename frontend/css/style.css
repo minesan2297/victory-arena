@@ -5398,20 +5398,3 @@ html[data-theme="light"] .chatbot-message.ai .msg-text {
     color: #0f172a;
     border: 1px solid #e2e8f0;
 }
-
-/* ==========================================================================
-   ACCESSIBILITY & PREFERS-REDUCED-MOTION
-   ========================================================================== */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-
-
