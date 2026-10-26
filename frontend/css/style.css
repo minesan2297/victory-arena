@@ -295,6 +295,7 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 }
 
 .nav-item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -307,24 +308,45 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color var(--dur-fast) var(--ease-smooth), color var(--dur-fast) var(--ease-smooth), transform var(--dur-fast) var(--ease-spring);
     text-align: left;
+    overflow: hidden;
 }
 
 .nav-item i {
     font-size: 1.1rem;
     width: 20px;
+    transition: transform var(--dur-fast) var(--ease-spring), color var(--dur-fast) var(--ease-smooth);
 }
 
 .nav-item:hover {
     background-color: rgba(255, 255, 255, 0.05);
     color: var(--text-main);
+    transform: translateX(4px);
+}
+
+.nav-item:hover i {
+    transform: scale(1.15);
+    color: var(--primary);
 }
 
 .nav-item.active {
-    background: linear-gradient(135deg, var(--primary-light), rgba(99, 102, 241, 0.1));
+    background: linear-gradient(135deg, var(--primary-light), rgba(99, 102, 241, 0.08));
     color: var(--primary);
-    border-left: 3px solid var(--primary);
+    box-shadow: 0 2px 12px rgba(16, 185, 129, 0.12);
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 65%;
+    background: var(--primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    box-shadow: 0 0 12px var(--primary);
 }
 
 .sidebar-footer {
@@ -628,69 +650,128 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 }
 
 .slot-card {
+    position: relative;
     border-radius: var(--radius-md);
     padding: 10px 12px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-smooth), border-color var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth);
     display: flex;
     flex-direction: column;
     justify-content: center;
     border: 1px solid transparent;
+    user-select: none;
 }
 
 .slot-card.available {
-    background-color: rgba(16, 185, 129, 0.05);
-    border-color: rgba(16, 185, 129, 0.2);
-    color: #34d399;
+    background-color: var(--slot-avail-bg);
+    border-color: var(--slot-avail-border);
+    color: var(--slot-avail-text);
 }
 
 .slot-card.available:hover {
-    background-color: rgba(16, 185, 129, 0.12);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.15);
-    border-color: rgba(16, 185, 129, 0.4);
+    background-color: rgba(16, 185, 129, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--slot-avail-glow);
+    border-color: var(--primary);
+}
+
+/* Selected state: electric bounce and blue glow */
+.slot-card.selected {
+    background-color: var(--slot-selected-bg);
+    border-color: var(--slot-selected-border);
+    color: var(--slot-selected-text);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 20px var(--slot-selected-glow);
+    animation: slotSelectedPop 0.25s var(--ease-spring);
+}
+
+@keyframes slotSelectedPop {
+    0% { transform: scale(0.95); }
+    60% { transform: scale(1.04); }
+    100% { transform: translateY(-3px) scale(1.02); }
 }
 
 .slot-card.booked {
-    background-color: rgba(239, 68, 68, 0.05);
-    border-color: rgba(239, 68, 68, 0.25);
-    color: #f87171;
-    cursor: pointer;
+    background-color: var(--slot-booked-bg);
+    border-color: var(--slot-booked-border);
+    color: var(--slot-booked-text);
+    cursor: not-allowed;
     position: relative;
-    user-select: none;
 }
 
 .slot-card.booked:hover {
     background-color: rgba(239, 68, 68, 0.12);
     border-color: rgba(239, 68, 68, 0.45);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+    transform: translateY(-1px);
 }
 
-.slot-card.locked {
-    background-color: rgba(245, 158, 11, 0.05);
-    border-color: rgba(245, 158, 11, 0.25);
-    color: #fbbf24;
+.slot-card.locked,
+.slot-card.held {
+    background-color: var(--slot-held-bg);
+    border-color: var(--slot-held-border);
+    color: var(--slot-held-text);
     cursor: pointer;
+    position: relative;
 }
 
-.slot-card.locked:hover {
-    background-color: rgba(245, 158, 11, 0.1);
+.slot-card.locked::before,
+.slot-card.held::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--accent-amber);
+    opacity: 0;
+    pointer-events: none;
+    animation: slotHeldPulse 2s infinite ease-in-out;
+}
+
+@keyframes slotHeldPulse {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+.slot-card.locked:hover,
+.slot-card.held:hover {
+    background-color: rgba(245, 158, 11, 0.15);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+    box-shadow: 0 4px 14px var(--slot-held-glow);
 }
 
 .slot-card.maintenance {
-    background-color: rgba(100, 116, 139, 0.05);
-    border-color: rgba(100, 116, 139, 0.2);
-    color: #94a3b8;
-    cursor: pointer;
+    background-color: var(--slot-maint-bg);
+    border: 1px dashed var(--slot-maint-border);
+    color: var(--slot-maint-text);
+    cursor: not-allowed;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(100, 116, 139, 0.06) 6px, rgba(100, 116, 139, 0.06) 12px);
 }
 
 .slot-card.maintenance:hover {
-    background-color: rgba(100, 116, 139, 0.1);
-    border-color: rgba(100, 116, 139, 0.35);
+    background-color: rgba(100, 116, 139, 0.12);
+    border-color: rgba(100, 116, 139, 0.4);
+}
+
+/* Floating Action Dock for Schedule Actions */
+#multi-booking-bar,
+.multi-booking-bar,
+.floating-action-dock {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    z-index: var(--z-dock);
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-full);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 24px var(--primary-light);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    transition: transform var(--dur-normal) var(--ease-spring), opacity var(--dur-normal) var(--ease-smooth);
 }
 
 .slot-time {
@@ -1164,13 +1245,17 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 }
 
 .login-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 32px;
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-xl);
+    padding: 36px 32px;
     width: 100%;
-    max-width: 420px;
-    box-shadow: var(--shadow-md);
+    max-width: 440px;
+    box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.75), 0 0 32px rgba(16, 185, 129, 0.1);
+    position: relative;
+    transition: transform var(--dur-normal) var(--ease-spring), box-shadow var(--dur-normal) var(--ease-smooth);
 }
 
 .login-brand {
@@ -2327,16 +2412,29 @@ input.input-invalid {
     gap: 10px;
     overflow: hidden;
     perspective: 400px;
-    height: 46px;
+    height: 48px;
     font-size: 0.95rem;
     font-weight: 700;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    box-shadow: 0 4px 16px var(--primary-glow);
+    transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-smooth);
+}
+
+.doorbtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--primary-glow);
+}
+
+.doorbtn:active {
+    transform: translateY(0);
 }
 
 .doorbtn__label {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: transform 0.28s var(--ease-smooth), opacity 0.28s var(--ease-smooth);
 }
 
 .dooric {
@@ -2359,17 +2457,17 @@ input.input-invalid {
     inset: 0;
     background-color: #ffffff;
     transform-origin: left center;
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.28s var(--ease-out-expo);
     border-radius: 1px 0 0 0;
 }
 
 .dooric__glow {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.9) 0%, rgba(16, 185, 129, 0.8) 100%);
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.95) 0%, rgba(16, 185, 129, 0.85) 100%);
     opacity: 0;
-    transition: opacity 0.3s ease;
-    box-shadow: 0 0 10px #38bdf8;
+    transition: opacity 0.25s var(--ease-smooth);
+    box-shadow: 0 0 12px #38bdf8;
 }
 
 .dooric__person {
@@ -2377,7 +2475,7 @@ input.input-invalid {
     bottom: -1px;
     left: -20px;
     opacity: 0;
-    transition: left 0.45s ease-in-out, opacity 0.3s ease;
+    transition: left 0.42s ease-in-out, opacity 0.25s var(--ease-smooth);
 }
 
 /* Door Walkthrough Animation States */
@@ -2601,7 +2699,7 @@ input.input-invalid {
     padding: 18px 20px;
     position: relative;
     overflow: hidden;
-    transition: all 0.25s ease;
+    transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-smooth), border-color var(--dur-fast) var(--ease-smooth);
 }
 
 .hud-card::before {
@@ -2758,14 +2856,14 @@ input.input-invalid {
 }
 
 .fixture-match-card:hover {
-    background: rgba(30, 41, 59, 0.85);
+    background: var(--bg-card-hover);
     border-color: var(--primary);
-    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.18);
+    box-shadow: 0 6px 20px var(--shadow-glow);
     transform: translateY(-2px);
 }
 
 .fixture-match-card:hover .fixture-icon {
-    background: rgba(0, 240, 255, 0.25);
+    background: var(--primary-light);
     color: var(--primary);
     border-color: var(--primary);
     transform: scale(1.08);
@@ -2798,7 +2896,7 @@ input.input-invalid {
     margin: 0 0 4px;
     font-size: 0.95rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text-main);
 }
 
 .fixture-meta {
@@ -4486,8 +4584,13 @@ html[data-theme="light"] .nav-item:hover {
 
 html[data-theme="light"] .nav-item.active {
     background: #ecfdf5;
-    color: #059669;
-    border-left: 3px solid #059669;
+    color: #047857;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.08);
+}
+
+html[data-theme="light"] .nav-item.active::before {
+    background: #059669;
+    box-shadow: 0 0 8px rgba(5, 150, 105, 0.4);
 }
 
 html[data-theme="light"] .sidebar-footer {
@@ -4596,10 +4699,44 @@ html[data-theme="light"] .slot-card.locked:hover {
     box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
 }
 
+html[data-theme="light"] .slot-card.selected {
+    background-color: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+}
+
 html[data-theme="light"] .slot-card.maintenance {
     background-color: #f8fafc;
     border-color: #cbd5e1;
     color: #64748b;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(148, 163, 184, 0.12) 6px, rgba(148, 163, 184, 0.12) 12px);
+}
+
+html[data-theme="light"] .fixture-match-card {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="light"] .fixture-match-card:hover {
+    background-color: #f8fafc;
+    border-color: #059669;
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.12);
+}
+
+html[data-theme="light"] .fixture-icon {
+    background-color: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+}
+
+html[data-theme="light"] #multi-booking-bar,
+html[data-theme="light"] .multi-booking-bar,
+html[data-theme="light"] .floating-action-dock {
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12), 0 0 24px rgba(5, 150, 105, 0.1);
 }
 
 /* Light Theme Data Tables */
