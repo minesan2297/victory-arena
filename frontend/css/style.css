@@ -545,6 +545,19 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 
 .tab-content.active {
     display: block;
+    animation: tabContentEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
+}
+
+@keyframes tabContentEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .panel {
@@ -2217,56 +2230,82 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
     transform: translateX(-50%);
     z-index: var(--z-elevated);
     pointer-events: none;
-    transition: transform 0.3s ease;
+    will-change: transform;
+    backface-visibility: hidden;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.husky-svg {
+    will-change: transform;
+    transform-origin: 100px 140px;
+    animation: mascotIdleBreathe 4s ease-in-out infinite;
+}
+
+@keyframes mascotIdleBreathe {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-3.5px) scale(1.012);
+    }
 }
 
 .pupil-group {
-    transition: transform 0.1s ease-out;
+    will-change: transform;
+    transition: transform 0.16s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .paw {
-    transform-box: fill-box;
-    transform-origin: center center;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+    backface-visibility: hidden;
+    transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Mascot State: Covering Eyes (Password mode) */
+.paw-left {
+    transform-origin: 50px 155px;
+}
+
+.paw-right {
+    transform-origin: 150px 155px;
+}
+
+/* Mascot State: Covering Eyes (Password mode - precise, fluid coverage) */
 .husky-mascot.is-covering #paw-left {
-    transform: translate(22px, -67px) scale(1.15) rotate(22deg) !important;
+    transform: translate(22px, -67px) rotate(18deg) scale(1.12) !important;
 }
 
 .husky-mascot.is-covering #paw-right {
-    transform: translate(-22px, -67px) scale(1.15) rotate(-22deg) !important;
+    transform: translate(-22px, -67px) rotate(-18deg) scale(1.12) !important;
 }
 
 /* Mascot State: Peeking (Password eye toggled open) */
 .husky-mascot.is-peeking #paw-left {
-    transform: translate(10px, -42px) rotate(10deg) !important;
+    transform: translate(12px, -40px) rotate(8deg) scale(1.05) !important;
 }
 
 .husky-mascot.is-peeking #paw-right {
-    transform: translate(-10px, -42px) rotate(-10deg) !important;
+    transform: translate(-12px, -40px) rotate(-8deg) scale(1.05) !important;
 }
 
-/* Mascot State: Happy (Success) */
+/* Mascot State: Happy (Success - smooth fluid bounce) */
 .husky-mascot.is-happy {
-    animation: happyBounce 0.6s ease infinite alternate;
+    animation: happyBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite alternate;
 }
 
 @keyframes happyBounce {
     0% { transform: translateX(-50%) translateY(0) scale(1); }
-    100% { transform: translateX(-50%) translateY(-14px) scale(1.05); }
+    100% { transform: translateX(-50%) translateY(-12px) scale(1.04); }
 }
 
-/* Mascot State: Sad/Scared (Failed login) */
+/* Mascot State: Sad/Scared (Failed login - perfectly synchronized to 800ms JS wait) */
 .husky-mascot.is-sad {
-    animation: sadShake 0.4s ease-in-out;
+    animation: sadShake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
 }
 
 @keyframes sadShake {
     0%, 100% { transform: translateX(-50%) rotate(0deg); }
-    20%, 60% { transform: translateX(-54%) rotate(-4deg); }
-    40%, 80% { transform: translateX(-46%) rotate(4deg); }
+    15%, 55%, 85% { transform: translateX(-53%) rotate(-3deg); }
+    35%, 70% { transform: translateX(-47%) rotate(3deg); }
 }
 
 #main-login-card.shake {
@@ -2986,13 +3025,12 @@ input.input-invalid {
    Realistic Stadium Schedule Radar & Skeleton Loader
    ========================================== */
 .schedule-loader-box {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 15, 30, 0.9) 100%);
+    background: rgba(15, 23, 42, 0.94);
     border: 1px solid rgba(0, 240, 255, 0.22);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 0 20px rgba(0, 240, 255, 0.04);
     border-radius: var(--radius-lg);
     padding: 24px;
     margin: 8px 0;
-    backdrop-filter: blur(10px);
 }
 
 .radar-scanner-wrapper {
@@ -3023,6 +3061,7 @@ input.input-invalid {
     border-radius: 50%;
     border: 3px dashed rgba(0, 240, 255, 0.85);
     border-top-color: transparent;
+    will-change: transform;
     animation: stadiumSpinClockwise 1.4s linear infinite;
     box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
 }
@@ -3035,12 +3074,14 @@ input.input-invalid {
     border: 2px solid rgba(16, 185, 129, 0.85);
     border-right-color: transparent;
     border-bottom-color: transparent;
+    will-change: transform;
     animation: stadiumSpinCounter 0.9s linear infinite;
 }
 
 .radar-center-ball {
     font-size: 1.45rem;
-    animation: radarBallPulse 1.2s ease-in-out infinite;
+    will-change: transform;
+    animation: radarBallPulse 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     z-index: 2;
     line-height: 1;
     display: flex;
@@ -3157,7 +3198,8 @@ input.input-invalid {
     bottom: 0;
     background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.09) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerSweep 1.3s infinite;
+    will-change: transform;
+    animation: shimmerSweep 1.5s linear infinite;
 }
 
 .skeleton-left {
@@ -3216,7 +3258,8 @@ input.input-invalid {
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.08) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerSweep 1.3s infinite;
+    will-change: transform;
+    animation: shimmerSweep 1.5s linear infinite;
 }
 
 .skeleton-cell {
@@ -3270,7 +3313,8 @@ input.input-invalid {
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.08) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerSweep 1.3s infinite;
+    will-change: transform;
+    animation: shimmerSweep 1.5s linear infinite;
 }
 
 .skeleton-form-btn {
@@ -3288,7 +3332,8 @@ input.input-invalid {
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.35) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerSweep 1.3s infinite;
+    will-change: transform;
+    animation: shimmerSweep 1.5s linear infinite;
 }
 
 /* Court Status Live Banner */
@@ -3364,8 +3409,8 @@ input.input-invalid {
 }
 
 @keyframes radarBallPulse {
-    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.5)); }
-    50% { transform: scale(1.18); filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.85)); }
+    0%, 100% { transform: scale(1); opacity: 0.92; }
+    50% { transform: scale(1.15); opacity: 1; }
 }
 
 @keyframes radarDotBlink {
@@ -3471,7 +3516,8 @@ input.input-invalid {
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.15) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerSweep 1.2s infinite;
+    will-change: transform;
+    animation: shimmerSweep 1.5s linear infinite;
 }
 
 .ai-skel-line {
@@ -3500,13 +3546,12 @@ input.input-invalid {
    AI Report & Insights Realistic Neural Analytics Loader
    ========================================== */
 .ai-report-loader-box {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(8, 14, 28, 0.95) 100%);
+    background: rgba(15, 23, 42, 0.94);
     border: 1px solid rgba(56, 189, 248, 0.3);
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(56, 189, 248, 0.05);
     border-radius: var(--radius-lg);
     padding: 26px;
     margin: 8px 0;
-    backdrop-filter: blur(12px);
 }
 
 .ai-neural-scanner-wrapper {
@@ -3648,7 +3693,8 @@ input.input-invalid {
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.1) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerSweep 1.3s infinite;
+    will-change: transform;
+    animation: shimmerSweep 1.5s linear infinite;
 }
 
 /* Skeleton for AI Promotions Grid */
@@ -3676,7 +3722,8 @@ input.input-invalid {
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.1) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerSweep 1.3s infinite;
+    will-change: transform;
+    animation: shimmerSweep 1.5s linear infinite;
 }
 
 /* Profile Modal & User Panel Enhancements */
@@ -4212,32 +4259,59 @@ input.input-invalid {
 
 /* App Exit & Login Screen Enter Transitions */
 .app-exit-fade {
-    animation: appExitAnim 0.35s ease-out forwards;
+    animation: appExitAnim 0.28s ease-out forwards;
+    will-change: opacity, transform;
 }
 
 @keyframes appExitAnim {
     0% {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0);
     }
     100% {
         opacity: 0;
-        transform: scale(0.97);
+        transform: translateY(-8px);
     }
 }
 
 .login-screen-enter {
-    animation: loginEnterAnim 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: loginOverlayFadeIn 0.3s ease-out forwards;
 }
 
-@keyframes loginEnterAnim {
+.login-screen-enter .login-card {
+    animation: loginCardSpringUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+.login-screen-enter .husky-mascot {
+    animation: mascotPopIn 0.45s cubic-bezier(0.2, 1.15, 0.4, 1) 0.05s both;
+    will-change: transform, opacity;
+}
+
+@keyframes loginOverlayFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes loginCardSpringUp {
     0% {
         opacity: 0;
-        transform: scale(1.03);
+        transform: translateY(16px) scale(0.97);
     }
     100% {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes mascotPopIn {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(14px) scale(0.86);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
     }
 }
 

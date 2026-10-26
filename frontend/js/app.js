@@ -319,15 +319,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (alertBox) alertBox.style.display = 'none';
     }
 
-    // Eye Tracking on Username typing
+    // Eye Tracking on Username typing (60 FPS with requestAnimationFrame)
+    let eyeRafId = null;
     function updateEyePosition(inputVal) {
         if (!huskyGuard || huskyGuard.classList.contains('is-covering')) return;
-        const len = inputVal ? inputVal.length : 0;
-        const offsetX = Math.min(Math.max((len - 6) * 0.7, -7), 7);
-        const offsetY = len > 0 ? 2 : 0;
-        
-        if (pupilLeft) pupilLeft.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-        if (pupilRight) pupilRight.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        if (eyeRafId) cancelAnimationFrame(eyeRafId);
+        eyeRafId = requestAnimationFrame(() => {
+            const len = inputVal ? inputVal.length : 0;
+            const offsetX = Math.min(Math.max((len - 6) * 0.7, -7), 7);
+            const offsetY = len > 0 ? 2 : 0;
+            
+            if (pupilLeft) pupilLeft.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            if (pupilRight) pupilRight.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        });
     }
 
     const loginUsernameInput = document.getElementById('login-username');
@@ -341,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateEyePosition(e.target.value);
             });
             inp.addEventListener('blur', () => {
+                if (eyeRafId) cancelAnimationFrame(eyeRafId);
                 if (pupilLeft) pupilLeft.style.transform = `translate(0px, 0px)`;
                 if (pupilRight) pupilRight.style.transform = `translate(0px, 0px)`;
             });
@@ -358,13 +363,17 @@ document.addEventListener('DOMContentLoaded', () => {
             huskyGuard.classList.remove('is-happy', 'is-sad');
             huskyGuard.classList.add('is-covering');
         }
-        if (mascotStatusText) mascotStatusText.textContent = "Suỵt! Linh vật đang che mắt bảo vệ mật khẩu của bạn.";
+        if (mascotStatusText && mascotStatusText.textContent !== "Suỵt! Linh vật đang che mắt bảo vệ mật khẩu của bạn.") {
+            mascotStatusText.textContent = "Suỵt! Linh vật đang che mắt bảo vệ mật khẩu của bạn.";
+        }
     }
 
     function uncoverEyes() {
         if (!huskyGuard) return;
         huskyGuard.classList.remove('is-covering', 'is-peeking');
-        if (mascotStatusText) mascotStatusText.textContent = "Chào mừng! Linh vật AI đang gác cổng hệ thống.";
+        if (mascotStatusText && mascotStatusText.textContent !== "Chào mừng! Linh vật AI đang gác cổng hệ thống.") {
+            mascotStatusText.textContent = "Chào mừng! Linh vật AI đang gác cổng hệ thống.";
+        }
     }
 
     [loginPasswordInput, regPasswordInput, regConfirmPasswordInput].forEach(pwInp => {
