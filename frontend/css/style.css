@@ -3,35 +3,122 @@
    ========================================================================== */
 
 :root {
+    color-scheme: dark;
+
+    /* Brand & Accent Tokens */
     --primary: #10b981;
     --primary-hover: #059669;
-    --primary-light: rgba(16, 185, 129, 0.08);
+    --primary-active: #047857;
+    --primary-light: rgba(16, 185, 129, 0.12);
+    --primary-glow: rgba(16, 185, 129, 0.28);
+    --primary-text: #10b981;
+
     --secondary: #6366f1;
     --secondary-hover: #4f46e5;
+    --secondary-light: rgba(99, 102, 241, 0.12);
+
     --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --accent-light: rgba(245, 158, 11, 0.12);
+
+    --accent-ai: #06b6d4;
+    --accent-ai-glow: rgba(6, 182, 212, 0.24);
+
     --danger: #ef4444;
-    --danger-light: rgba(239, 68, 68, 0.1);
-    
-    --bg-main: #060913;
-    --bg-card: #0d1527;
-    --bg-card-hover: #15223c;
-    --bg-subtle: #1b2942;
-    
+    --danger-hover: #dc2626;
+    --danger-light: rgba(239, 68, 68, 0.12);
+
+    --info: #3b82f6;
+    --info-light: rgba(59, 130, 246, 0.12);
+
+    /* Court Slot Status Tokens (Accessible & Colorblind-safe) */
+    --slot-avail-bg: rgba(16, 185, 129, 0.08);
+    --slot-avail-border: rgba(16, 185, 129, 0.28);
+    --slot-avail-text: #34d399;
+    --slot-avail-glow: rgba(16, 185, 129, 0.22);
+
+    --slot-selected-bg: rgba(59, 130, 246, 0.18);
+    --slot-selected-border: #3b82f6;
+    --slot-selected-text: #60a5fa;
+    --slot-selected-glow: rgba(59, 130, 246, 0.4);
+
+    --slot-held-bg: rgba(245, 158, 11, 0.12);
+    --slot-held-border: rgba(245, 158, 11, 0.4);
+    --slot-held-text: #fbbf24;
+    --slot-held-glow: rgba(245, 158, 11, 0.25);
+
+    --slot-booked-bg: rgba(239, 68, 68, 0.08);
+    --slot-booked-border: rgba(239, 68, 68, 0.22);
+    --slot-booked-text: #f87171;
+
+    --slot-maint-bg: rgba(100, 116, 139, 0.08);
+    --slot-maint-border: rgba(100, 116, 139, 0.2);
+    --slot-maint-text: #94a3b8;
+
+    /* Theme Surfaces (Dark: Deep Obsidian & Glass) */
+    --bg-main: #060a12;
+    --bg-body-gradient: radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.04) 0%, transparent 45%),
+                        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.03) 0%, transparent 50%),
+                        linear-gradient(180deg, #060a12 0%, #0b1120 100%);
+    --bg-card: rgba(15, 23, 42, 0.72);
+    --bg-card-solid: #0d1527;
+    --bg-card-hover: rgba(21, 34, 60, 0.82);
+    --bg-subtle: rgba(27, 41, 66, 0.7);
+    --bg-input: rgba(10, 16, 30, 0.85);
+
+    /* Text Tokens */
     --text-main: #f8fafc;
+    --text-secondary: #cbd5e1;
     --text-muted: #708099;
     --text-dark: #0f172a;
-    
-    --border-color: rgba(255, 255, 255, 0.05);
+
+    /* Borders */
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.05);
+    --border-focus: rgba(16, 185, 129, 0.6);
+
+    /* Spacings & Border-Radius */
+    --radius-xs: 4px;
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 16px;
+    --radius-xl: 24px;
     --radius-full: 9999px;
-    
+
+    /* Shadows */
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 24px rgba(16, 185, 129, 0.15);
-    
-    --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.55);
+    --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.65);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --shadow-glow: 0 0 24px rgba(16, 185, 129, 0.22);
+    --shadow-glow-cyan: 0 0 24px rgba(6, 182, 212, 0.22);
+
+    /* Z-Index Hierarchy Tokens (Strict Unified Scale) */
+    --z-base: 1;
+    --z-elevated: 10;
+    --z-sidebar: 100;
+    --z-topbar: 200;
+    --z-dock: 300;
+    --z-chatbot: 400;
+    --z-modal-backdrop: 500;
+    --z-modal: 600;
+    --z-qr-expired: 700;
+    --z-toast: 800;
+    --z-login-overlay: 850;
+    --z-login-theme-btn: 860;
+    --z-logout-overlay: 900;
+
+    /* Motion & Easing Tokens */
+    --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur-fast: 150ms;
+    --dur-normal: 250ms;
+    --dur-slow: 400ms;
+
+    /* Typography */
+    --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 * {
@@ -43,10 +130,100 @@
 body {
     font-family: var(--font-main);
     background-color: var(--bg-main);
+    background-image: var(--bg-body-gradient);
+    background-attachment: fixed;
     color: var(--text-main);
     line-height: 1.5;
     min-height: 100vh;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Tabular Numbers for Time, Price, Counter, KPI */
+.tabular-nums,
+.price-tag,
+.hud-number,
+.kpi-value,
+.stat-value,
+.slot-price,
+.matrix-time-header,
+.court-time-cell,
+.qr-timer-text,
+#qr-countdown-timer,
+#live-clock,
+.total-amount,
+.invoice-amount,
+.badge-code {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
+/* Accessible focus visible outlines */
+:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
+/* Decorative Overlays Pointer Events Protection */
+.glow-effect,
+.radar-ring-outer,
+.radar-ring-inner,
+.skeleton-table-row::after,
+.skeleton-slot-card::after,
+.hero-glow-orb {
+    pointer-events: none;
+}
+
+/* Global Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Native Date/Time Picker Indicator Sync */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+    opacity: 0.75;
+    cursor: pointer;
+    transition: opacity var(--dur-fast) var(--ease-smooth);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: none;
+    opacity: 0.65;
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 /* App Container Layout */
@@ -582,7 +759,7 @@ body {
 
 .ai-input-box textarea {
     width: 100%;
-    background-color: rgba(15, 23, 42, 0.8);
+    background-color: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 14px;
@@ -591,11 +768,12 @@ body {
     font-size: 0.92rem;
     resize: vertical;
     outline: none;
+    transition: border-color var(--dur-fast) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-smooth);
 }
 
 .ai-input-box textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary-light);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .ai-response-box {
@@ -767,7 +945,7 @@ body {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: var(--z-modal-backdrop);
     padding: 20px;
 }
 
@@ -776,6 +954,8 @@ body {
 }
 
 .modal-card {
+    position: relative;
+    z-index: var(--z-modal);
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
@@ -838,20 +1018,34 @@ body {
 }
 
 .form-group input,
-.form-group select {
-    background-color: rgba(15, 23, 42, 0.8);
+.form-group select,
+.form-group textarea,
+.filter-group select,
+.table-search-input {
+    background-color: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 10px 12px;
+    padding: 10px 14px;
     color: var(--text-main);
     font-family: inherit;
     font-size: 0.9rem;
     outline: none;
+    transition: border-color var(--dur-fast) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth);
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus,
+.filter-group select:focus,
+.table-search-input:focus {
     border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.table-search-input::placeholder {
+    color: var(--text-muted);
 }
 
 .modal-footer {
@@ -914,7 +1108,7 @@ body {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    z-index: 9999;
+    z-index: var(--z-toast);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -966,7 +1160,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: var(--z-login-overlay);
 }
 
 .login-card {
@@ -1285,7 +1479,7 @@ body {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    z-index: 9999;
+    z-index: var(--z-chatbot);
 }
 
 /* Trigger Bubble */
@@ -1678,7 +1872,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-lg);
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 20px rgba(16, 185, 129, 0.15);
-    z-index: 1000;
+    z-index: calc(var(--z-topbar) + 10);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1936,7 +2130,7 @@ body {
     top: -96px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: var(--z-elevated);
     pointer-events: none;
     transition: transform 0.3s ease;
 }
@@ -3863,7 +4057,7 @@ input.input-invalid {
     height: 100vh;
     background: radial-gradient(circle at center, rgba(15, 23, 42, 0.97) 0%, rgba(6, 9, 19, 0.99) 100%);
     backdrop-filter: blur(12px);
-    z-index: 999999;
+    z-index: var(--z-logout-overlay);
     display: none;
     flex-direction: column;
     align-items: center;
@@ -4154,36 +4348,95 @@ input.input-invalid {
     position: absolute;
     top: 24px;
     right: 28px;
-    z-index: 10001;
+    z-index: var(--z-login-theme-btn);
     background-color: rgba(13, 21, 39, 0.8);
     backdrop-filter: blur(8px);
 }
 
 /* 2. Light Theme Design System (data-theme="light") */
 html[data-theme="light"] {
+    color-scheme: light;
+
+    /* Brand & Accent Tokens in Light Mode */
     --primary: #059669;
     --primary-hover: #047857;
-    --primary-light: rgba(5, 150, 105, 0.08);
+    --primary-active: #065f46;
+    --primary-light: rgba(5, 150, 105, 0.09);
+    --primary-glow: rgba(5, 150, 105, 0.2);
+    --primary-text: #047857;
+
     --secondary: #4f46e5;
     --secondary-hover: #4338ca;
+    --secondary-light: rgba(79, 70, 229, 0.08);
+
     --accent: #d97706;
+    --accent-hover: #b45309;
+    --accent-light: rgba(217, 119, 6, 0.1);
+
+    --accent-ai: #0891b2;
+    --accent-ai-glow: rgba(8, 145, 178, 0.18);
+
     --danger: #dc2626;
+    --danger-hover: #b91c1c;
     --danger-light: rgba(220, 38, 38, 0.08);
 
+    --info: #2563eb;
+    --info-light: rgba(37, 99, 235, 0.08);
+
+    /* Court Slot Status Tokens (Light Mode - High Contrast & Colorblind Accessible) */
+    --slot-avail-bg: #ecfdf5;
+    --slot-avail-border: #a7f3d0;
+    --slot-avail-text: #047857;
+    --slot-avail-glow: rgba(5, 150, 105, 0.15);
+
+    --slot-selected-bg: #eff6ff;
+    --slot-selected-border: #3b82f6;
+    --slot-selected-text: #1d4ed8;
+    --slot-selected-glow: rgba(59, 130, 246, 0.25);
+
+    --slot-held-bg: #fffbeb;
+    --slot-held-border: #fcd34d;
+    --slot-held-text: #b45309;
+    --slot-held-glow: rgba(217, 119, 6, 0.2);
+
+    --slot-booked-bg: #fef2f2;
+    --slot-booked-border: #fecaca;
+    --slot-booked-text: #b91c1c;
+
+    --slot-maint-bg: #f8fafc;
+    --slot-maint-border: #cbd5e1;
+    --slot-maint-text: #64748b;
+
+    /* Theme Surfaces (Light: Clean Crisp Glass & Subtle Gray) */
     --bg-main: #f1f5f9;
-    --bg-card: #ffffff;
+    --bg-body-gradient: radial-gradient(circle at 15% 15%, rgba(5, 150, 105, 0.03) 0%, transparent 45%),
+                        radial-gradient(circle at 85% 85%, rgba(8, 145, 178, 0.03) 0%, transparent 50%),
+                        linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%);
+    --bg-card: rgba(255, 255, 255, 0.92);
+    --bg-card-solid: #ffffff;
     --bg-card-hover: #f8fafc;
     --bg-subtle: #e2e8f0;
+    --bg-input: #ffffff;
 
+    /* Text Tokens in Light Mode */
     --text-main: #0f172a;
+    --text-secondary: #334155;
     --text-muted: #64748b;
     --text-dark: #020617;
 
-    --border-color: #e2e8f0;
+    /* Borders in Light Mode */
+    --border-color: rgba(15, 23, 42, 0.08);
+    --border-light: rgba(15, 23, 42, 0.05);
+    --border-focus: rgba(5, 150, 105, 0.6);
 
+    /* Shadows in Light Mode */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
-    --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.12);
+    --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    --shadow-lg: 0 16px 36px -6px rgba(15, 23, 42, 0.1);
+    --shadow-xl: 0 24px 48px -12px rgba(15, 23, 42, 0.12);
+    --shadow-glass: 0 10px 30px -10px rgba(15, 23, 42, 0.07);
+    --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.14);
+    --shadow-glow-cyan: 0 0 20px rgba(8, 145, 178, 0.14);
 }
 
 /* 3. Light Mode Theme Switcher Button - EXACT MATCH to user uploaded image (🌙 Tối) */
