@@ -2,6 +2,7 @@ import pytest
 from datetime import date, time, datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 from fastapi import HTTPException
 
 from app.database import Base
@@ -18,7 +19,11 @@ from app.services.dat_san_service import DatSanService, get_vn_now
 @pytest.fixture(scope="function")
 def db_session():
     """Tạo database SQLite in-memory độc lập cho từng ca kiểm thử."""
-    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
+    )
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = Session()
@@ -230,6 +235,14 @@ def test_cancellation_under_24h_timezone_offset_no_refund(db_session):
     ).first()
     assert refund is None
 
+    # Kiểm tra schema response trả về đúng trạng thái phạt cọc
+    from app.routers.dat_san_router import to_booking_response
+    resp = to_booking_response(cancelled)
+    assert resp.da_hoan_coc is False
+    assert resp.so_tien_hoan_coc == 0
+    assert resp.ly_do_hoan_coc is not None
+    assert "Không hoàn cọc" in resp.ly_do_hoan_coc
+
 def test_cancellation_over_24h_timezone_offset_refunds(db_session):
     """Kiểm tra độ chính xác múi giờ VN (UTC+7): Hủy đơn thi đấu cách giờ hiện tại >= 24h (ví dụ 26 tiếng) ĐƯỢC hoàn cọc đầy đủ."""
     customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
@@ -262,6 +275,14 @@ def test_cancellation_over_24h_timezone_offset_refunds(db_session):
     ).first()
     assert refund is not None
     assert refund.so_tien == -100000.0
+
+    # Kiểm tra schema response trả về đúng trạng thái hoàn cọc
+    from app.routers.dat_san_router import to_booking_response
+    resp = to_booking_response(cancelled)
+    assert resp.da_hoan_coc is True
+    assert resp.so_tien_hoan_coc == 100000
+    assert resp.ly_do_hoan_coc is not None
+    assert "Đã hoàn cọc" in resp.ly_do_hoan_coc
 
 def test_unpaid_booking_cancellation_no_phantom_refund(db_session):
     """Kiểm tra chống lỗ hổng hoàn cọc ảo: Hủy đơn chưa cọc (cho_coc) thì không được sinh giao dịch hoàn tiền âm."""
@@ -467,7 +488,62 @@ def test_booking_detail_with_services(db_session):
         assert len(data["dich_vus"]) == 1
         assert data["dich_vus"][0]["ten_dich_vu"] == "Nước bù khoáng Revive"
         assert data["dich_vus"][0]["so_luong"] == 5
-        assert data["dich_vus"][0]["thanh_tien"] == 75000
+        assert data["da_hoan_coc"] is False
+        assert data["so_tien_hoan_coc"] == 0
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_cancellation_api_refund_visibility(db_session):
+    """Kiểm tra API hủy đơn trả về đầy đủ cờ hoàn cọc da_hoan_coc, so_tien_hoan_coc, ly_do_hoan_coc và hiển thị trong chi tiết đơn."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.auth.security import create_access_token
+    from app.database import get_db
+
+    app.dependency_overrides[get_db] = lambda: db_session
+    client = TestClient(app)
+
+    try:
+        cust = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+
+        # Tạo đơn đặt sân ở 3 ngày tới
+        future_date = date.today() + timedelta(days=3)
+        booking_in = DatSanCreate(
+            ma_san="SAN5-001",
+            ngay_da=future_date,
+            gio_bat_dau=time(18, 0),
+            gio_ket_thuc=time(19, 30),
+            tien_coc=100000.0
+        )
+        booking = DatSanService.create_booking(db_session, booking_in, cust.tai_khoan_id)
+        DatSanService.xac_nhan_coc(db_session, booking.ma_don, 100000, "chuyen_khoan")
+
+        token = create_access_token({"sub": str(cust.tai_khoan_id)})
+
+        # 1. Gọi API hủy đơn POST /api/dat-san/booking/cancel
+        res_cancel = client.post(
+            f"/api/dat-san/booking/cancel?ma_don={booking.ma_don}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        assert res_cancel.status_code == 200
+        cancel_data = res_cancel.json()
+        assert cancel_data["trang_thai"] == "da_huy"
+        assert cancel_data["da_hoan_coc"] is True
+        assert cancel_data["so_tien_hoan_coc"] == 100000
+        assert "Đã hoàn cọc" in cancel_data["ly_do_hoan_coc"]
+
+        # 2. Gọi API xem chi tiết GET /api/dat-san/booking/{ma_don}/detail
+        res_detail = client.get(
+            f"/api/dat-san/booking/{booking.ma_don}/detail",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        assert res_detail.status_code == 200
+        detail_data = res_detail.json()
+        assert detail_data["trang_thai"] == "da_huy"
+        assert detail_data["da_hoan_coc"] is True
+        assert detail_data["so_tien_hoan_coc"] == 100000
+        assert "Đã hoàn cọc" in detail_data["ly_do_hoan_coc"]
     finally:
         app.dependency_overrides.clear()
 

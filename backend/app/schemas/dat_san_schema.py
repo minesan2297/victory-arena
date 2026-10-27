@@ -26,6 +26,9 @@ class DatSanResponse(BaseModel):
     ngay_tao: datetime
     san: Optional[SanResponse] = None
     khach_hang_ten: Optional[str] = None
+    da_hoan_coc: bool = False
+    so_tien_hoan_coc: int = 0
+    ly_do_hoan_coc: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -117,6 +120,10 @@ class DatSanDetailResponse(BaseModel):
     dich_vus: List[DichVuItemDetail] = []
     # Phương thức thanh toán cọc nếu có
     phuong_thuc_coc: Optional[str] = None
+    # Trạng thái hoàn cọc nếu hủy đơn
+    da_hoan_coc: bool = False
+    so_tien_hoan_coc: int = 0
+    ly_do_hoan_coc: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

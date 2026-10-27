@@ -26,6 +26,19 @@ def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
 
 
 def to_booking_response(booking: DatSan) -> DatSanResponse:
+    # Kiểm tra giao dịch hoàn cọc nếu đơn bị hủy
+    refund_tx = [p for p in (booking.thanh_toans or []) if p.loai_giao_dich == 'hoan_coc' and p.trang_thai == 'thanh_cong']
+    da_hoan_coc = len(refund_tx) > 0
+    so_tien_hoan_coc = abs(refund_tx[0].so_tien) if refund_tx else 0
+    ly_do_hoan = None
+    if da_hoan_coc:
+        ly_do_hoan = f"Đã hoàn cọc {so_tien_hoan_coc:,}đ do hủy trước giờ đá >= 24h"
+    elif booking.trang_thai == 'da_huy':
+        if booking.ghi_chu and "Không được hoàn cọc" in booking.ghi_chu:
+            ly_do_hoan = "Không hoàn cọc do hủy sát giờ thi đấu (< 24h)"
+        elif booking.ghi_chu and "hết hạn" in booking.ghi_chu.lower():
+            ly_do_hoan = "Đơn quá hạn giữ chỗ 10 phút (chưa cọc)"
+
     return DatSanResponse(
         ma_don=booking.ma_don,
         ma_khach_hang=booking.ma_khach_hang,
@@ -39,7 +52,10 @@ def to_booking_response(booking: DatSan) -> DatSanResponse:
         ghi_chu=booking.ghi_chu,
         ngay_tao=ensure_utc(booking.ngay_tao),
         san=booking.san,
-        khach_hang_ten=booking.khach_hang.ho_ten if booking.khach_hang else None
+        khach_hang_ten=booking.khach_hang.ho_ten if booking.khach_hang else None,
+        da_hoan_coc=da_hoan_coc,
+        so_tien_hoan_coc=so_tien_hoan_coc,
+        ly_do_hoan_coc=ly_do_hoan
     )
 
 
@@ -205,11 +221,23 @@ def get_booking_detail(
         tien_san = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
         tong_thanh_toan = max(0, tien_san + tong_dich_vu - booking.tien_coc)
         
-    # Lấy phương thức cọc
+    # Lấy phương thức cọc & kiểm tra hoàn cọc nếu đơn hủy
     phuong_thuc_coc = None
-    deposit_pay = [p for p in booking.thanh_toans if p.loai_giao_dich == 'dat_coc' and p.trang_thai == 'thanh_cong']
+    deposit_pay = [p for p in (booking.thanh_toans or []) if p.loai_giao_dich == 'dat_coc' and p.trang_thai == 'thanh_cong']
     if deposit_pay:
         phuong_thuc_coc = deposit_pay[0].phuong_thuc
+
+    refund_tx = [p for p in (booking.thanh_toans or []) if p.loai_giao_dich == 'hoan_coc' and p.trang_thai == 'thanh_cong']
+    da_hoan_coc = len(refund_tx) > 0
+    so_tien_hoan_coc = abs(refund_tx[0].so_tien) if refund_tx else 0
+    ly_do_hoan = None
+    if da_hoan_coc:
+        ly_do_hoan = f"Đã hoàn cọc {so_tien_hoan_coc:,}đ do hủy trước giờ đá >= 24h"
+    elif booking.trang_thai == 'da_huy':
+        if booking.ghi_chu and "Không được hoàn cọc" in booking.ghi_chu:
+            ly_do_hoan = "Không hoàn cọc do hủy sát giờ thi đấu (< 24h)"
+        elif booking.ghi_chu and "hết hạn" in booking.ghi_chu.lower():
+            ly_do_hoan = "Đơn quá hạn giữ chỗ 10 phút (chưa cọc)"
         
     return DatSanDetailResponse(
         ma_don=booking.ma_don,
@@ -235,7 +263,10 @@ def get_booking_detail(
         check_in_thuc_te=ensure_utc(check_in_thuc_te),
         check_out_thuc_te=ensure_utc(check_out_thuc_te),
         dich_vus=dich_vus,
-        phuong_thuc_coc=phuong_thuc_coc
+        phuong_thuc_coc=phuong_thuc_coc,
+        da_hoan_coc=da_hoan_coc,
+        so_tien_hoan_coc=so_tien_hoan_coc,
+        ly_do_hoan_coc=ly_do_hoan
     )
 
 

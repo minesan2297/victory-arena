@@ -1364,9 +1364,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 badgeClass = 'badge-confirmed';
                 statusIcon = '<i class="fa-solid fa-flag-checkered"></i>';
             } else if (data.trang_thai === 'da_huy') {
-                statusText = 'ĐÃ HỦY ĐƠN';
-                badgeClass = 'badge-danger';
-                statusIcon = '<i class="fa-solid fa-ban"></i>';
+                if (data.da_hoan_coc || (data.ghi_chu && data.ghi_chu.includes('Đã hoàn cọc'))) {
+                    statusText = 'ĐÃ HỦY (ĐÃ HOÀN CỌC 100K)';
+                    badgeClass = 'badge-confirmed';
+                    statusIcon = '<i class="fa-solid fa-rotate-left"></i>';
+                } else if (data.ghi_chu && data.ghi_chu.includes('Không được hoàn cọc')) {
+                    statusText = 'ĐÃ HỦY (PHẠT CỌC < 24H)';
+                    badgeClass = 'badge-danger';
+                    statusIcon = '<i class="fa-solid fa-ban"></i>';
+                } else {
+                    statusText = 'ĐÃ HỦY ĐƠN';
+                    badgeClass = 'badge-danger';
+                    statusIcon = '<i class="fa-solid fa-ban"></i>';
+                }
             }
             if (statusBadgeEl) {
                 statusBadgeEl.className = `fixture-status-badge ${badgeClass}`;
@@ -1403,8 +1413,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const tongDichVu = (data.tong_dich_vu !== undefined && data.tong_dich_vu > 0) ? Number(data.tong_dich_vu) : sumServices;
             
-            // Total remaining to pay = Sân + Dịch vụ - Cọc đã trả
-            const remainingToPay = Math.max(0, tienSan + tongDichVu - tienCoc);
+            // Total remaining to pay = Sân + Dịch vụ - Cọc đã trả (Nếu đơn đã hủy thì bằng 0đ)
+            const remainingToPay = (data.trang_thai === 'da_huy') ? 0 : Math.max(0, tienSan + tongDichVu - tienCoc);
 
             const elPitchPrice = document.getElementById('bdetail-pitch-price');
             if (elPitchPrice) elPitchPrice.textContent = `${tienSan.toLocaleString()}đ`;
@@ -1426,11 +1436,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 pMethodStr = methodMap[data.phuong_thuc_coc] || data.phuong_thuc_coc;
             }
-            const depositText = tienCoc > 0 
+            let depositText = tienCoc > 0 
                 ? `${tienCoc.toLocaleString()}đ (${pMethodStr})`
                 : 'Chưa đặt cọc (0đ)';
+            if (data.da_hoan_coc || (data.ghi_chu && data.ghi_chu.includes('Đã hoàn cọc'))) {
+                depositText += ` <span class="badge badge-success" style="font-size: 0.72rem; margin-left: 6px; padding: 2px 6px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-rotate-left"></i> Đã hoàn cọc</span>`;
+            } else if (data.trang_thai === 'da_huy' && data.ghi_chu && data.ghi_chu.includes('Không được hoàn cọc')) {
+                depositText += ` <span class="badge badge-danger" style="font-size: 0.72rem; margin-left: 6px; padding: 2px 6px; background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);"><i class="fa-solid fa-ban"></i> Phạt cọc (< 24h)</span>`;
+            }
             const elDeposit = document.getElementById('bdetail-deposit-paid');
-            if (elDeposit) elDeposit.textContent = depositText;
+            if (elDeposit) elDeposit.innerHTML = depositText;
 
             // Services Table
             const elServiceCount = document.getElementById('bdetail-service-count');
@@ -2632,8 +2647,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 `;
             } else if (b.trang_thai === 'da_huy') {
-                statusBadge = `<span class="badge badge-danger"><i class="fa-solid fa-ban"></i> Đã hủy</span>`;
-                actionBtn = `<span class="text-muted" style="font-size: 0.82rem;">Đơn đã hủy</span>`;
+                if (b.da_hoan_coc || (b.ghi_chu && b.ghi_chu.includes('Đã hoàn cọc'))) {
+                    statusBadge = `<span class="badge badge-success" title="Đã hoàn lại tiền cọc do hủy trước giờ đá >= 24h"><i class="fa-solid fa-rotate-left"></i> Đã hoàn cọc</span>`;
+                    actionBtn = `<span class="badge badge-xs" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 600;">Hoàn 100.000₫</span>`;
+                } else if (b.ghi_chu && b.ghi_chu.includes('Không được hoàn cọc')) {
+                    statusBadge = `<span class="badge badge-danger" title="Không hoàn cọc do hủy sát giờ thi đấu (< 24h)"><i class="fa-solid fa-ban"></i> Đã hủy (Phạt cọc)</span>`;
+                    actionBtn = `<span class="badge badge-xs" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); font-weight: 600;">Mất cọc (&lt;24h)</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-danger"><i class="fa-solid fa-ban"></i> Đã hủy</span>`;
+                    actionBtn = `<span class="text-muted" style="font-size: 0.82rem;">Đơn đã hủy</span>`;
+                }
             }
 
             const timeStr = `${b.gio_bat_dau.substring(0, 5)} - ${b.gio_ket_thuc.substring(0, 5)}`;
@@ -2719,7 +2742,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (res.ok) {
-                showToast("Đã hủy đơn đặt sân thành công!");
+                const data = await res.json();
+                if (data.da_hoan_coc || (data.ghi_chu && data.ghi_chu.includes('Đã hoàn cọc'))) {
+                    const refundAmt = data.so_tien_hoan_coc ? data.so_tien_hoan_coc.toLocaleString() : '100.000';
+                    showToast(`Đã hủy đơn ${maDon} thành công! Hệ thống đã hoàn cọc ${refundAmt} ₫ (hủy trước giờ đá ≥ 24h).`, "success");
+                } else if (data.ghi_chu && data.ghi_chu.includes('Không được hoàn cọc')) {
+                    showToast(`Đã hủy đơn ${maDon} thành công. Tiền cọc không được hoàn lại do hủy sát giờ thi đấu (< 24h).`, "warning");
+                } else {
+                    showToast(`Đã hủy đơn đặt sân ${maDon} thành công!`, "info");
+                }
                 fetchBookings();
                 fetchNotifications();
             } else {
