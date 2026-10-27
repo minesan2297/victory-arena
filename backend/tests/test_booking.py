@@ -13,7 +13,7 @@ from app.schemas.san_schema import SanCreate, BangGiaCreate, BaoTriCreate
 from app.schemas.dat_san_schema import DatSanCreate, DoiLichRequest
 from app.services.auth_service import AuthService
 from app.services.san_service import SanService
-from app.services.dat_san_service import DatSanService
+from app.services.dat_san_service import DatSanService, get_vn_now
 
 @pytest.fixture(scope="function")
 def db_session():
@@ -195,6 +195,73 @@ def test_booking_cancellation_refund(db_session):
     ).first()
     assert refund is not None
     assert refund.so_tien == -100000.0 # Hoàn cọc âm
+
+def test_cancellation_under_24h_timezone_offset_no_refund(db_session):
+    """Kiểm tra độ chính xác múi giờ VN (UTC+7): Hủy đơn thi đấu cách giờ hiện tại < 24h (ví dụ 20 tiếng) KHÔNG được hoàn cọc."""
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    
+    # Tạo đơn đặt sân ở 3 ngày tới
+    future_date = date.today() + timedelta(days=3)
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=future_date,
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(19, 30),
+        tien_coc=100000.0
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+    DatSanService.xac_nhan_coc(db_session, booking.ma_don, 100000, "chuyen_khoan")
+    
+    # Giả lập giờ đá cách thời điểm hiện tại tại VN đúng 20 tiếng (< 24h)
+    vn_now = get_vn_now()
+    target_dt = vn_now + timedelta(hours=20)
+    booking.ngay_da = target_dt.date()
+    booking.gio_bat_dau = target_dt.time()
+    db_session.commit()
+    
+    cancelled = DatSanService.huy_lich(db_session, booking.ma_don)
+    assert cancelled.trang_thai == "da_huy"
+    assert "Không được hoàn cọc do hủy trễ < 24h" in (cancelled.ghi_chu or "")
+    
+    # Đảm bảo không sinh giao dịch hoàn cọc
+    refund = db_session.query(ThanhToan).filter(
+        ThanhToan.ma_don == booking.ma_don,
+        ThanhToan.loai_giao_dich == "hoan_coc"
+    ).first()
+    assert refund is None
+
+def test_cancellation_over_24h_timezone_offset_refunds(db_session):
+    """Kiểm tra độ chính xác múi giờ VN (UTC+7): Hủy đơn thi đấu cách giờ hiện tại >= 24h (ví dụ 26 tiếng) ĐƯỢC hoàn cọc đầy đủ."""
+    customer = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    
+    future_date = date.today() + timedelta(days=3)
+    booking_in = DatSanCreate(
+        ma_san="SAN5-001",
+        ngay_da=future_date,
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(19, 30),
+        tien_coc=100000.0
+    )
+    booking = DatSanService.create_booking(db_session, booking_in, customer.tai_khoan_id)
+    DatSanService.xac_nhan_coc(db_session, booking.ma_don, 100000, "chuyen_khoan")
+    
+    # Giả lập giờ đá cách thời điểm hiện tại tại VN đúng 26 tiếng (> 24h)
+    vn_now = get_vn_now()
+    target_dt = vn_now + timedelta(hours=26)
+    booking.ngay_da = target_dt.date()
+    booking.gio_bat_dau = target_dt.time()
+    db_session.commit()
+    
+    cancelled = DatSanService.huy_lich(db_session, booking.ma_don)
+    assert cancelled.trang_thai == "da_huy"
+    assert "Đã hoàn cọc 100,000đ do hủy trước 24h" in (cancelled.ghi_chu or "")
+    
+    refund = db_session.query(ThanhToan).filter(
+        ThanhToan.ma_don == booking.ma_don,
+        ThanhToan.loai_giao_dich == "hoan_coc"
+    ).first()
+    assert refund is not None
+    assert refund.so_tien == -100000.0
 
 def test_unpaid_booking_cancellation_no_phantom_refund(db_session):
     """Kiểm tra chống lỗ hổng hoàn cọc ảo: Hủy đơn chưa cọc (cho_coc) thì không được sinh giao dịch hoàn tiền âm."""

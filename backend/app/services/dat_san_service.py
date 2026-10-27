@@ -13,9 +13,15 @@ from app.schemas.dat_san_schema import DatSanCreate, DoiLichRequest, LichSanResp
 from app.config import get_settings
 from app.tasks.lock_expiry import check_and_expire_bookings
 
+VN_TIMEZONE = timezone(timedelta(hours=7))
+
 def get_utc_now() -> datetime:
     """Trả về thời gian UTC dạng naive datetime tương thích chuẩn SQLite."""
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+def get_vn_now() -> datetime:
+    """Trả về thời gian hiện tại theo múi giờ Việt Nam (UTC+7) dạng naive datetime."""
+    return datetime.now(VN_TIMEZONE).replace(tzinfo=None)
 
 class DatSanService:
     @staticmethod
@@ -134,7 +140,7 @@ class DatSanService:
         # Tự động hủy các đơn hết hạn trước khi xử lý đặt mới
         check_and_expire_bookings(db)
         
-        if data.ngay_da < date.today():
+        if data.ngay_da < get_vn_now().date():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Không thể đặt sân vào ngày trong quá khứ"
@@ -336,7 +342,7 @@ class DatSanService:
         gio_ket_thuc = data.gio_ket_thuc_moi or booking.gio_ket_thuc
         ma_san = data.ma_san_moi or booking.ma_san
         
-        if ngay_da < date.today():
+        if ngay_da < get_vn_now().date():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể đổi lịch sang ngày trong quá khứ")
 
         if gio_bat_dau >= gio_ket_thuc:
@@ -408,7 +414,11 @@ class DatSanService:
         booking_time = datetime.combine(booking.ngay_da, booking.gio_bat_dau)
         noi_dung_huy = f"❌ [HỦY LỊCH ĐẶT SÂN] Đơn {ma_don} đã được hủy thành công."
         if booking.trang_thai == 'da_xac_nhan' and tong_coc_thuc_te > 0 and da_hoan == 0:
-            if booking_time - get_utc_now() >= timedelta(hours=24):
+            # Sửa triệt để lỗi lệch 7 tiếng múi giờ:
+            # booking_time là giờ địa phương Việt Nam (UTC+7).
+            # So sánh với thời gian thực tế hiện tại ở Việt Nam (get_vn_now()).
+            thoi_gian_den_gio_da = booking_time - get_vn_now()
+            if thoi_gian_den_gio_da >= timedelta(hours=24):
                 # Hoàn cọc số tiền thực tế khách đã nộp
                 so_tien_hoan = int(tong_coc_thuc_te)
                 new_payment = ThanhToan(
