@@ -15,6 +15,7 @@ from app.schemas.dat_san_schema import DatSanCreate, DoiLichRequest
 from app.services.auth_service import AuthService
 from app.services.san_service import SanService
 from app.services.dat_san_service import DatSanService, get_vn_now
+from app.tasks.lock_expiry import check_and_expire_bookings
 
 @pytest.fixture(scope="function")
 def db_session():
@@ -767,6 +768,91 @@ def test_expired_booking_loophole_prevention(db_session):
     booking2 = DatSanService.create_booking(db_session, booking2_in, customer.tai_khoan_id)
     assert booking2.ma_don != booking.ma_don
     assert booking2.trang_thai == "cho_coc"
+
+
+def test_cannot_cancel_past_or_started_booking(db_session):
+    """Kiểm tra chặn hủy đơn đặt sân đã quá giờ thi đấu hoặc đã diễn ra trong quá khứ."""
+    cust = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    
+    # Tạo đơn đặt sân và gán giờ bắt đầu trong quá khứ
+    vn_now = get_vn_now()
+    past_booking = DatSan(
+        ma_don="DS-PAST-CANCEL-001",
+        ma_khach_hang=cust.tai_khoan_id,
+        ma_san="SAN5-001",
+        ngay_da=(vn_now - timedelta(days=2)).date(),
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(19, 30),
+        tien_coc=100000,
+        trang_thai="da_xac_nhan"
+    )
+    db_session.add(past_booking)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as exc:
+        DatSanService.huy_lich(db_session, past_booking.ma_don)
+    assert exc.value.status_code == 400
+    assert "quá khứ" in exc.value.detail or "quá giờ" in exc.value.detail
+
+
+def test_cannot_reschedule_past_or_started_booking(db_session):
+    """Kiểm tra chặn đổi lịch cho đơn đặt sân đã bắt đầu hoặc trong quá khứ."""
+    cust = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    vn_now = get_vn_now()
+    past_booking = DatSan(
+        ma_don="DS-PAST-RESCHEDULE-001",
+        ma_khach_hang=cust.tai_khoan_id,
+        ma_san="SAN5-001",
+        ngay_da=(vn_now - timedelta(days=1)).date(),
+        gio_bat_dau=time(17, 0),
+        gio_ket_thuc=time(18, 30),
+        tien_coc=100000,
+        trang_thai="da_xac_nhan"
+    )
+    db_session.add(past_booking)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as exc:
+        DatSanService.doi_lich(db_session, DoiLichRequest(
+            ma_don=past_booking.ma_don,
+            ngay_da_moi=(vn_now + timedelta(days=3)).date()
+        ))
+    assert exc.value.status_code == 400
+    assert "quá khứ" in exc.value.detail or "quá giờ" in exc.value.detail
+
+
+def test_lock_expiry_auto_closes_past_confirmed_booking_to_noshow(db_session):
+    """Kiểm tra task nền tự động quét và đóng các đơn đã cọc trong quá khứ sang 'hoan_tat' (No-Show)."""
+    cust = db_session.query(TaiKhoan).filter(TaiKhoan.ten_dang_nhap == "customer1").first()
+    vn_now = get_vn_now()
+    
+    past_confirmed = DatSan(
+        ma_don="DS-NOSHOW-001",
+        ma_khach_hang=cust.tai_khoan_id,
+        ma_san="SAN5-001",
+        ngay_da=(vn_now - timedelta(days=3)).date(),
+        gio_bat_dau=time(18, 0),
+        gio_ket_thuc=time(19, 30),
+        tien_coc=100000,
+        trang_thai="da_xac_nhan"
+    )
+    lich_past = LichDat(
+        san_id="SAN5-001",
+        ma_don=past_confirmed.ma_don,
+        bat_dau=datetime.combine(past_confirmed.ngay_da, past_confirmed.gio_bat_dau),
+        ket_thuc=datetime.combine(past_confirmed.ngay_da, past_confirmed.gio_ket_thuc),
+        loai_lich="thue"
+    )
+    db_session.add_all([past_confirmed, lich_past])
+    db_session.commit()
+
+    processed_count = check_and_expire_bookings(db_session)
+    assert processed_count >= 1
+
+    db_session.refresh(past_confirmed)
+    assert past_confirmed.trang_thai == "hoan_tat"
+    assert "No-Show" in (past_confirmed.ghi_chu or "")
+    assert db_session.query(LichDat).filter(LichDat.ma_don == past_confirmed.ma_don).count() == 0
 
 
 

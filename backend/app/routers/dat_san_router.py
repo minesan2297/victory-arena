@@ -31,8 +31,17 @@ def to_booking_response(booking: DatSan) -> DatSanResponse:
     da_hoan_coc = len(refund_tx) > 0
     so_tien_hoan_coc = abs(refund_tx[0].so_tien) if refund_tx else 0
     ly_do_hoan = None
+    noi_nhan_hoan = None
     if da_hoan_coc:
-        ly_do_hoan = f"Đã hoàn cọc {so_tien_hoan_coc:,}đ do hủy trước giờ đá >= 24h"
+        pt = refund_tx[0].phuong_thuc or 'chuyen_khoan'
+        noi_nhan_map = {
+            'chuyen_khoan': 'Tài khoản ngân hàng chuyển cọc ban đầu (VietQR / MBBank)',
+            'vnpay': 'Ví / Tài khoản VNPAY liên kết ban đầu',
+            'momo': 'Ví MoMo đã thanh toán cọc',
+            'tien_mat': 'Tiền mặt tại quầy lễ tân sân bóng'
+        }
+        noi_nhan_hoan = noi_nhan_map.get(pt, f'Phương thức {pt} ban đầu')
+        ly_do_hoan = f"Đã hoàn cọc {so_tien_hoan_coc:,}đ về {noi_nhan_hoan} (hủy trước giờ đá >= 24h)"
     elif booking.trang_thai == 'da_huy':
         if booking.ghi_chu and "Không được hoàn cọc" in booking.ghi_chu:
             ly_do_hoan = "Không hoàn cọc do hủy sát giờ thi đấu (< 24h)"
@@ -55,7 +64,8 @@ def to_booking_response(booking: DatSan) -> DatSanResponse:
         khach_hang_ten=booking.khach_hang.ho_ten if booking.khach_hang else None,
         da_hoan_coc=da_hoan_coc,
         so_tien_hoan_coc=so_tien_hoan_coc,
-        ly_do_hoan_coc=ly_do_hoan
+        ly_do_hoan_coc=ly_do_hoan,
+        noi_nhan_hoan_coc=noi_nhan_hoan
     )
 
 
@@ -231,8 +241,17 @@ def get_booking_detail(
     da_hoan_coc = len(refund_tx) > 0
     so_tien_hoan_coc = abs(refund_tx[0].so_tien) if refund_tx else 0
     ly_do_hoan = None
+    noi_nhan_hoan = None
     if da_hoan_coc:
-        ly_do_hoan = f"Đã hoàn cọc {so_tien_hoan_coc:,}đ do hủy trước giờ đá >= 24h"
+        pt = refund_tx[0].phuong_thuc or 'chuyen_khoan'
+        noi_nhan_map = {
+            'chuyen_khoan': 'Tài khoản ngân hàng chuyển cọc ban đầu (VietQR / MBBank)',
+            'vnpay': 'Ví / Tài khoản VNPAY liên kết ban đầu',
+            'momo': 'Ví MoMo đã thanh toán cọc',
+            'tien_mat': 'Tiền mặt tại quầy lễ tân sân bóng'
+        }
+        noi_nhan_hoan = noi_nhan_map.get(pt, f'Phương thức {pt} ban đầu')
+        ly_do_hoan = f"Đã hoàn cọc {so_tien_hoan_coc:,}đ về {noi_nhan_hoan} (thời gian xử lý 1-24h làm việc do hủy trước >= 24h)"
     elif booking.trang_thai == 'da_huy':
         if booking.ghi_chu and "Không được hoàn cọc" in booking.ghi_chu:
             ly_do_hoan = "Không hoàn cọc do hủy sát giờ thi đấu (< 24h)"
@@ -266,7 +285,8 @@ def get_booking_detail(
         phuong_thuc_coc=phuong_thuc_coc,
         da_hoan_coc=da_hoan_coc,
         so_tien_hoan_coc=so_tien_hoan_coc,
-        ly_do_hoan_coc=ly_do_hoan
+        ly_do_hoan_coc=ly_do_hoan,
+        noi_nhan_hoan_coc=noi_nhan_hoan
     )
 
 

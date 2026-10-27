@@ -1360,12 +1360,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 badgeClass = 'badge-playing';
                 statusIcon = '<i class="fa-solid fa-circle pulse-live text-danger"></i>';
             } else if (data.trang_thai === 'hoan_tat') {
-                statusText = 'HOÀN TẤT & ĐÃ TRẢ SÂN';
-                badgeClass = 'badge-confirmed';
-                statusIcon = '<i class="fa-solid fa-flag-checkered"></i>';
+                if (data.ghi_chu && (data.ghi_chu.includes('No-Show') || data.ghi_chu.includes('Khách không đến'))) {
+                    statusText = 'KHÁCH VẮNG MẶT (NO-SHOW)';
+                    badgeClass = 'badge-warning';
+                    statusIcon = '<i class="fa-solid fa-user-slash"></i>';
+                } else {
+                    statusText = 'HOÀN TẤT & ĐÃ TRẢ SÂN';
+                    badgeClass = 'badge-confirmed';
+                    statusIcon = '<i class="fa-solid fa-flag-checkered"></i>';
+                }
             } else if (data.trang_thai === 'da_huy') {
-                if (data.da_hoan_coc || (data.ghi_chu && data.ghi_chu.includes('Đã hoàn cọc'))) {
-                    statusText = 'ĐÃ HỦY (ĐÃ HOÀN CỌC 100K)';
+                if (data.da_hoan_coc || (data.ghi_chu && (data.ghi_chu.includes('Đã hoàn cọc') || data.ghi_chu.includes('lập lệnh hoàn cọc')))) {
+                    statusText = 'ĐÃ HỦY (ĐÃ LẬP LỆNH HOÀN CỌC)';
                     badgeClass = 'badge-confirmed';
                     statusIcon = '<i class="fa-solid fa-rotate-left"></i>';
                 } else if (data.ghi_chu && data.ghi_chu.includes('Không được hoàn cọc')) {
@@ -1439,8 +1445,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let depositText = tienCoc > 0 
                 ? `${tienCoc.toLocaleString()}đ (${pMethodStr})`
                 : 'Chưa đặt cọc (0đ)';
-            if (data.da_hoan_coc || (data.ghi_chu && data.ghi_chu.includes('Đã hoàn cọc'))) {
+            if (data.da_hoan_coc || (data.ghi_chu && (data.ghi_chu.includes('Đã hoàn cọc') || data.ghi_chu.includes('lập lệnh hoàn cọc')))) {
                 depositText += ` <span class="badge badge-success" style="font-size: 0.72rem; margin-left: 6px; padding: 2px 6px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-rotate-left"></i> Đã hoàn cọc</span>`;
+                if (data.noi_nhan_hoan_coc) {
+                    depositText += `<div style="font-size: 0.78rem; color: #10b981; margin-top: 4px; font-weight: 500;"><i class="fa-solid fa-building-columns"></i> Hoàn về: <strong>${data.noi_nhan_hoan_coc}</strong> (1-24h làm việc)</div>`;
+                }
             } else if (data.trang_thai === 'da_huy' && data.ghi_chu && data.ghi_chu.includes('Không được hoàn cọc')) {
                 depositText += ` <span class="badge badge-danger" style="font-size: 0.72rem; margin-left: 6px; padding: 2px 6px; background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);"><i class="fa-solid fa-ban"></i> Phạt cọc (< 24h)</span>`;
             }
@@ -1553,21 +1562,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 }
             } else if (data.trang_thai === 'da_xac_nhan') {
+                const matchStarted = isMatchStartedOrPassed(data);
                 if (currentUser.vai_tro !== 'CUSTOMER') {
                     actionsContainer.innerHTML += `
                         <button class="btn btn-sm btn-primary" onclick="window.closeBookingDetailModal(); quickCheckIn('${data.ma_don}');">
                             <i class="fa-solid fa-right-to-bracket"></i> Check-in Bàn Giao Sân
                         </button>
-                        <button class="btn btn-sm btn-secondary" onclick="window.closeBookingDetailModal(); window.triggerReminder('${data.ma_don}');">
-                            <i class="fa-solid fa-robot"></i> Gửi Tin AI Nhắc Lịch
+                    `;
+                    if (!matchStarted) {
+                        actionsContainer.innerHTML += `
+                            <button class="btn btn-sm btn-secondary" onclick="window.closeBookingDetailModal(); window.triggerReminder('${data.ma_don}');">
+                                <i class="fa-solid fa-robot"></i> Gửi Tin AI Nhắc Lịch
+                            </button>
+                        `;
+                    }
+                }
+                if (matchStarted) {
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-sm btn-outline-secondary" disabled title="Khung giờ thi đấu đã bắt đầu hoặc đã qua trong quá khứ, không thể hủy">
+                            <i class="fa-solid fa-clock"></i> Đã Quá Giờ Thi Đấu
+                        </button>
+                    `;
+                } else {
+                    actionsContainer.innerHTML += `
+                        <button class="btn btn-sm btn-danger" onclick="window.closeBookingDetailModal(); window.cancelBookingPrompt('${data.ma_don}');">
+                            <i class="fa-solid fa-xmark"></i> Hủy Đơn
                         </button>
                     `;
                 }
-                actionsContainer.innerHTML += `
-                    <button class="btn btn-sm btn-danger" onclick="window.closeBookingDetailModal(); window.cancelBookingPrompt('${data.ma_don}');">
-                        <i class="fa-solid fa-xmark"></i> Hủy Đơn
-                    </button>
-                `;
             } else if (data.trang_thai === 'dang_da') {
                 if (currentUser.vai_tro !== 'CUSTOMER') {
                     actionsContainer.innerHTML += `
@@ -2466,8 +2488,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 
-                if ((b.trang_thai === 'cho_coc' || b.trang_thai === 'da_xac_nhan') && !isExpired) {
+                const isMatchStarted = isMatchStartedOrPassed(b);
+                if ((b.trang_thai === 'cho_coc' || b.trang_thai === 'da_xac_nhan') && !isExpired && !isMatchStarted) {
                     actions += `<button class="btn btn-xs btn-danger btn-action" onclick="window.cancelBookingPrompt('${b.ma_don}')"><i class="fa-solid fa-xmark"></i> Hủy đơn</button>`;
+                } else if ((b.trang_thai === 'cho_coc' || b.trang_thai === 'da_xac_nhan') && isMatchStarted) {
+                    actions += `<span class="text-muted" style="font-size: 0.78rem;" title="Khung giờ thi đấu đã bắt đầu hoặc đã qua"><i class="fa-solid fa-clock"></i> Đã đến giờ</span>`;
                 }
                 
                 if (actions === "") actions = `<span class="text-muted">Đang đá</span>`;
@@ -2640,16 +2665,22 @@ document.addEventListener('DOMContentLoaded', () => {
             let actionBtn = "";
 
             if (b.trang_thai === 'hoan_tat') {
-                statusBadge = `<span class="badge badge-secondary"><i class="fa-solid fa-circle-check"></i> Hoàn tất</span>`;
-                actionBtn = `
-                    <button class="btn btn-xs btn-outline btn-action" onclick="window.showPastInvoice('${b.ma_don}')" title="Xem lại hóa đơn chi tiết">
-                        <i class="fa-solid fa-file-invoice"></i> Xem hóa đơn
-                    </button>
-                `;
+                if (b.ghi_chu && (b.ghi_chu.includes('No-Show') || b.ghi_chu.includes('Khách không đến'))) {
+                    statusBadge = `<span class="badge badge-warning" title="Khách không đến nhận sân theo giờ đã đặt"><i class="fa-solid fa-user-slash"></i> Khách vắng mặt (No-Show)</span>`;
+                    actionBtn = `<span class="badge badge-xs" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); font-weight: 600;">Thu cọc No-Show</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-secondary"><i class="fa-solid fa-circle-check"></i> Hoàn tất</span>`;
+                    actionBtn = `
+                        <button class="btn btn-xs btn-outline btn-action" onclick="window.showPastInvoice('${b.ma_don}')" title="Xem lại hóa đơn chi tiết">
+                            <i class="fa-solid fa-file-invoice"></i> Xem hóa đơn
+                        </button>
+                    `;
+                }
             } else if (b.trang_thai === 'da_huy') {
-                if (b.da_hoan_coc || (b.ghi_chu && b.ghi_chu.includes('Đã hoàn cọc'))) {
-                    statusBadge = `<span class="badge badge-success" title="Đã hoàn lại tiền cọc do hủy trước giờ đá >= 24h"><i class="fa-solid fa-rotate-left"></i> Đã hoàn cọc</span>`;
-                    actionBtn = `<span class="badge badge-xs" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 600;">Hoàn 100.000₫</span>`;
+                if (b.da_hoan_coc || (b.ghi_chu && (b.ghi_chu.includes('Đã hoàn cọc') || b.ghi_chu.includes('lập lệnh hoàn cọc')))) {
+                    statusBadge = `<span class="badge badge-success" title="Đã lập lệnh hoàn lại tiền cọc do hủy trước giờ đá >= 24h"><i class="fa-solid fa-rotate-left"></i> Đã hoàn cọc</span>`;
+                    const amtStr = b.so_tien_hoan_coc ? `${b.so_tien_hoan_coc.toLocaleString()}₫` : 'Hoàn 100.000₫';
+                    actionBtn = `<span class="badge badge-xs" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 600;">${amtStr}</span>`;
                 } else if (b.ghi_chu && b.ghi_chu.includes('Không được hoàn cọc')) {
                     statusBadge = `<span class="badge badge-danger" title="Không hoàn cọc do hủy sát giờ thi đấu (< 24h)"><i class="fa-solid fa-ban"></i> Đã hủy (Phạt cọc)</span>`;
                     actionBtn = `<span class="badge badge-xs" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); font-weight: 600;">Mất cọc (&lt;24h)</span>`;
@@ -2731,7 +2762,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     window.cancelBookingPrompt = async (maDon) => {
-        if (!confirm(`Bạn có chắc chắn muốn hủy đơn đặt sân ${maDon}? Nếu hủy trước 24h, khách sẽ được hoàn tiền cọc tự động.`)) return;
+        if (!confirm(`Bạn có chắc chắn muốn hủy đơn đặt sân ${maDon}?\n\n- Hủy trước giờ đấu ≥ 24h: Hệ thống lập lệnh hoàn 100% tiền cọc về tài khoản/ví thanh toán ban đầu.\n- Hủy sát giờ < 24h: Tiền cọc sẽ bị phạt theo quy chế của sân bóng.`)) return;
         
         try {
             const res = await fetch(`/api/dat-san/booking/cancel?ma_don=${maDon}`, {
@@ -2743,11 +2774,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (res.ok) {
                 const data = await res.json();
-                if (data.da_hoan_coc || (data.ghi_chu && data.ghi_chu.includes('Đã hoàn cọc'))) {
+                if (data.da_hoan_coc || (data.ghi_chu && (data.ghi_chu.includes('Đã hoàn cọc') || data.ghi_chu.includes('lập lệnh hoàn cọc')))) {
                     const refundAmt = data.so_tien_hoan_coc ? data.so_tien_hoan_coc.toLocaleString() : '100.000';
-                    showToast(`Đã hủy đơn ${maDon} thành công! Hệ thống đã hoàn cọc ${refundAmt} ₫ (hủy trước giờ đá ≥ 24h).`, "success");
+                    const targetAcc = data.noi_nhan_hoan_coc || 'tài khoản ngân hàng/ví chuyển cọc ban đầu';
+                    showToast(`✅ Đã hủy đơn ${maDon}! Lệnh hoàn cọc ${refundAmt}₫ về ${targetAcc} đã được lập (nhận tiền trong 1-24h làm việc).`, "success");
                 } else if (data.ghi_chu && data.ghi_chu.includes('Không được hoàn cọc')) {
-                    showToast(`Đã hủy đơn ${maDon} thành công. Tiền cọc không được hoàn lại do hủy sát giờ thi đấu (< 24h).`, "warning");
+                    showToast(`⚠️ Đã hủy đơn ${maDon}. Tiền cọc không được hoàn lại do hủy sát giờ thi đấu (< 24h).`, "warning");
                 } else {
                     showToast(`Đã hủy đơn đặt sân ${maDon} thành công!`, "info");
                 }
@@ -4150,6 +4182,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const expDate = parseUtcDate(booking.lock_expires_at);
         if (!expDate) return 0;
         return Math.max(0, Math.floor((expDate.getTime() - Date.now()) / 1000));
+    }
+
+    function isMatchStartedOrPassed(b) {
+        if (!b || !b.ngay_da || !b.gio_bat_dau) return false;
+        const timePart = b.gio_bat_dau.length === 5 ? `${b.gio_bat_dau}:00` : b.gio_bat_dau.substring(0, 8);
+        const dt = new Date(`${b.ngay_da}T${timePart}`);
+        return !isNaN(dt.getTime()) && dt <= new Date();
+    }
+
+    function isMatchEnded(b) {
+        if (!b || !b.ngay_da || !b.gio_ket_thuc) return false;
+        const timePart = b.gio_ket_thuc.length === 5 ? `${b.gio_ket_thuc}:00` : b.gio_ket_thuc.substring(0, 8);
+        const dt = new Date(`${b.ngay_da}T${timePart}`);
+        return !isNaN(dt.getTime()) && dt <= new Date();
     }
     
     function showToast(message, type = 'success') {

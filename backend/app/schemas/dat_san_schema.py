@@ -29,6 +29,7 @@ class DatSanResponse(BaseModel):
     da_hoan_coc: bool = False
     so_tien_hoan_coc: int = 0
     ly_do_hoan_coc: Optional[str] = None
+    noi_nhan_hoan_coc: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -124,6 +125,7 @@ class DatSanDetailResponse(BaseModel):
     da_hoan_coc: bool = False
     so_tien_hoan_coc: int = 0
     ly_do_hoan_coc: Optional[str] = None
+    noi_nhan_hoan_coc: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

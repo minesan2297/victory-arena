@@ -340,8 +340,11 @@ class DatSanService:
         ngay_da = data.ngay_da_moi or booking.ngay_da
         gio_bat_dau = data.gio_bat_dau_moi or booking.gio_bat_dau
         gio_ket_thuc = data.gio_ket_thuc_moi or booking.gio_ket_thuc
-        ma_san = data.ma_san_moi or booking.ma_san
-        
+        # Kiểm tra không thể đổi lịch cho trận đấu đã diễn ra trong quá khứ
+        original_start = datetime.combine(booking.ngay_da, booking.gio_bat_dau)
+        if original_start <= get_vn_now():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể đổi lịch cho đơn đặt sân đã quá giờ thi đấu hoặc đã diễn ra trong quá khứ.")
+
         if ngay_da < get_vn_now().date():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Không thể đổi lịch sang ngày trong quá khứ")
 
@@ -412,29 +415,59 @@ class DatSanService:
         
         # Điều kiện hoàn cọc: Chỉ hoàn nếu đơn đã xác nhận, thực tế đã có tiền cọc đóng thành công và chưa hoàn lần nào
         booking_time = datetime.combine(booking.ngay_da, booking.gio_bat_dau)
+        vn_now = get_vn_now()
+
+        # CHẶN HỦY ĐƠN TRONG QUÁ KHỨ: Trận đấu đã bắt đầu hoặc đã diễn ra trong quá khứ thì không thể hủy
+        if booking_time <= vn_now:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể hủy đơn đặt sân vì khung giờ thi đấu đã bắt đầu hoặc đã diễn ra trong quá khứ."
+            )
+
         noi_dung_huy = f"❌ [HỦY LỊCH ĐẶT SÂN] Đơn {ma_don} đã được hủy thành công."
         if booking.trang_thai == 'da_xac_nhan' and tong_coc_thuc_te > 0 and da_hoan == 0:
-            # Sửa triệt để lỗi lệch 7 tiếng múi giờ:
-            # booking_time là giờ địa phương Việt Nam (UTC+7).
-            # So sánh với thời gian thực tế hiện tại ở Việt Nam (get_vn_now()).
-            thoi_gian_den_gio_da = booking_time - get_vn_now()
+            thoi_gian_den_gio_da = booking_time - vn_now
+            
+            # Lấy phương thức thanh toán cọc ban đầu của khách
+            deposit_tx = db.query(ThanhToan).filter(
+                ThanhToan.ma_don == ma_don,
+                ThanhToan.loai_giao_dich == 'dat_coc',
+                ThanhToan.trang_thai == 'thanh_cong'
+            ).first()
+            phuong_thuc_goc = deposit_tx.phuong_thuc if deposit_tx else 'chuyen_khoan'
+            
+            noi_nhan_map = {
+                'chuyen_khoan': 'tài khoản ngân hàng quý khách đã chuyển cọc (VietQR / MBBank)',
+                'vnpay': 'ví / tài khoản VNPAY liên kết ban đầu',
+                'momo': 'ví MoMo quý khách đã thanh toán',
+                'tien_mat': 'tiền mặt trực tiếp tại quầy lễ tân sân bóng'
+            }
+            noi_nhan_str = noi_nhan_map.get(phuong_thuc_goc, f'phương thức {phuong_thuc_goc} ban đầu')
+
             if thoi_gian_den_gio_da >= timedelta(hours=24):
                 # Hoàn cọc số tiền thực tế khách đã nộp
                 so_tien_hoan = int(tong_coc_thuc_te)
                 new_payment = ThanhToan(
                     ma_don=ma_don,
                     so_tien=-so_tien_hoan,
-                    phuong_thuc='chuyen_khoan',
+                    phuong_thuc=phuong_thuc_goc,
                     loai_giao_dich='hoan_coc',
                     trang_thai='thanh_cong',
                     thoi_gian=get_utc_now()
                 )
                 db.add(new_payment)
-                booking.ghi_chu = (booking.ghi_chu or "") + f" [Đã hoàn cọc {so_tien_hoan:,}đ do hủy trước 24h]"
-                noi_dung_huy += f" Đã hoàn lại {so_tien_hoan:,} ₫ tiền cọc do hủy trước giờ đấu 24h."
+                booking.ghi_chu = (booking.ghi_chu or "") + f" [Đã hoàn cọc {so_tien_hoan:,}đ do hủy trước 24h - Lập lệnh hoàn về {noi_nhan_str}]"
+                noi_dung_huy = (
+                    f"✅ [HỦY LỊCH ĐẶT SÂN & HOÀN CỌC] Đơn đặt sân {ma_don} ({booking.ma_san}) ngày {booking.ngay_da.strftime('%d/%m/%Y')} "
+                    f"đã hủy thành công. Hệ thống đã lập lệnh hoàn lại {so_tien_hoan:,} ₫ tiền cọc về {noi_nhan_str} "
+                    f"(thời gian nhận tiền trong vòng 1-24h làm việc)."
+                )
             else:
                 booking.ghi_chu = (booking.ghi_chu or "") + " [Không được hoàn cọc do hủy trễ < 24h]"
-                noi_dung_huy += " Tiền cọc không được hoàn lại do hủy sát giờ thi đấu (< 24h)."
+                noi_dung_huy = (
+                    f"⚠️ [HỦY LỊCH ĐẶT SÂN] Đơn đặt sân {ma_don} ({booking.ma_san}) ngày {booking.ngay_da.strftime('%d/%m/%Y')} "
+                    f"đã hủy thành công. Tiền cọc {int(tong_coc_thuc_te):,} ₫ không được hoàn lại do quý khách hủy sát giờ thi đấu (< 24h so với giờ lăn bóng)."
+                )
                 
         # Cập nhật trạng thái
         booking.trang_thai = 'da_huy'
