@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Sân Bóng Tích Hợp AI - Mini Victory</title>
+    <!-- Favicon Icon Bóng Đá -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&subset=vietnamese,latin-ext&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css?v=2.5.0">
+    <!-- Theme Initializer (Prevent theme flicker / FOUC) -->
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('va_theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body>
+    <!-- LOGIN INTERFACE OVERLAY -->
+    <div class="login-overlay" id="login-screen">
+        <!-- Login Screen Theme Switcher Pill -->
+        <button type="button" class="btn-theme-toggle btn-theme-toggle-login" id="btn-theme-toggle-login" title="Chuyển đổi giao diện Sáng / Tối">
+            <span class="theme-toggle-icon" id="login-theme-toggle-icon">☀️</span>
+            <span class="theme-toggle-text" id="login-theme-toggle-text">Sáng</span>
+        </button>
+        <div class="login-wrapper">
+            <!-- HUSKY AI GUARD MASCOT SVG -->
+            <div class="husky-mascot" id="husky-guard">
+                <svg class="husky-svg" viewBox="0 0 200 180" width="160" height="144">
+                    <defs>
+                        <radialGradient id="huskyGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.4" />
+                            <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                        </radialGradient>
+                        <linearGradient id="huskyEarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8" />
+                            <stop offset="100%" stop-color="#10b981" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="100" cy="90" r="85" fill="url(#huskyGlow)" />
+                    
+                    <!-- Ears -->
+                    <g class="husky-ears">
+                        <polygon points="35,65 15,10 65,40" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                        <polygon points="40,60 25,20 60,42" fill="url(#huskyEarGrad)"/>
+                        <polygon points="165,65 185,10 135,40" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                        <polygon points="160,60 175,20 140,42" fill="url(#huskyEarGrad)"/>
+                    </g>
+                    
+                    <!-- Head Body -->
+                    <ellipse cx="100" cy="95" rx="70" ry="60" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                    <!-- Face Mask White area -->
+                    <path d="M 45,95 C 45,65 65,50 100,60 C 135,50 155,65 155,95 C 155,130 135,145 100,145 C 65,145 45,130 45,95 Z" fill="#f8fafc"/>
+                    
+                    <!-- Forehead Marking -->
+                    <polygon points="100,60 90,80 110,80" fill="#1e293b"/>
+                    
+                    <!-- Eyes White -->
+                    <g class="husky-eyes">
+                        <ellipse cx="72" cy="88" rx="16" ry="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+                        <ellipse cx="128" cy="88" rx="16" ry="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+                        
+                        <!-- Eye Pupils -->
+                        <g class="pupil-group" id="pupil-left">
+                            <circle cx="72" cy="88" r="8" fill="#0f172a"/>
+                            <circle cx="75" cy="85" r="2.5" fill="#ffffff"/>
+                        </g>
+                        <g class="pupil-group" id="pupil-right">
+                            <circle cx="128" cy="88" r="8" fill="#0f172a"/>
+                            <circle cx="131" cy="85" r="2.5" fill="#ffffff"/>
+                        </g>
+                    </g>
+                    
+                    <!-- Snout & Nose -->
+                    <ellipse cx="100" cy="112" rx="22" ry="16" fill="#e2e8f0"/>
+                    <path d="M 90,104 Q 100,98 110,104 Q 105,114 100,114 Q 95,114 90,104 Z" fill="#0f172a"/>
+                    <!-- Mouth -->
+                    <path class="husky-mouth" id="husky-mouth" d="M 92,118 Q 100,125 108,118" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Blushing Cheeks -->
+                    <circle cx="56" cy="105" r="7" fill="#f43f5e" opacity="0.3"/>
+                    <circle cx="144" cy="105" r="7" fill="#f43f5e" opacity="0.3"/>
+                    
+                    <!-- Interactive Paws -->
+                    <g class="husky-paws" id="husky-paws">
+                        <g class="paw paw-left" id="paw-left">
+                            <ellipse cx="50" cy="155" rx="18" ry="14" fill="#334155" stroke="#475569" stroke-width="2"/>
+                            <circle cx="42" cy="152" r="3" fill="#f8fafc"/>
+                            <circle cx="50" cy="150" r="3" fill="#f8fafc"/>
+                            <circle cx="58" cy="152" r="3" fill="#f8fafc"/>
+                        </g>
+                        <g class="paw paw-right" id="paw-right">
+                            <ellipse cx="150" cy="155" rx="18" ry="14" fill="#334155" stroke="#475569" stroke-width="2"/>
+                            <circle cx="142" cy="152" r="3" fill="#f8fafc"/>
+                            <circle cx="150" cy="150" r="3" fill="#f8fafc"/>
+                            <circle cx="158" cy="152" r="3" fill="#f8fafc"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="login-card" id="main-login-card">
+                <div class="login-back-bar" style="margin-bottom: 14px;">
+                    <a href="index.html" class="back-home-link" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                        <i class="fa-solid fa-arrow-left"></i> Về trang giới thiệu
+                    </a>
+                </div>
+                <div class="login-brand">
+                    <h2>Mini Victory <span class="badge-ai">v2.0</span></h2>
+                    <p id="mascot-status-text">Chào mừng! Linh vật AI đang gác cổng hệ thống.</p>
+                </div>
+
+                <!-- Alert Báo Lỗi -->
+                <div class="auth-alert" id="auth-alert" style="display: none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="auth-alert-msg">Thông tin đăng nhập không chính xác</span>
+                    <button type="button" class="auth-alert-close" onclick="document.getElementById('auth-alert').style.display='none'">&times;</button>
+                </div>
+                
+                <div class="login-tabs">
+                    <button class="login-tab-btn active" id="btn-tab-login">Đăng Nhập</button>
+                    <button class="login-tab-btn" id="btn-tab-register">Đăng Ký</button>
+                </div>
+                
+                <!-- Form Đăng Nhập -->
+                <form id="form-login">
+                    <div class="form-group">
+                        <label>Tên đăng nhập</label>
+                        <input type="text" id="login-username" placeholder="Nhập tên đăng nhập" required autocomplete="username">
+                        <div class="field-error" id="err-login-username"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mật khẩu</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="login-password" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+                            <button type="button" class="btn-toggle-pw" id="btn-toggle-login-pw" title="Ẩn/Hiện mật khẩu">
+                                <i class="fa-regular fa-eye" id="icon-login-pw"></i>
+                            </button>
+                        </div>
+                        <div class="field-error" id="err-login-password"></div>
+                    </div>
+                    
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" id="remember-me-check" checked>
+                            <span>Ghi nhớ đăng nhập</span>
+                        </label>
+                        <a href="javascript:void(0)" class="forgot-pw-link" onclick="showToast('Vui lòng liên hệ Admin để khôi phục mật khẩu!', 'warning')">Quên mật khẩu?</a>
+                    </div>
+
+                    <!-- Nút Submit Cánh Cửa 3D (Door Walkthrough Button) -->
+                    <button type="submit" class="btn btn-primary btn-block doorbtn" id="btn-door-submit">
+                        <span class="doorbtn__label"><i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập</span>
+                        <span class="dooric">
+                            <span class="dooric__glow"></span>
+                            <span class="dooric__frame"></span>
+                            <span class="dooric__panel"></span>
+                            <span class="dooric__person">
+                                <svg viewBox="0 0 24 36" width="16" height="24">
+                                    <circle cx="12" cy="6" r="4" fill="#ffffff"/>
+                                    <line x1="12" y1="10" x2="12" y2="22" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                                    <line class="arm arm--left" x1="12" y1="13" x2="6" y2="19" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                                    <line class="arm arm--right" x1="12" y1="13" x2="18" y2="19" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                                    <line class="leg leg--left" id="leg-left" x1="12" y1="22" x2="6" y2="33" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                                    <line class="leg leg--right" id="leg-right" x1="12" y1="22" x2="18" y2="33" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                        </span>
+                    </button>
+                </form>
+                
+                <!-- Form Đăng Ký (2-Column Grid Format) -->
+                <form id="form-register" style="display: none;">
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label>Tên đăng nhập *</label>
+                            <input type="text" id="reg-username" placeholder="Ví dụ: tuanfc99" required>
+                            <div class="field-error" id="err-reg-username"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Họ và Tên *</label>
+                            <input type="text" id="reg-fullname" placeholder="Nguyễn Văn A" required>
+                            <div class="field-error" id="err-reg-fullname"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mật khẩu *</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="reg-password" placeholder="Ít nhất 6 ký tự" required>
+                                <button type="button" class="btn-toggle-pw" id="btn-toggle-reg-pw">
+                                    <i class="fa-regular fa-eye" id="icon-reg-pw"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength-bar">
+                                <div class="strength-indicator" id="pw-strength-fill"></div>
+                            </div>
+                            <div class="field-error" id="err-reg-password"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Xác nhận mật khẩu *</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="reg-confirm-password" placeholder="Nhập lại mật khẩu" required>
+                            </div>
+                            <div class="field-error" id="err-reg-confirm-password"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại *</label>
+                            <input type="tel" id="reg-phone" placeholder="Ví dụ: 0988123456" required>
+                            <div class="field-error" id="err-reg-phone"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email (Tùy chọn)</label>
+                            <input type="email" id="reg-email" placeholder="email@gmail.com">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">
+                        <i class="fa-solid fa-user-plus"></i> Đăng Ký Tài Khoản
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP INTERFACE (HIDDEN UNTIL AUTHENTICATED) -->
+    <div class="app-container" id="app-interface" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <a href="index.html" class="brand" style="text-decoration: none; color: inherit;" title="Quay về Trang giới thiệu (Landing Page)">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-futbol"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>Mini Victory <span class="badge-ai">v2.0</span></h2>
+                    <p>Nhóm 20 - K23C CNTT</p>
+                </div>
+            </a>
+
+            <!-- User Panel -->
+            <div class="user-panel" id="sidebar-user-panel" style="cursor: pointer;" title="Nhấn để xem thông tin cá nhân">
+                <div class="user-avatar">
+                    <i class="fa-solid fa-user-shield" id="user-icon"></i>
+                </div>
+                <div class="user-info">
+                    <h4 id="user-display-name">Họ Tên</h4>
+                    <span class="user-role-badge" id="user-display-role">ADMIN</span>
+                </div>
+                <button class="btn-logout" id="btn-logout" title="Đăng xuất" onclick="event.stopPropagation()">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="tab-dashboard">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span>Trang Chủ Tổng Quan</span>
+                </button>
+                <button class="nav-item" data-tab="tab-schedule">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span>Lịch Sân Trực Quan</span>
+                </button>
+                <button class="nav-item" data-tab="tab-booking-form">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Đặt Lịch Giữ Sân</span>
+                </button>
+                <button class="nav-item" data-tab="tab-bookings" id="nav-bookings">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span id="nav-bookings-label">Sân Đã Đặt</span>
+                    <span class="badge badge-primary" id="badge-active-bookings" style="margin-left: auto; font-size: 11px; padding: 2px 7px; border-radius: 10px; display: none;">0</span>
+                </button>
+                <button class="nav-item" data-tab="tab-booking-history" id="nav-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Lịch Sử Đặt Sân</span>
+                </button>
+                <button class="nav-item" data-tab="tab-operations" id="nav-operations">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>Vận Hành Check-in/out</span>
+                </button>
+                <button class="nav-item" data-tab="tab-insights" id="nav-insights">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Báo Cáo & AI Insights</span>
+                </button>
+                <button class="nav-item" data-tab="tab-admin" id="nav-admin">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Cấu Hình Hệ Thống</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <small>GVHD: ThS. Nguyễn Tuấn Anh</small>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Topbar Header -->
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h1 id="page-title">Ma Trận Khung Giờ Sân Bóng</h1>
+                    <p id="page-subtitle">Xem chi tiết trạng thái các loại sân trong ngày</p>
+                </div>
+
+                <div class="topbar-actions">
+                    <!-- Theme Toggle Switcher Pill (Matching user screenshot) -->
+                    <button type="button" class="btn-theme-toggle" id="btn-theme-toggle" title="Chuyển đổi giao diện Sáng / Tối">
+                        <span class="theme-toggle-icon" id="theme-toggle-icon">☀️</span>
+                        <span class="theme-toggle-text" id="theme-toggle-text">Sáng</span>
+                    </button>
+
+                    <div class="date-picker-wrapper">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="date" id="query-date-input">
+                    </div>
+                    
+                    <!-- Notification Bell & Dropdown Container -->
+                    <div class="topbar-notification-wrapper">
+                        <div class="topbar-notification" id="topbar-notif-btn" title="Xem thông báo hệ thống">
+                            <i class="fa-regular fa-bell"></i>
+                            <span class="notification-badge" id="topbar-notif-badge" style="display: none;">0</span>
+                        </div>
+
+                        <!-- Notification Dropdown Menu -->
+                        <div class="notification-dropdown" id="notification-dropdown" style="display: none;">
+                            <div class="notif-dropdown-header">
+                                <div class="notif-header-title">
+                                    <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                    <h4>Thông Báo</h4>
+                                    <span class="notif-unread-tag" id="notif-unread-tag">0 mới</span>
+                                </div>
+                                <div class="notif-header-actions">
+                                    <button type="button" class="btn-notif-action" id="btn-mark-all-read" title="Đánh dấu tất cả đã đọc">
+                                        <i class="fa-solid fa-check-double"></i> Đọc hết
+                                    </button>
+                                    <button type="button" class="btn-notif-action text-danger" id="btn-clear-all-notifs" title="Xóa tất cả thông báo">
+                                        <i class="fa-regular fa-trash-can"></i> Xóa
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="notif-dropdown-body" id="notif-dropdown-list">
+                                <div class="placeholder-text" style="padding: 20px; text-align: center;">Không có thông báo mới nào.</div>
+                            </div>
+                            <div class="notif-dropdown-footer">
+                                <span><i class="fa-solid fa-shield-halved text-neon-green"></i> SportBookAI Cảnh báo thời gian thực</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Profile Quick Info -->
+                    <div class="topbar-user-profile" id="topbar-user-btn" style="cursor: pointer;" title="Nhấn để xem thông tin cá nhân">
+                        <div class="topbar-user-info">
+                            <span class="user-greeting">Xin chào,</span>
+                            <strong class="user-name" id="topbar-user-name">Admin</strong>
+                        </div>
+                        <div class="topbar-avatar">
+                            <i class="fa-solid fa-user" id="topbar-user-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Tab 0: Trang Chủ Tổng Quan (Role-based Dynamic Dashboard) -->
+            <section id="tab-dashboard" class="tab-content active">
+                <!-- 1. CUSTOMER DASHBOARD VIEW -->
+                <div id="dash-view-customer" style="display: none;">
+                    <div class="esports-hero-banner hero-customer">
+                        <div class="hero-content">
+                            <div class="hero-badge"><i class="fa-solid fa-user-shield"></i> PORTAL CẦU THỦ VICTORY ARENA</div>
+                            <h1 class="hero-title">Chào mừng cầu thủ, <span id="cust-greeting-name" class="text-neon">Bạn</span>! ⚽</h1>
+                            <p class="hero-subtitle">Đặt lịch sân bóng nhanh chóng, theo dõi lịch thi đấu cá nhân và nhận tư vấn khung giờ vàng từ AI.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn btn-neon-green" onclick="document.querySelector('[data-tab=tab-booking-form]').click()">
+                                <i class="fa-solid fa-calendar-plus"></i> Đặt Sân Ngay
+                            </button>
+                            <button class="btn btn-neon-cyan" onclick="document.getElementById('chatbot-trigger').click()">
+                                <i class="fa-solid fa-brain"></i> Trợ Lý Tìm Sân AI
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="hud-stat-grid">
+                        <div class="hud-card hud-courts">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-calendar-check"></i> LỊCH ĐÁ CỦA TÔI</span>
+                                <span class="hud-badge">CÁ NHÂN</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-my-bookings">0</h3>
+                                <span class="hud-unit">Trận đấu</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-100"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-bookings">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-star"></i> ĐIỂM UY TÍN</span>
+                                <span class="hud-badge badge-green">TỐT</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-reputation">100</h3>
+                                <span class="hud-unit">/ 100 Điểm</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-green" style="width: 100%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-revenue">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-futbol"></i> SÂN TRỐNG HÔM NAY</span>
+                                <span class="hud-badge badge-cyan">SẴN SÀNG</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-available-courts">5</h3>
+                                <span class="hud-unit">Sân khả dụng</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill" style="width: 100%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-active">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-wallet"></i> TIỀN CỌC ĐÃ THANH TOÁN</span>
+                                <span class="hud-badge badge-gold">VND</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="cust-stat-deposit-paid">0 ₫</h3>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-gold" style="width: 50%;"></div></div>
+                        </div>
+                    </section>
+
+                    <div class="esports-dashboard-grid">
+                        <div class="esports-fixtures-panel">
+                            <div class="panel-header esports-header">
+                                <div class="esports-header-title">
+                                    <i class="fa-solid fa-calendar-day text-neon-green"></i>
+                                    <h3>TRẬN ĐẤU SẮP TỚI CỦA TÔI</h3>
+                                </div>
+                                <span class="hud-tag" id="cust-my-count">0 trận</span>
+                            </div>
+                            <div id="cust-my-bookings-list" class="fixtures-card-list">
+                                <div class="placeholder-text">Đang tải lịch thi đấu của bạn...</div>
+                            </div>
+                        </div>
+
+                        <div class="esports-insights-panel">
+                            <div class="ai-tactical-card">
+                                <div class="ai-tactical-header">
+                                    <i class="fa-solid fa-robot text-neon-cyan"></i>
+                                    <span>AI COPILOT TƯ VẤN ĐẶT SÂN</span>
+                                </div>
+                                <div class="ai-tactical-body">
+                                    <p>⚡ <strong>Gợi ý khung giờ vàng:</strong> Bạn muốn tìm đối thủ giao hữu hoặc tìm sân trống tối nay? Nhấp vào nút "Trợ Lý Tìm Sân AI" ở góc phải để được chatbot tự động ghép sân thích hợp nhất!</p>
+                                </div>
+                            </div>
+
+                            <div class="panel esports-notif-panel">
+                                <div class="panel-header esports-header">
+                                    <div class="esports-header-title">
+                                        <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                        <h3>THÔNG BÁO CỦA TÔI</h3>
+                                    </div>
+                                    <div class="notif-controls">
+                                        <span class="hud-tag" id="cust-notif-count">0</span>
+                                        <button type="button" class="btn btn-xs btn-secondary" id="btn-cust-clear-notif">Xóa</button>
+                                    </div>
+                                </div>
+                                <div id="cust-notif-list" class="esports-notif-list">
+                                    <div class="placeholder-text">Không có thông báo mới.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. STAFF DASHBOARD VIEW -->
+                <div id="dash-view-staff" style="display: none;">
+                    <div class="esports-hero-banner hero-staff">
+                        <div class="hero-content">
+                            <div class="hero-badge"><i class="fa-solid fa-clipboard-user"></i> CA TRỰC VẬN HÀNH SÂN BÓNG</div>
+                            <h1 class="hero-title">Chào nhân viên ca trực, <span id="staff-greeting-name" class="text-neon">Staff</span>! 🧢</h1>
+                            <p class="hero-subtitle">Điều hành bàn giao sân bóng, check-in nhận sân, ghi nhận bán dịch vụ nước giải khát & quyết toán check-out.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn btn-neon-green" onclick="document.querySelector('[data-tab=tab-operations]').click()">
+                                <i class="fa-solid fa-right-to-bracket"></i> Check-In Nhanh
+                            </button>
+                            <button class="btn btn-neon-cyan" onclick="document.querySelector('[data-tab=tab-operations]').click()">
+                                <i class="fa-solid fa-bottle-water"></i> Thêm Dịch Vụ
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="hud-stat-grid">
+                        <div class="hud-card hud-courts">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-person-running"></i> SÂN ĐANG CÓ ĐỘI ĐÁ</span>
+                                <span class="hud-badge badge-green">LIVE</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-playing">0</h3>
+                                <span class="hud-unit">Sân</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-green" style="width: 50%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-bookings">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-clock-rotate-left"></i> TRẬN CHỜ CHECK-IN</span>
+                                <span class="hud-badge badge-cyan">HÔM NAY</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-pending">0</h3>
+                                <span class="hud-unit">Trận</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill" style="width: 40%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-revenue">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-bottle-water"></i> DỊCH VỤ ĐÃ BÁN</span>
+                                <span class="hud-badge badge-gold">CA TRỰC</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-services">0</h3>
+                                <span class="hud-unit">Lượt bán</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-gold" style="width: 65%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-active">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-check-double"></i> ĐƠN ĐÃ QUYẾT TOÁN</span>
+                                <span class="hud-badge">CHECK-OUT</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="staff-stat-completed">0</h3>
+                                <span class="hud-unit">Hoàn tất</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-100"></div></div>
+                        </div>
+                    </section>
+
+                    <div class="esports-dashboard-grid">
+                        <div class="esports-fixtures-panel">
+                            <div class="panel-header esports-header">
+                                <div class="esports-header-title">
+                                    <i class="fa-solid fa-clipboard-check text-neon-green"></i>
+                                    <h3>TRẬN ĐẤU CẦN VẬN HÀNH HÔM NAY</h3>
+                                </div>
+                                <span class="hud-tag" id="staff-today-count">0 trận</span>
+                            </div>
+                            <div id="staff-upcoming-list" class="fixtures-card-list">
+                                <div class="placeholder-text">Đang tải lịch thi đấu ca trực...</div>
+                            </div>
+                        </div>
+
+                        <div class="esports-insights-panel">
+                            <div class="ai-tactical-card">
+                                <div class="ai-tactical-header">
+                                    <i class="fa-solid fa-bullhorn text-neon-cyan"></i>
+                                    <span>LƯU Ý VẬN HÀNH CA TRỰC</span>
+                                </div>
+                                <div class="ai-tactical-body">
+                                    <p>⚡ <strong>Nhắc nhở nhân viên:</strong> Vui lòng thu đủ cọc trước khi check-in cho khách vào sân và ghi nhận chính xác số lượng nước uống phát sinh vào mã đơn trước khi tiến hành Check-Out quyết toán.</p>
+                                </div>
+                            </div>
+
+                            <div class="panel esports-notif-panel">
+                                <div class="panel-header esports-header">
+                                    <div class="esports-header-title">
+                                        <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                        <h3>THÔNG BÁO VẬN HÀNH</h3>
+                                    </div>
+                                </div>
+                                <div id="staff-notif-list" class="esports-notif-list">
+                                    <div class="placeholder-text">Không có thông báo mới.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. ADMIN DASHBOARD VIEW (EXECUTIVE COMMAND CENTER) -->
+                <div id="dash-view-admin" style="display: none;">
+                    <div class="esports-ticker-bar">
+                        <div class="ticker-tag"><i class="fa-solid fa-satellite-dish"></i> LIVE ARENA HUD</div>
+                        <div class="ticker-content">
+                            <span class="ticker-item"><i class="fa-solid fa-circle text-success pulse-live"></i> HỆ THỐNG: SẴN SÀNG VẬN HÀNH 5/5 SÂN THỂ THAO MINI VICTORY (SÂN 7 & SÂN 11)</span>
+                            <span class="ticker-item"><i class="fa-solid fa-bolt text-warning"></i> ĐẤU TRƯỜNG: KHU B, C ĐÃ BẬT ĐÈN CAO ÁP CHỜ THI ĐẤU</span>
+                            <span class="ticker-item"><i class="fa-solid fa-brain text-primary"></i> AI COPILOT: ĐANG THEO DÕI LỊCH SÂN VÀ TỰ ĐỘNG CHỐNG TRÙNG LỊCH</span>
+                        </div>
+                    </div>
+
+                    <div class="esports-hero-banner">
+                        <div class="hero-content">
+                            <div class="hero-badge"><i class="fa-solid fa-trophy"></i> VICTORY ARENA COMMAND CENTER</div>
+                            <h1 class="hero-title">Chào mừng đại bản doanh, <span id="dash-greeting-name" class="text-neon">Admin</span>! 👑</h1>
+                            <p class="hero-subtitle">Hệ thống quản lý sân bóng tích hợp AI thế hệ 2.0 — Chuẩn hóa trải nghiệm vận hành & thi đấu eSports.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn btn-neon-green" onclick="document.querySelector('[data-tab=tab-insights]').click()">
+                                <i class="fa-solid fa-chart-pie"></i> Báo Cáo AI
+                            </button>
+                            <button class="btn btn-neon-cyan" onclick="document.querySelector('[data-tab=tab-admin]').click()">
+                                <i class="fa-solid fa-gears"></i> Cấu Hình Hệ Thống
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="hud-stat-grid">
+                        <div class="hud-card hud-courts">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-futbol"></i> TỔNG SỐ SÂN</span>
+                                <span class="hud-badge">ONLINE</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-total-courts">05</h3>
+                                <span class="hud-unit">Sân (Sân 7 & 11)</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-100"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-bookings">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-ticket"></i> TRẬN ĐÃ ĐẶT</span>
+                                <span class="hud-badge badge-cyan">FIXTURES</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-total-bookings">0</h3>
+                                <span class="hud-unit">Trận</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill" id="stat-booking-progress" style="width: 30%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-revenue">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-coins"></i> DOANH THU THU ĐƯỢC</span>
+                                <span class="hud-badge badge-gold">VND</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-total-revenue">0 ₫</h3>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-gold" style="width: 60%;"></div></div>
+                        </div>
+
+                        <div class="hud-card hud-active">
+                            <div class="hud-card-header">
+                                <span class="hud-label"><i class="fa-solid fa-signal"></i> SÂN HOẠT ĐỘNG</span>
+                                <span class="hud-badge badge-green">100% READY</span>
+                            </div>
+                            <div class="hud-value-group">
+                                <h3 class="hud-number" id="stat-active-courts">5/5</h3>
+                                <span class="hud-unit">Sẵn sàng</span>
+                            </div>
+                            <div class="hud-progress-bar"><div class="hud-progress-fill fill-green" style="width: 100%;"></div></div>
+                        </div>
+                    </section>
+
+                    <div class="esports-dashboard-grid">
+                        <div class="esports-fixtures-panel">
+                            <div class="panel-header esports-header">
+                                <div class="esports-header-title">
+                                    <i class="fa-solid fa-shield-halved text-neon-green"></i>
+                                    <h3>LỊCH THI ĐẤU TOÀN HỆ THỐNG HÔM NAY</h3>
+                                </div>
+                                <span class="hud-tag" id="dash-today-count">0 trận</span>
+                            </div>
+                            <div id="dash-upcoming-list" class="fixtures-card-list">
+                                <div class="placeholder-text">Đang tải lịch thi đấu hôm nay...</div>
+                            </div>
+                        </div>
+
+                        <div class="esports-insights-panel">
+                            <div class="ai-tactical-card">
+                                <div class="ai-tactical-header">
+                                    <i class="fa-solid fa-brain text-neon-cyan"></i>
+                                    <span>AI TACTICAL ANALYST INSIGHT</span>
+                                </div>
+                                <div class="ai-tactical-body">
+                                    <p id="ai-tactical-text">⚡ <strong>Tải trọng sân bóng:</strong> Các khung giờ tối (17:30 - 20:30) đang có tỷ lệ lấp đầy cao nhất. Hệ thống AI sẵn sàng tự động gợi ý ghép đội và nhắc lịch qua Zalo/Web!</p>
+                                </div>
+                            </div>
+
+                            <div class="panel esports-notif-panel">
+                                <div class="panel-header esports-header">
+                                    <div class="esports-header-title">
+                                        <i class="fa-solid fa-bell text-neon-cyan"></i>
+                                        <h3>THÔNG BÁO ARENA</h3>
+                                    </div>
+                                    <div class="notif-controls">
+                                        <span class="hud-tag" id="dash-notif-count">0</span>
+                                        <button class="btn btn-xs btn-secondary" id="btn-dash-clear-notif">Xóa</button>
+                                    </div>
+                                </div>
+                                <div id="dash-notif-list" class="esports-notif-list">
+                                    <div class="placeholder-text">Không có thông báo mới nào được ghi nhận.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 1: Lịch Sân Trực Quan (Schedule Grid) -->
+            <section id="tab-schedule" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="legend-group">
+                            <span class="legend-item"><span class="legend-color available"></span> Trống (Available)</span>
+                            <span class="legend-item"><span class="legend-color locked"></span> Đang Giữ Chỗ (10m)</span>
+                            <span class="legend-item"><span class="legend-color booked"></span> Đã Có Trận (Booked)</span>
+                            <span class="legend-item"><span class="legend-color maintenance"></span> Đang Bảo Trì (Maint)</span>
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-court-select"></select>
+                            <button class="btn btn-secondary" id="btn-refresh-schedule">
+                                <i class="fa-solid fa-rotate"></i> Làm mới
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Slot Matrix Container -->
+                    <div class="matrix-container" id="schedule-matrix">
+                        <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải ma trận khung giờ...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 2: Đặt Sân (Booking Form) -->
+            <section id="tab-booking-form" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h3><i class="fa-regular fa-calendar-check text-primary"></i> Đặt Lịch Giữ Sân Bóng</h3>
+                            <p class="text-sm text-muted">Trận đấu sẽ được tạm khóa giữ lịch trong 10 phút chờ thanh toán đặt cọc.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" id="btn-refresh-booking-form" title="Làm mới tình trạng sân">
+                            <i class="fa-solid fa-rotate"></i> Làm mới sân
+                        </button>
+                    </div>
+
+                    <!-- Fake Loader Live Radar Container -->
+                    <div id="booking-radar-box"></div>
+
+                    <!-- Court Live Status Info Card -->
+                    <div id="booking-court-status-card" class="court-status-banner" style="display: none; margin-bottom: 20px;"></div>
+
+                    <form id="form-create-booking" style="transition: opacity 0.3s ease;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Chọn Sân Bóng *</label>
+                                <select id="bk-court-id" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Ngày Đá *</label>
+                                <input type="date" id="bk-date" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Giờ Bóng Lăn *</label>
+                                <input type="time" id="bk-start-time" value="18:30" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Giờ Kết Thúc *</label>
+                                <input type="time" id="bk-end-time" value="20:00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tiền Đặt Cọc (VND) <span class="text-sm text-success" id="bk-deposit-rule">(Cố định 100.000 ₫ / đơn đặt sân)</span></label>
+                                <input type="number" id="bk-deposit" value="100000" min="100000" step="50000" placeholder="100.000 ₫">
+                            </div>
+                            <div class="form-group">
+                                <label>Phương Thức Thanh Toán Cọc</label>
+                                <select id="bk-payment-method">
+                                    <option value="chuyen_khoan">Chuyển khoản QR ngân hàng (VietQR / QRPay)</option>
+                                    <option value="momo">Ví điện tử MoMo (Quét mã QR)</option>
+                                    <option value="vnpay">Cổng thanh toán VNPAY-QR</option>
+                                    <option value="tien_mat">Tiền mặt tại quầy</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; font-size: 0.85rem; padding: 10px 14px; border-radius: var(--radius-md); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); color: #93c5fd;">
+                            <i class="fa-solid fa-circle-info"></i> <strong>Chính sách đặt cọc:</strong> Sau khi bấm "Xác Nhận Giữ Sân", hệ thống sẽ tự động bật <strong>Mã QR ảo (VietQR/MoMo/VNPAY)</strong> kèm thời gian đếm ngược 10 phút để bạn quét thanh toán giữ chỗ an toàn.
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ghi Chú Đơn Đặt Sân / Tiện Ích Yêu Cầu</label>
+                            <textarea id="bk-note" placeholder="Ví dụ: Mượn 14 áo bib, còi trọng tài, chuẩn bị 2 quả bóng số 5..." rows="2"></textarea>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary" id="btn-submit-booking">
+                                <i class="fa-solid fa-check"></i> <span>Xác Nhận Giữ Sân</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Tab 3: Quản Lý Sân Đã Đặt (Active Bookings List) -->
+            <section id="tab-bookings" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3 id="bookings-panel-title"><i class="fa-solid fa-calendar-check text-primary"></i> Quản Lý Sân Đã Đặt</h3>
+                            <p class="text-sm text-muted" id="bookings-panel-subtitle">Danh sách các trận đấu đang chờ đặt cọc, đã xác nhận và sắp thi đấu</p>
+                        </div>
+                        <button class="btn btn-secondary" id="btn-refresh-bookings">
+                            <i class="fa-solid fa-arrows-rotate"></i> Tải lại
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Đơn</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Sân</th>
+                                    <th>Ngày Đá</th>
+                                    <th>Khung Giờ</th>
+                                    <th>Tiền Cọc</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookings-table-body">
+                                <tr><td colspan="8" class="text-center">Đang tải dữ liệu đơn đặt...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 4: Lịch Sử Đặt Sân & Hóa Đơn Cũ (History & Finished/Cancelled Bookings) -->
+            <section id="tab-booking-history" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fa-solid fa-clock-rotate-left text-primary"></i> Lịch Sử Đặt Sân & Hóa Đơn</h3>
+                            <p class="text-sm text-muted">Toàn bộ hồ sơ các trận đấu đã hoàn tất hoặc đã hủy trên hệ thống</p>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="history-search-input" class="table-search-input" placeholder="Tìm mã đơn, tên sân..." style="padding: 7px 12px; font-size: 0.85rem; border-radius: var(--radius-md); background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
+                            <button class="btn btn-secondary" id="btn-refresh-history">
+                                <i class="fa-solid fa-arrows-rotate"></i> Tải lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Đơn</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Sân</th>
+                                    <th>Ngày Đá</th>
+                                    <th>Khung Giờ</th>
+                                    <th>Tiền Cọc</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Hóa Đơn / Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <tr><td colspan="8" class="text-center">Đang tải lịch sử đặt sân...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 5: Vận Hành Sân (Check-in / Add Service / Check-out) -->
+            <section id="tab-operations" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-clipboard-list text-primary"></i> Nghiệp Vụ Vận Hành Sân Bóng</h3>
+                    </div>
+                    
+                    <div id="operations-radar-box"></div>
+
+                    <div class="operations-grid">
+                        <!-- Check In Section -->
+                        <div class="op-card">
+                            <h4><i class="fa-solid fa-right-to-bracket text-primary"></i> 1. Check-In Nhận Sân</h4>
+                            <div class="form-group">
+                                <label>Nhập Mã Đơn (Ví dụ: DS20260822-xxxx)</label>
+                                <input type="text" id="op-checkin-madon" placeholder="Mã đơn đặt sân">
+                            </div>
+                            <div class="form-group">
+                                <label>Ghi chú Check-in (Tùy chọn)</label>
+                                <input type="text" id="op-checkin-note" placeholder="Tình trạng nhận bóng, áo bíp...">
+                            </div>
+                            <button class="btn btn-primary btn-block" id="btn-op-checkin">Check-in Vào Sân</button>
+                        </div>
+
+                        <!-- Dịch Vụ Phát Sinh -->
+                        <div class="op-card">
+                            <h4><i class="fa-solid fa-bottle-water text-primary"></i> 2. Sử Dụng Dịch Vụ</h4>
+                            <div class="form-group">
+                                <label>Mã Đơn (Chỉ áp dụng khi Đang đá)</label>
+                                <input type="text" id="op-service-madon" placeholder="Mã đơn đang đá">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Chọn Dịch Vụ</label>
+                                    <select id="op-service-id"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Số lượng</label>
+                                    <input type="number" id="op-service-quantity" value="1" min="1" max="100" style="width: 70px;">
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-block" id="btn-op-addservice">Thêm Dịch Vụ</button>
+                            
+                            <div id="service-usage-preview" style="margin-top: 15px; display: none;">
+                                <table class="service-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Dịch vụ</th>
+                                            <th>SL</th>
+                                            <th>Giá</th>
+                                            <th>Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="service-usage-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Check Out & Quyết Toán -->
+                        <div class="op-card">
+                            <h4><i class="fa-solid fa-right-from-bracket text-primary"></i> 3. Check-Out & Quyết Toán</h4>
+                            <div class="form-group">
+                                <label>Mã Đơn Đặt Sân</label>
+                                <input type="text" id="op-checkout-madon" placeholder="Mã đơn đặt sân">
+                            </div>
+                            <div class="form-group">
+                                <label>Hình thức thanh toán tiền mặt/chuyển khoản</label>
+                                <select id="op-checkout-method">
+                                    <option value="tien_mat">Tiền mặt tại quầy</option>
+                                    <option value="chuyen_khoan">Chuyển khoản ngân hàng</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-danger btn-block" id="btn-op-checkout">Check-out & Xuất Hóa Đơn</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 6: Báo Cáo & AI Insights -->
+            <section id="tab-insights" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-chart-line text-primary"></i> AI Phân Tích Hiệu Suất & Đề Xuất Tối Ưu</h3>
+                        <button class="btn btn-primary" id="btn-load-ai-insights">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Phân Tích Doanh Thu AI
+                        </button>
+                    </div>
+
+                    <div class="insight-summary-card" id="ai-insight-summary">
+                        <div class="placeholder-text">Nhấp vào nút phía trên để AI phân tích hiệu suất lấp đầy và đề xuất khuyến mãi giảm giá giờ thấp điểm.</div>
+                    </div>
+
+                    <h4 style="margin-top: 24px; margin-bottom: 12px;">Đề Xuất Chương Trình Giờ Thấp Điểm (Off-Peak Promotion)</h4>
+                    <div class="promotions-grid" id="ai-promotions-list"></div>
+                </div>
+            </section>
+
+            <!-- Tab 7: Cấu Hình Hệ Thống (Admin Only) -->
+            <section id="tab-admin" class="tab-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-gears text-primary"></i> Cấu Hình Sân Bãi & Bảng Giá (Chỉ ADMIN)</h3>
+                    </div>
+                    
+                    <div class="admin-grid">
+                        <!-- Thêm Sân Mới -->
+                        <div class="admin-card">
+                            <h4><i class="fa-solid fa-square-plus"></i> Thêm Sân Mới</h4>
+                            <form id="form-admin-create-court">
+                                <div class="form-group">
+                                    <label>Mã Sân (Unicode, vd: SAN7-003) *</label>
+                                    <input type="text" id="adm-c-ma" placeholder="Mã định danh sân" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tên Sân Bóng *</label>
+                                    <input type="text" id="adm-c-ten" placeholder="Tên sân hiển thị" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Loại Sân *</label>
+                                        <select id="adm-c-loai" required></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Vị Trí Khu Vực</label>
+                                        <input type="text" id="adm-c-vitri" placeholder="Khu A, Khu B...">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Mô tả ngắn cho AI hiểu cấu hình sân</label>
+                                    <input type="text" id="adm-c-mota" placeholder="Mặt cỏ đạt chuẩn FIFA, dàn đèn 400W...">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Tạo Sân Bóng</button>
+                            </form>
+                        </div>
+
+                        <!-- Cập Nhật Bảng Giá -->
+                        <div class="admin-card">
+                            <h4><i class="fa-solid fa-tags"></i> Thiết Lập Bảng Giá Giờ Vàng</h4>
+                            <form id="form-admin-add-pricing">
+                                <div class="form-group">
+                                    <label>Chọn Sân Bóng *</label>
+                                    <select id="adm-p-san" required></select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Giờ Bắt Đầu *</label>
+                                        <input type="time" id="adm-p-start" value="17:30" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Giờ Kết Thúc *</label>
+                                        <input type="time" id="adm-p-end" value="22:30" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Đơn Giá (VND/Giờ) *</label>
+                                        <input type="number" id="adm-p-gia" value="300000" min="50000" step="10000" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Kiểu Ngày</label>
+                                        <select id="adm-p-loai-ngay">
+                                            <option value="thuong">Ngày thường (T2-T6)</option>
+                                            <option value="cuoi_tuan">Cuối tuần (T7-CN)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-secondary btn-block">Thêm Khung Giá</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Bảng Danh Sách & Quản Lý Sân Hiện Hữu (CRUD Full: Sửa & Xóa) -->
+                    <div style="margin-top: 30px;">
+                        <div class="panel-header" style="padding: 0 0 12px 0;">
+                            <h4><i class="fa-solid fa-list-check text-primary"></i> Danh Sách & Quản Lý Sân Bóng Hiện Hữu</h4>
+                            <button class="btn btn-secondary btn-sm" id="btn-refresh-admin-courts">
+                                <i class="fa-solid fa-arrows-rotate"></i> Làm mới danh sách
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã Sân</th>
+                                        <th>Tên Sân</th>
+                                        <th>Loại Sân</th>
+                                        <th>Vị Trí</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Mô Tả Cấu Hình AI</th>
+                                        <th style="text-align: center;">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-courts-table-body">
+                                    <tr><td colspan="7" class="text-center">Đang tải danh sách sân...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Bảng Danh Sách Người Dùng & Khách Hàng Trong Hệ Thống -->
+                    <div style="margin-top: 30px;">
+                        <div class="panel-header" style="padding: 0 0 12px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h4><i class="fa-solid fa-users text-primary"></i> Danh Sách Tài Khoản Người Dùng & Khách Hàng</h4>
+                                <p class="text-sm text-muted">Toàn bộ tài khoản đã đăng ký trên hệ thống (lưu trực tiếp trong CSDL SQLite)</p>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="admin-user-search" class="table-search-input" placeholder="Tìm tên, username, SĐT..." style="padding: 6px 12px; font-size: 0.85rem; border-radius: var(--radius-md); background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
+                                <button class="btn btn-secondary btn-sm" id="btn-refresh-admin-users">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Làm mới
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tên Đăng Nhập</th>
+                                        <th>Họ Và Tên</th>
+                                        <th>Số Điện Thoại</th>
+                                        <th>Email</th>
+                                        <th>Vai Trò</th>
+                                        <th>Điểm Uy Tín</th>
+                                        <th>Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-users-table-body">
+                                    <tr><td colspan="8" class="text-center">Đang tải danh sách tài khoản...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- FLOATING CHATBOT WIDGET -->
+        <div class="chatbot-widget" id="chatbot-widget">
+            <!-- Trigger Bubble -->
+            <button class="chatbot-trigger" id="chatbot-trigger" title="Trợ lý AI tư vấn">
+                <i class="fa-solid fa-robot"></i>
+                <span class="chatbot-pulse"></span>
+            </button>
+            
+            <!-- Chat Container -->
+            <div class="chatbot-container" id="chatbot-container">
+                <!-- Header -->
+                <div class="chatbot-header">
+                    <div class="chatbot-header-info">
+                        <i class="fa-solid fa-robot text-primary" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <h4 style="margin: 0; font-size: 0.9rem;">Trợ Lý AI Mini Victory</h4>
+                            <span class="chatbot-status">Đang online</span>
+                        </div>
+                    </div>
+                    <button class="chatbot-close-btn" id="chatbot-close-btn" title="Thu nhỏ">&times;</button>
+                </div>
+                
+                <!-- Quick Prompts Chips -->
+                <div class="chatbot-quick-prompts">
+                    <button class="chip-prompt" data-text="Tối nay còn sân 7 trống không?">
+                        ⚽ Sân 7 tối nay
+                    </button>
+                    <button class="chip-prompt" data-text="Ngày mai còn sân trống không?">
+                        📅 Ngày mai có sân?
+                    </button>
+                    <button class="chip-prompt" data-text="Cuối tuần này còn sân 7 không?">
+                        🏟️ Cuối tuần
+                    </button>
+                    <button class="chip-prompt" data-text="Thứ 7 tối còn sân 5 người không?">
+                        🌙 Thứ 7 tối
+                    </button>
+                    <button class="chip-prompt" data-text="Ngày kia sáng sớm còn sân 7 không?">
+                        🌅 Ngày kia sáng
+                    </button>
+                    <button class="chip-prompt" data-text="05/10 chiều còn sân 11 không?">
+                        📆 Theo ngày cụ thể
+                    </button>
+                    <button class="chip-prompt" data-text="Tìm sân 11 người sáng Chủ Nhật">
+                        🏆 Sân 11 CN sáng
+                    </button>
+                    <button class="chip-prompt" data-text="Sân mình có những dịch vụ nước uống và phụ kiện gì?">
+                        🥤 Dịch vụ sân bóng
+                    </button>
+                    <button class="chip-prompt" data-text="Quy định đặt cọc và chính sách hủy sân thế nào?">
+                        📋 Quy định & Cọc
+                    </button>
+                    <button class="chip-prompt" data-text="Giá thuê sân 7 và sân 11 bao nhiêu?">
+                        💰 Bảng giá thuê sân
+                    </button>
+                </div>
+
+                <!-- Messages Log -->
+                <div class="chatbot-messages" id="chatbot-messages">
+                    <div class="chatbot-message ai">
+                        <div class="ai-avatar"><i class="fa-solid fa-sparkles"></i></div>
+                        <div class="msg-text">Chào bạn! Mình là Trợ lý AI Victory Arena. Mình hỗ trợ tư vấn các thông tin chuyên môn về sân bóng đá, kiểm tra lịch trống, đặt sân và dịch vụ tiện ích tại sân. Bạn cần hỗ trợ gì hôm nay ạ? ⚽🏟️</div>
+                    </div>
+                </div>
+                
+                <!-- Form Input -->
+                <div class="chatbot-input-area">
+                    <textarea id="chatbot-user-input" placeholder="Hỏi về lịch sân, giá thuê, dịch vụ nước/áo..." rows="1"></textarea>
+                    <button id="btn-chatbot-send" title="Gửi"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HÓA ĐƠN CHI TIẾT CHECKOUT -->
+    <div class="modal-overlay" id="modal-invoice">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-invoice-dollar text-primary"></i> Hóa Đơn Quyết Toán Trận Đấu</h3>
+                <button class="modal-close" id="btn-close-invoice-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="invoice-box" id="invoice-details-content">
+                    <!-- Chi tiết hóa đơn nạp tự động qua JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-block" id="btn-invoice-done">Xác Nhận & Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AI SINH THÔNG BÁO / NHẮC LỊCH -->
+    <div class="modal-overlay" id="modal-ai-notification">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Trợ Lý AI Sinh Thông Báo Nhắc Lịch</h3>
+                <button class="modal-close" id="btn-close-notif-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="notif-template-group">
+                    <label><i class="fa-solid fa-comment-dots text-primary"></i> Mẫu Tin Nhắn Gửi Đội Bóng (Zalo/SMS):</label>
+                    <div class="code-box" id="ai-zalo-text" style="white-space: pre-wrap; font-family: inherit;">Đang tạo...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btn-copy-zalo">
+                    <i class="fa-regular fa-copy"></i> Sao Chép Tin Nhắn
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-close-notif-action">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MÃ QR THANH TOÁN TIỀN CỌC / QUYẾT TOÁN HÓA ĐƠN -->
+    <div class="modal-overlay" id="modal-qr-payment">
+        <div class="modal-card" style="max-width: 580px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-qrcode text-primary"></i> <span id="qr-modal-title">Quét Mã QR Thanh Toán</span></h3>
+                <button class="modal-close" id="btn-close-qr-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding-top: 15px;">
+                <!-- Phương thức Tabs -->
+                <div class="qr-method-tabs" style="display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <button type="button" class="btn btn-sm btn-primary qr-tab-btn active" data-method="vietqr" id="tab-qr-vietqr">
+                        <i class="fa-solid fa-building-columns"></i> VietQR Ngân Hàng
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary qr-tab-btn" data-method="momo" id="tab-qr-momo">
+                        <i class="fa-solid fa-wallet"></i> Ví MoMo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary qr-tab-btn" data-method="vnpay" id="tab-qr-vnpay">
+                        <i class="fa-solid fa-qrcode"></i> VNPAY-QR
+                    </button>
+                </div>
+
+                <!-- Đồng hồ đếm ngược -->
+                <div id="qr-timer-box" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 8px 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 0.85rem; color: #fca5a5;"><i class="fa-regular fa-clock"></i> Thời gian giữ chỗ (Lock):</span>
+                    <strong id="qr-countdown" style="font-size: 1.1rem; color: #ef4444; font-family: monospace;">10:00</strong>
+                </div>
+
+                <!-- Khu vực hiển thị mã QR -->
+                <div id="qr-display-container" class="qr-container-box">
+                    <img id="qr-image-display" src="" alt="Mã QR Thanh Toán" style="width: 240px; height: 240px; object-fit: contain; display: block; border-radius: 8px;">
+                    <div id="qr-badge-method" style="margin-top: 8px; font-size: 0.78rem; font-weight: 700; color: #1e293b; background: #e2e8f0; padding: 4px 10px; border-radius: 20px;">
+                        Quét mã bằng app ngân hàng bất kỳ (VietQR 24/7)
+                    </div>
+
+                    <!-- LỚP PHỦ ANIMATION HẾT HẠN (EXPIRED OVERLAY) -->
+                    <div id="qr-expired-overlay" class="qr-expired-overlay" style="display: none;">
+                        <div class="qr-expired-card">
+                            <div class="qr-expired-icon-wrap">
+                                <div class="qr-pulse-ring"></div>
+                                <i class="fa-solid fa-clock-rotate-left qr-expired-icon"></i>
+                            </div>
+                            <h4 class="qr-expired-title">MÃ QR ĐÃ HẾT HẠN</h4>
+                            <p class="qr-expired-desc">Đã quá thời gian giữ chỗ 10 phút. Lịch sân đã được tự động giải phóng để bảo đảm tính công bằng.</p>
+                            <button type="button" class="btn btn-sm btn-rebook-neon" id="btn-rebook-expired-qr">
+                                <i class="fa-solid fa-arrow-rotate-right"></i> Chọn Khung Giờ Mới
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chi tiết thanh toán -->
+                <div class="qr-details" style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Số tiền thanh toán:</span>
+                        <strong id="qr-display-amount" class="text-primary" style="font-size: 1.25rem;">0 ₫</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Ngân hàng thụ hưởng:</span>
+                        <span style="font-weight: 600;" id="qr-display-bank">MBBank (Quân Đội)</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Số tài khoản / SĐT:</span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <strong id="qr-display-account" style="font-family: monospace; letter-spacing: 1px;">0988123456</strong>
+                            <button type="button" class="btn btn-xs btn-outline" id="btn-copy-account" title="Sao chép số tài khoản"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Chủ tài khoản:</span>
+                        <span style="font-weight: 600;" id="qr-display-name">SAN BONG VICTORY ARENA</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="text-sm text-muted">Nội dung chuyển khoản:</span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <strong id="qr-display-memo" class="text-warning" style="font-family: monospace; font-size: 1rem;">COC DS...</strong>
+                            <button type="button" class="btn btn-xs btn-outline" id="btn-copy-memo" title="Sao chép nội dung"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                    <i class="fa-solid fa-shield-halved text-success"></i> <strong>Chính sách kinh tế:</strong> Khách hàng sau khi chuyển khoản, đơn sẽ ở trạng thái <em>Chờ cọc</em> để nhân viên đối soát sao kê ngân hàng rồi duyệt đơn.
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <button type="button" class="btn btn-success" id="btn-sandbox-qr-pay" title="Dùng cho chấm bài & kiểm thử môn học">
+                        <i class="fa-solid fa-bolt"></i> Giả Lập Quét Thành Công (Sandbox Test)
+                    </button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" id="btn-done-qr-pay">Tôi Đã Chuyển Khoản</button>
+                    <button type="button" class="btn btn-outline" id="btn-close-qr-action">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA SÂN BÓNG (CRUD EDIT MODAL) -->
+    <div class="modal-overlay" id="modal-edit-court" style="display: none;">
+        <div class="modal-card" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square text-primary"></i> Chỉnh Sửa Sân Bóng</h3>
+                <button class="modal-close" id="btn-close-edit-court-modal">&times;</button>
+            </div>
+            <form id="form-edit-court">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Mã Sân (Cố định, không thể sửa)</label>
+                        <input type="text" id="edit-c-ma" disabled style="background: rgba(255,255,255,0.05); color: #94a3b8; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Sân Bóng *</label>
+                        <input type="text" id="edit-c-ten" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Loại Sân *</label>
+                            <select id="edit-c-loai" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng Thái *</label>
+                            <select id="edit-c-trang-thai" required>
+                                <option value="active">🟢 Đang hoạt động (Active)</option>
+                                <option value="maintenance">🟡 Đang bảo trì (Maintenance)</option>
+                                <option value="inactive">🔴 Tạm ngưng hoạt động (Inactive)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Vị Trí Khu Vực</label>
+                        <input type="text" id="edit-c-vitri" placeholder="Khu A, Khu B...">
+                    </div>
+                    <div class="form-group">
+                        <label>Mô Tả Cấu Hình AI</label>
+                        <textarea id="edit-c-mota" rows="2" placeholder="Đặc điểm mặt cỏ, hệ thống chiếu sáng..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-edit-court">Hủy</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CHI TIẾT ĐẶT SÂN & DỊCH VỤ ĐÃ ĐẶT -->
+    <div class="modal-overlay" id="modal-booking-detail">
+        <div class="modal-card modal-lg" style="max-width: 820px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="modal-icon-badge" style="width: 42px; height: 42px; border-radius: 12px; background: rgba(0, 240, 255, 0.15); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                        <i class="fa-solid fa-futbol"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-bright);" id="bdetail-pitch-name">Sân 7A – Phủi Pro</h3>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+                            <span class="fixture-code" id="bdetail-madon" style="font-size: 0.8rem; letter-spacing: 0.5px; color: var(--primary);">DS20260909-001</span>
+                            <span class="fixture-status-badge" id="bdetail-status-badge" style="font-size: 0.75rem;">• ĐÃ XÁC NHẬN</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="modal-close" id="btn-close-bdetail-modal" title="Đóng">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 20px 0;">
+                <!-- 2-column info grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px;">
+                    <!-- Cột 1: Thông tin sân & thời gian -->
+                    <div class="detail-info-card" style="border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-calendar-check"></i> Thông Tin Thi Đấu & Sân Bãi
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Loại sân:</span>
+                            <strong id="bdetail-court-type" style="color: var(--text-bright);">Sân 7 người</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Vị trí:</span>
+                            <strong id="bdetail-pitch-location" style="color: var(--text-bright);">Khu A - Khán đài chính</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Ngày đá:</span>
+                            <strong id="bdetail-match-date" style="color: var(--text-bright);">09/09/2026</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Khung giờ:</span>
+                            <strong id="bdetail-match-time" style="color: var(--neon-green); font-size: 0.95rem;">17:30 - 19:00</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span class="text-muted">Ghi chú:</span>
+                            <span id="bdetail-note" style="color: var(--text-main); font-style: italic; max-width: 60%; text-align: right;">Giao lưu bóng đá</span>
+                        </div>
+                    </div>
+
+                    <!-- Cột 2: Khách hàng & Tài chính -->
+                    <div class="detail-info-card" style="border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-receipt"></i> Khách Hàng & Thanh Toán
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Người đặt:</span>
+                            <strong id="bdetail-client-name" style="color: var(--text-bright);">Đức Anh (FC Thanh Niên)</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Số điện thoại:</span>
+                            <strong id="bdetail-client-phone" style="color: var(--text-bright);">0912345678</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Tiền thuê sân:</span>
+                            <strong id="bdetail-pitch-price" style="color: var(--text-bright);">450.000đ</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Tiền cọc đã trả:</span>
+                            <strong id="bdetail-deposit-paid" style="color: var(--neon-cyan);">200.000đ (Chuyển khoản)</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                            <span class="text-muted">Tiền dịch vụ kèm:</span>
+                            <strong id="bdetail-sub-services-price" style="color: var(--primary);">0đ</strong>
+                        </div>
+                        <div class="detail-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span class="text-muted">Còn lại cần thanh toán:</span>
+                            <strong id="bdetail-remaining-price" style="color: #ffb800; font-size: 1rem;">250.000đ</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng Dịch Vụ Đã Đặt / Phát Sinh -->
+                <div class="detail-services-section" style="border-radius: 12px; padding: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-bright); text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-bottle-water text-primary"></i> Danh Mục Dịch Vụ Đã Đặt Kèm
+                            <span class="badge badge-primary" id="bdetail-service-count" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 10px;">0 món</span>
+                        </div>
+                        <button class="btn btn-xs btn-outline-cyan" id="btn-quick-add-service" style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-plus"></i> Thêm Nước / Dịch Vụ
+                        </button>
+                    </div>
+
+                    <!-- Table container -->
+                    <div style="overflow-x: auto;">
+                        <table class="esports-table" style="width: 100%; font-size: 0.88rem; margin: 0;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">STT</th>
+                                    <th>Tên Dịch Vụ</th>
+                                    <th>Phân Loại</th>
+                                    <th>Đơn Vị</th>
+                                    <th style="text-align: right;">Đơn Giá</th>
+                                    <th style="text-align: center;">SL</th>
+                                    <th style="text-align: right;">Thành Tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bdetail-services-tbody">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                            <tfoot id="bdetail-services-tfoot">
+                                <tr style="background: rgba(0, 240, 255, 0.05); font-weight: 700;">
+                                    <td colspan="6" style="text-align: right; color: var(--text-bright);">Tổng Tiền Dịch Vụ:</td>
+                                    <td style="text-align: right; color: var(--primary); font-size: 0.95rem;" id="bdetail-services-total">0đ</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty message if no services -->
+                    <div id="bdetail-services-empty" style="display: none; padding: 24px; text-align: center; color: var(--text-muted);">
+                        <i class="fa-solid fa-mug-hot" style="font-size: 1.8rem; margin-bottom: 8px; opacity: 0.4;"></i>
+                        <p style="margin: 0; font-size: 0.88rem;">Chưa có dịch vụ phát sinh nào được ghi nhận cho trận đấu này.</p>
+                        <p style="margin: 4px 0 0; font-size: 0.78rem; opacity: 0.7;">Bấm "Thêm Nước / Dịch Vụ" ở trên để ghi nhận nước uống, áo bít hoặc bóng thi đấu.</p>
+                    </div>
+                </div>
+
+                <!-- Tổng thanh toán dự kiến (Sân + Dịch vụ - Cọc) -->
+                <div style="margin-top: 16px; background: rgba(0, 240, 255, 0.06); border: 1px dashed rgba(0, 240, 255, 0.3); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Tổng cộng thanh toán (Sân + Dịch vụ - Cọc đã trừ):</span>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); opacity: 0.8;">Sẽ được tất toán chính xác khi bàn giao/trả sân tại quầy</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 1.25rem; font-weight: 800; color: var(--primary);" id="bdetail-grand-total">0đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div id="bdetail-dynamic-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <!-- Dynamic action buttons injected based on state and role -->
+                </div>
+                <button type="button" class="btn btn-secondary" id="btn-close-bdetail-footer">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÔNG TIN CÁ NHÂN / HỒ SƠ TÀI KHOẢN -->
+    <div class="modal-overlay" id="modal-user-profile" style="display: none;">
+        <div class="modal-card modal-profile-card" style="max-width: 520px; border-radius: 18px; overflow: hidden;">
+            <!-- Profile Card Header with Decorative Cover -->
+            <div style="height: 100px; background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(139, 92, 246, 0.35) 50%, rgba(16, 185, 129, 0.25) 100%); position: relative; display: flex; align-items: flex-end; padding: 0 24px;">
+                <button class="modal-close" id="btn-close-profile-modal" title="Đóng" style="position: absolute; top: 12px; right: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;">&times;</button>
+                
+                <!-- Avatar overlapping cover -->
+                <div style="width: 76px; height: 76px; border-radius: 50%; background: var(--bg-card); border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 2rem; transform: translateY(30px); box-shadow: 0 10px 25px rgba(0, 240, 255, 0.3); z-index: 2;" id="uprofile-avatar-box">
+                    <i class="fa-solid fa-user-shield" id="uprofile-avatar-icon"></i>
+                </div>
+            </div>
+
+            <!-- Header Info -->
+            <div style="padding: 38px 24px 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--text-main); letter-spacing: 0.3px;" id="uprofile-fullname">Nguyễn Văn C</h3>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">@<span id="uprofile-username">customer1</span></span>
+                        <span style="display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--border-color);"></span>
+                        <span class="user-role-badge" id="uprofile-role-badge" style="font-size: 0.72rem; padding: 2px 10px; border-radius: 12px; background: rgba(0, 240, 255, 0.15); color: var(--primary); border: 1px solid rgba(0, 240, 255, 0.3); font-weight: 700;">CUSTOMER</span>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;">Trạng thái</span>
+                    <span style="font-size: 0.82rem; font-weight: 700; color: #10b981; display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;" id="uprofile-status">
+                        <i class="fa-solid fa-circle-check"></i> Hoạt động
+                    </span>
+                </div>
+            </div>
+
+            <!-- Profile Body Information Grid -->
+            <div class="modal-body" style="padding: 20px 24px;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-address-card"></i> Thông Tin Đăng Ký Hệ Thống
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Số điện thoại -->
+                    <div class="uprofile-info-row" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(0, 240, 255, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Số điện thoại liên lạc</div>
+                                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 2px;" id="uprofile-phone">0912345678</div>
+                            </div>
+                        </div>
+                        <span style="font-size: 0.72rem; color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 2px 8px;">Đã xác minh</span>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="uprofile-info-row" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(139, 92, 246, 0.1); color: #a78bfa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Địa chỉ Email</div>
+                                <div style="font-size: 0.92rem; font-weight: 600; color: var(--text-main); margin-top: 2px;" id="uprofile-email">customer1@victoryarena.vn</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2 Cột: Điểm uy tín & Vai trò -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <!-- Điểm uy tín -->
+                        <div class="uprofile-info-row" style="padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-star text-neon-yellow" style="color: #fbbf24; font-size: 0.9rem;"></i>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Điểm Uy Tín</span>
+                            </div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: #fbbf24;" id="uprofile-reputation">100 / 100 ⭐</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Cầu thủ tiêu chuẩn vàng</div>
+                        </div>
+
+                        <!-- Mã ID tài khoản -->
+                        <div class="uprofile-info-row" style="padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-id-badge text-neon" style="color: var(--primary); font-size: 0.9rem;"></i>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Mã Định Danh ID</span>
+                            </div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);" id="uprofile-id">#TK-03</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;" id="uprofile-role-desc">Khách hàng đặt sân</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút Đổi Mật Khẩu -->
+                <div style="margin-top: 16px;">
+                    <button type="button" id="btn-open-doi-mat-khau" style="width: 100%; padding: 11px 16px; background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(139, 92, 246, 0.12) 100%); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 12px; color: var(--primary); font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; letter-spacing: 0.3px;">
+                        <i class="fa-solid fa-key"></i> Đổi Mật Khẩu
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <button type="button" class="btn btn-outline-danger" id="uprofile-btn-logout" style="border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-close-profile-footer" style="padding: 8px 20px; font-size: 0.88rem;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Fake Loader: Khóa Giữ Sân Live Radar Scanner -->
+    <div id="booking-lock-radar-modal" class="modal-overlay" style="display: none; z-index: 100000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="max-width: 480px; width: 92%; text-align: center; padding: 30px 24px; border-radius: var(--radius-lg);">
+            <div class="radar-visual-header" style="justify-content: center; margin-bottom: 18px;">
+                <div class="radar-scan-ball-wrap" style="width: 64px; height: 64px;">
+                    <div class="radar-ring-outer" style="border-top-color: #00f0ff; border-right-color: #10b981;"></div>
+                    <div class="radar-ring-inner" style="border-bottom-color: #3b82f6;"></div>
+                    <div class="radar-ball-core" style="font-size: 1.6rem;">⚽</div>
+                </div>
+                <div class="radar-meta" style="text-align: left;">
+                    <div class="radar-title">
+                        <span class="radar-badge-live"><span class="radar-dot"></span> LIVE HOLD-LOCK</span>
+                        <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Khóa Giữ Lịch 10 Phút</h4>
+                    </div>
+                    <div class="radar-status-msg" id="lock-radar-step-text" style="font-size: 0.85rem; color: #38bdf8; margin-top: 5px;">
+                        <i class="fa-solid fa-satellite-dish"></i> Đang xác minh tính khả dụng của sân bóng...
+                    </div>
+                    <div class="radar-progress-bar-wrap" style="width: 230px; height: 6px; margin-top: 6px;">
+                        <div class="radar-progress-bar" id="lock-radar-progress" style="width: 25%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Booking Preview Info -->
+            <div id="lock-radar-info-box" style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; margin: 16px 0; text-align: left; font-size: 0.88rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span class="text-muted">Sân thi đấu:</span>
+                    <strong id="lock-prev-court" style="color: #38bdf8;">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span class="text-muted">Thời gian:</span>
+                    <strong id="lock-prev-time" style="color: var(--text-main);">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span class="text-muted">Tiền đặt cọc:</span>
+                    <strong id="lock-prev-deposit" style="color: #10b981;">100.000 ₫</strong>
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fa-solid fa-shield-halved text-success"></i> Hệ thống tự động chống trùng lịch (Anti-Overbooking Lock)
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thông Báo Từ Trợ Lý AI (Khi bấm vào khung giờ đã có người đặt) -->
+    <div id="ai-slot-alert-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="max-width: 480px; width: 92%; padding: 28px 24px; border: 1px solid rgba(239, 68, 68, 0.45); border-radius: var(--radius-lg); text-align: center;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 62px; height: 62px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); border: 2px solid rgba(239, 68, 68, 0.4); color: #f87171; font-size: 1.8rem; margin-bottom: 12px; box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div>
+                <span class="badge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 240, 255, 0.12); color: #38bdf8; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase;">
+                    <span class="radar-dot" style="background: #38bdf8; box-shadow: 0 0 8px #38bdf8;"></span> THÔNG BÁO TỪ TRỢ LÝ AI
+                </span>
+            </div>
+            <h4 id="ai-slot-modal-title" style="margin: 14px 0 10px 0; color: var(--text-main); font-size: 1.15rem; font-weight: 800;">
+                Khung Giờ Đã Có Người Đặt
+            </h4>
+            
+            <div class="ai-slot-alert-box" style="border-radius: var(--radius-md); padding: 14px 16px; margin: 12px 0 16px 0; text-align: left;">
+                <p id="ai-slot-modal-message" style="margin: 0; font-size: 0.95rem; color: var(--text-main); line-height: 1.55;">
+                    <!-- Nội dung AI thông báo -->
+                </p>
+                <div id="ai-slot-modal-detail" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                    <!-- Chi tiết phụ: sân, giờ, người đặt -->
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('ai-slot-alert-modal').style.display='none'" style="padding: 8px 22px; font-weight: 600;">
+                    <i class="fa-solid fa-xmark"></i> Đóng
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('ai-slot-alert-modal').style.display='none'" style="padding: 8px 20px; font-weight: 600;">
+                    <i class="fa-regular fa-clock"></i> Chọn Khung Giờ Khác
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xác Nhận Đăng Xuất -->
+    <div class="modal-overlay" id="modal-confirm-logout" style="display: none;">
+        <div class="modal-card logout-modal-card" id="modal-confirm-logout-card">
+            <div class="logout-icon-bubble">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Xác Nhận Đăng Xuất</h3>
+            <p style="margin: 0 0 22px 0; font-size: 0.88rem; color: var(--text-muted); line-height: 1.55;">
+                Bạn có chắc chắn muốn đăng xuất khỏi tài khoản <strong id="logout-target-name" style="color: #38bdf8;">--</strong> không? Phiên làm việc của bạn sẽ được đóng an toàn.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="logout-btn-cancel" id="btn-cancel-logout">
+                    <i class="fa-solid fa-arrow-left"></i> Ở Lại
+                </button>
+                <button type="button" class="logout-btn-confirm" id="btn-confirm-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng Xuất Ngay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Safe Logout Transition Overlay -->
+    <div class="logout-transition-overlay" id="logout-transition-overlay">
+        <div class="logout-loader-ring"></div>
+        <div class="logout-msg-main" id="logout-transition-title">Đang Đăng Xuất An Toàn...</div>
+        <div class="logout-msg-sub">
+            <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
+            <span id="logout-transition-desc">Hẹn gặp lại bạn tại Victory Arena! ⚽</span>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Modal Đổi Mật Khẩu -->
+    <div class="modal-overlay" id="modal-doi-mat-khau" style="display: none;">
+        <div class="modal-card" id="modal-doi-mat-khau-card" style="max-width: 460px; width: 95%; border-radius: 18px; overflow: hidden;">
+            <!-- Header -->
+            <div style="padding: 20px 24px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="cp-key-badge">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main);">Đổi Mật Khẩu</h3>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1px;">Victory Arena · Bảo mật tài khoản</div>
+                    </div>
+                </div>
+                <button id="btn-close-doi-mat-khau" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s;">&times;</button>
+            </div>
+
+            <!-- Body Form -->
+            <div class="modal-body" style="padding: 22px 24px;">
+                <div id="doi-mat-khau-error" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; color: #f87171; font-size: 0.84rem; margin-bottom: 18px;">
+                    <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
+                    <span id="doi-mat-khau-error-text"></span>
+                </div>
+                <div id="doi-mat-khau-success" style="display: none; padding: 14px 16px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; color: #34d399; font-size: 0.88rem; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: center; gap: 10px; font-weight: 700;">
+                        <i class="fa-solid fa-circle-check" style="font-size: 1.25rem; color: #10b981;"></i>
+                        <span>Đổi mật khẩu thành công!</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: #a7f3d0; margin-top: 4px;">
+                        Mật khẩu mới đã được cập nhật. Cửa sổ sẽ tự động đóng sau giây lát...
+                    </div>
+                    <div class="cp-timer-progress"></div>
+                </div>
+
+                <form id="form-doi-mat-khau" autocomplete="off">
+                    <!-- Mật khẩu hiện tại -->
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px;">
+                            <i class="fa-solid fa-lock" style="margin-right: 5px; color: var(--primary);"></i>Mật khẩu hiện tại
+                        </label>
+                        <div style="position: relative;">
+                            <input type="password" id="cp-current" class="cp-input" name="mat_khau_hien_tai" placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password">
+                            <button type="button" class="cp-toggle-pw" data-target="cp-current" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0;">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="cp-field-error" id="err-cp-current" style="display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"></div>
+                    </div>
+
+                    <!-- Mật khẩu mới -->
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px;">
+                            <i class="fa-solid fa-lock-open" style="margin-right: 5px; color: #a78bfa;"></i>Mật khẩu mới
+                        </label>
+                        <div style="position: relative;">
+                            <input type="password" id="cp-new" class="cp-input" name="mat_khau_moi" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+                            <button type="button" class="cp-toggle-pw" data-target="cp-new" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0;">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                        <!-- Password Strength Indicator -->
+                        <div class="cp-strength-wrapper" id="cp-strength-wrap" style="display: none;">
+                            <div class="cp-strength-bar-bg">
+                                <div class="cp-strength-bar-fill" id="cp-strength-bar"></div>
+                            </div>
+                            <span class="cp-strength-text" id="cp-strength-label">Độ mạnh: --</span>
+                        </div>
+                        <div class="cp-field-error" id="err-cp-new" style="display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"></div>
+                    </div>
+
+                    <!-- Xác nhận mật khẩu mới -->
+                    <div style="margin-bottom: 22px;">
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px;">
+                            <i class="fa-solid fa-shield-check" style="margin-right: 5px; color: #10b981;"></i>Xác nhận mật khẩu mới
+                        </label>
+                        <div style="position: relative;">
+                            <input type="password" id="cp-confirm" class="cp-input" name="xac_nhan_mat_khau_moi" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                            <button type="button" class="cp-toggle-pw" data-target="cp-confirm" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0;">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="cp-field-error" id="err-cp-confirm" style="display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"></div>
+                    </div>
+
+                    <button type="submit" id="btn-submit-doi-mat-khau" class="cp-btn-submit">
+                        <i class="fa-solid fa-key"></i> Xác Nhận Đổi Mật Khẩu
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/app.js?v=3.0.0"></script>
+    <script>
+        // Tự động kích hoạt tab Đăng Ký nếu URL có hash #register
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.location.hash === '#register') {
+                const btnTabRegister = document.getElementById('btn-tab-register');
+                if (btnTabRegister) {
+                    btnTabRegister.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

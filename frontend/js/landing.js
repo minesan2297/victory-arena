@@ -5,7 +5,7 @@
  */
 
 // 1. DUY NHẤT MỘT HẰNG SỐ ĐƯỜNG DẪN ỨNG DỤNG CHÍNH (theo ràng buộc số 4)
-const APP_URL = 'index.html';
+const APP_URL = 'app.html';
 
 document.addEventListener('DOMContentLoaded', () => {
     initThemeManager();
