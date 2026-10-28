@@ -1,6 +1,6 @@
 ﻿# HỆ THỐNG QUẢN LÝ SÂN THỂ THAO CHO THUÊ TÍCH HỢP AI (VICTORY ARENA v2.0)
 
-* **Học phần:** Ứng dụng trí tuệ nhân tạo AI+
+* **Học phần:** Ứng dụng trí tuệ nhân tạo AI
 * **Đề tài:** Hệ thống Quản lý Sân thể thao cho thuê có tích hợp AI
 * **Nhóm thực hiện:** Nhóm 20 — Lớp K23C CNTT, Khoa Công nghệ Thông tin
 * **Giảng viên hướng dẫn:** TS. Nguyễn Tuấn Anh
