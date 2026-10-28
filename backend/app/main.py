@@ -46,6 +46,21 @@ def auto_seed_initial_data():
                     spec.loader.exec_module(seed_mod)
                     if hasattr(seed_mod, "seed_database"):
                         seed_mod.seed_database()
+            else:
+                # Nếu CSDL đã có sẵn, đảm bảo dịch vụ Trọng tài đã tồn tại
+                from app.models.dich_vu import DanhMucDichVu
+                referee_svc = db.query(DanhMucDichVu).filter(
+                    (DanhMucDichVu.danh_muc == 'TRONG_TAI') | (DanhMucDichVu.ten_dich_vu.ilike('%trọng tài%'))
+                ).first()
+                if not referee_svc:
+                    db.add(DanhMucDichVu(
+                        ten_dich_vu="Thuê trọng tài điều khiển trận",
+                        don_vi_tinh="Trận",
+                        don_gia=settings.referee_default_price,
+                        danh_muc="TRONG_TAI",
+                        trang_thai="active"
+                    ))
+                    db.commit()
         finally:
             db.close()
     except Exception as e:

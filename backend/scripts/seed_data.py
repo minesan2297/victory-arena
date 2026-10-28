@@ -175,7 +175,8 @@ def seed_database():
         dv2 = DanhMucDichVu(ten_dich_vu="Nước ngọt Pocari Sweat 500ml", don_vi_tinh="Chai", don_gia=20000, danh_muc="NUOC_UONG")
         dv3 = DanhMucDichVu(ten_dich_vu="Thuê áo bib (bộ 7 chiếc)", don_vi_tinh="Lượt", don_gia=30000, danh_muc="TRANG_BI")
         dv4 = DanhMucDichVu(ten_dich_vu="Thuê quả bóng số 5", don_vi_tinh="Lượt", don_gia=50000, danh_muc="TRANG_BI")
-        db.add_all([dv1, dv2, dv3, dv4])
+        dv5 = DanhMucDichVu(ten_dich_vu="Thuê trọng tài điều khiển trận", don_vi_tinh="Trận", don_gia=200000, danh_muc="TRONG_TAI")
+        db.add_all([dv1, dv2, dv3, dv4, dv5])
         db.flush()
         
         # 7. Seed AIConfig

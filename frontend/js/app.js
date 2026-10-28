@@ -1471,18 +1471,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const categoryLabels = {
                     'NUOC_UONG': '<span class="badge badge-xs badge-info" style="background: rgba(0,240,255,0.15); color: var(--primary);">Nước giải khát</span>',
                     'TRANG_BI': '<span class="badge badge-xs badge-warning" style="background: rgba(255,184,0,0.15); color: #ffb800;">Thiết bị & Bóng</span>',
+                    'TRONG_TAI': '<span class="badge badge-xs" style="background: rgba(14,165,233,0.15); color: var(--primary); border: 1px solid rgba(14,165,233,0.3);">⚽ Trọng tài</span>',
                     'KHAC': '<span class="badge badge-xs badge-secondary">Khác</span>'
                 };
+
+                const canEditService = currentUser && (currentUser.vai_tro === 'STAFF' || currentUser.vai_tro === 'ADMIN') && data.trang_thai !== 'hoan_tat' && data.trang_thai !== 'da_huy';
 
                 if (elTbody) {
                     elTbody.innerHTML = services.map((s, idx) => {
                         const catBadge = categoryLabels[s.danh_muc] || `<span class="badge badge-xs">${s.danh_muc || 'Dịch vụ'}</span>`;
                         const donGia = Number((s.don_gia !== undefined && s.don_gia !== null) ? s.don_gia : (s.don_gia_tai_ban || 0));
                         const thanhTien = Number((s.thanh_tien !== undefined && s.thanh_tien !== null) ? s.thanh_tien : (donGia * (s.so_luong || 1)));
+                        const removeBtn = (canEditService && s.su_dung_id) ? `<button class="btn btn-xs btn-outline-danger" onclick="window.removeBookingService('${data.ma_don}', ${s.su_dung_id})" title="Gỡ dịch vụ này" style="margin-left: 6px; padding: 1px 5px; border-radius: 4px; font-size: 0.72rem; line-height: 1;"><i class="fa-solid fa-trash"></i></button>` : '';
                         return `
                             <tr>
                                 <td style="text-align: center; color: var(--text-muted); font-weight: 600;">${idx + 1}</td>
-                                <td><strong style="color: var(--text-bright);">${s.ten_dich_vu}</strong></td>
+                                <td><strong style="color: var(--text-bright);">${s.ten_dich_vu}</strong> ${removeBtn}</td>
                                 <td>${catBadge}</td>
                                 <td style="color: var(--text-muted);">${s.don_vi_tinh || 'Lượt'}</td>
                                 <td style="text-align: right; color: var(--text-main); font-weight: 600;">${donGia.toLocaleString()}đ</td>
@@ -1614,6 +1618,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td></tr>
             `;
             showToast(err.message, 'error');
+        }
+    };
+
+    window.removeBookingService = async function(maDon, suDungId) {
+        if (!confirm("Bạn có chắc chắn muốn hủy / gỡ dịch vụ này khỏi đơn đặt sân?")) return;
+        try {
+            const res = await fetch(`/api/van-hanh/service-usage/${encodeURIComponent(maDon)}/${suDungId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                showToast(err.detail || "Không thể xóa dịch vụ", "error");
+                return;
+            }
+            showToast("Đã gỡ dịch vụ thành công!", "success");
+            // Tải lại chi tiết đơn
+            window.showBookingDetailModal(maDon);
+        } catch (e) {
+            console.error("Lỗi xóa dịch vụ:", e);
+            showToast("Lỗi kết nối khi xóa dịch vụ", "error");
         }
     };
 
@@ -2905,7 +2930,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gio_ket_thuc: document.getElementById('bk-end-time').value + ":00",
             tien_coc: parseFloat(document.getElementById('bk-deposit').value || 0.0),
             ghi_chu: document.getElementById('bk-note').value || null,
-            phuong_thuc_thanh_toan: document.getElementById('bk-payment-method').value
+            phuong_thuc_thanh_toan: document.getElementById('bk-payment-method').value,
+            thue_trong_tai: document.getElementById('bk-referee-checkbox')?.checked || false
         };
 
         const todayStr = new Date().toISOString().split('T')[0];
@@ -3003,6 +3029,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reset form
             document.getElementById('bk-deposit').value = 100000;
             document.getElementById('bk-note').value = "";
+            const refCb = document.getElementById('bk-referee-checkbox');
+            if (refCb) refCb.checked = false;
             
             // Switch tab to Bookings
             document.querySelector('[data-tab="tab-bookings"]').click();

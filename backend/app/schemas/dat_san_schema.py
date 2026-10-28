@@ -11,6 +11,7 @@ class DatSanCreate(BaseModel):
     tien_coc: int = Field(0, ge=0)
     ghi_chu: Optional[str] = None
     phuong_thuc_thanh_toan: str = 'tien_mat'
+    thue_trong_tai: bool = False
 
 class DatSanResponse(BaseModel):
     ma_don: str

@@ -327,6 +327,7 @@ class AIService:
         dich_vus = db.query(DanhMucDichVu).filter(DanhMucDichVu.trang_thai == 'active').all()
         dv_nuoc = [f"{dv.ten_dich_vu} ({dv.don_gia:,.0f}đ/{dv.don_vi_tinh})" for dv in dich_vus if dv.danh_muc == 'NUOC_UONG']
         dv_tb = [f"{dv.ten_dich_vu} ({dv.don_gia:,.0f}đ/{dv.don_vi_tinh})" for dv in dich_vus if dv.danh_muc == 'TRANG_BI']
+        dv_tt = [f"{dv.ten_dich_vu} ({dv.don_gia:,.0f}đ/{dv.don_vi_tinh})" for dv in dich_vus if dv.danh_muc == 'TRONG_TAI' or 'trọng tài' in dv.ten_dich_vu.lower()]
 
         # 3. Xử lý đặt sân hoặc tra cứu lịch trống
         loai_san_khach_tim = "Sân 7"
@@ -421,7 +422,8 @@ class AIService:
             "loai_san_trich_xuat": loai_san_khach_tim,
             "dich_vu_tai_san": {
                 "nuoc_uong": dv_nuoc,
-                "trang_bi": dv_tb
+                "trang_bi": dv_tb,
+                "trong_tai": dv_tt
             },
             "khung_gio_trong_thuc_te": [
                 {
@@ -452,6 +454,7 @@ class AIService:
                     "Thông tin dịch vụ tiện ích tại Cụm sân bóng đá Victory Arena:\n"
                     f"- 🥤 Danh mục nước giải khát: {', '.join(dv_nuoc) if dv_nuoc else 'Revive, Nước suối, Bò húc...'}\n"
                     f"- 🎽 Danh mục trang thiết bị: {', '.join(dv_tb) if dv_tb else 'Áo bít, Giày đá bóng, Bóng thi đấu...'}\n"
+                    f"- ⚽ Dịch vụ trọng tài: {', '.join(dv_tt) if dv_tt else 'Trọng tài điều khiển trận đấu (200.000đ/trận, tối đa 2 trận/ca)'}\n"
                     "- 🚗 Tiện ích miễn phí: Bãi đỗ xe an toàn, phòng thay đồ, vòi tắm tráng nước sạch và hệ thống đèn LED cao áp chuẩn thi đấu.\n"
                     "Quý khách có thể lựa chọn thêm các dịch vụ trên trực tiếp khi đặt sân hoặc tại quầy lễ tân. ⚽🏟️"
                 )

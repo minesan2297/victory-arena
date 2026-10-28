@@ -56,6 +56,7 @@ class TrangThaiGui(str, enum.Enum):
 class DanhMucDV(str, enum.Enum):
     NUOC_UONG = 'NUOC_UONG'
     TRANG_BI = 'TRANG_BI'
+    TRONG_TAI = 'TRONG_TAI'
     KHAC = 'KHAC'
 
 class LoaiNgay(str, enum.Enum):

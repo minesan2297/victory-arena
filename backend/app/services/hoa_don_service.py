@@ -61,15 +61,19 @@ class HoaDonService:
         ).scalar() or 0
         tien_coc_da_tru = int(tong_coc_thuc_te)
         
+        # Vá lỗ hổng: Tính tổng các dịch vụ đã đặt trước (ví dụ: Thuê trọng tài)
+        usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
+        tong_dich_vu = int(sum(u.thanh_tien for u in usages))
+        
         # Tạo HoaDon
         new_invoice = HoaDon(
             ma_hoa_don=ma_hoa_don,
             ma_don=ma_don,
             check_in_thuc_te=now,
             tien_san=tien_san,
-            tong_dich_vu=0,
+            tong_dich_vu=tong_dich_vu,
             tien_coc_da_tru=tien_coc_da_tru,
-            tong_thanh_toan=max(0, tien_san - tien_coc_da_tru),
+            tong_thanh_toan=max(0, tien_san + tong_dich_vu - tien_coc_da_tru),
             trang_thai='chua_thanh_toan',
             ngay_tao=now
         )
@@ -158,6 +162,38 @@ class HoaDonService:
         for u in usages:
             u.ten_dich_vu = u.dich_vu.ten_dich_vu
         return usages
+
+    @staticmethod
+    def remove_service_usage(db: Session, ma_don: str, su_dung_id: int):
+        booking = db.query(DatSan).filter(DatSan.ma_don == ma_don).first()
+        if not booking:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Đơn đặt sân không tồn tại")
+            
+        if booking.trang_thai in ['hoan_tat', 'da_huy']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể chỉnh sửa dịch vụ của đơn đặt sân đã kết thúc hoặc đã hủy"
+            )
+
+        usage = db.query(SuDungDichVu).filter(
+            SuDungDichVu.su_dung_id == su_dung_id,
+            SuDungDichVu.ma_don == ma_don
+        ).first()
+        if not usage:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy dịch vụ tương ứng trong đơn")
+
+        db.delete(usage)
+        db.commit()
+
+        # Cập nhật lại tổng dịch vụ trong hóa đơn (nếu đã tạo hóa đơn tạm tính)
+        invoice = db.query(HoaDon).filter(HoaDon.ma_don == ma_don).first()
+        if invoice:
+            usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
+            invoice.tong_dich_vu = int(sum(u.thanh_tien for u in usages))
+            invoice.tong_thanh_toan = max(0, int(invoice.tien_san + invoice.tong_dich_vu - invoice.tien_coc_da_tru))
+            db.commit()
+
+        return {"success": True, "message": "Đã xóa dịch vụ thành công", "ma_don": ma_don, "su_dung_id": su_dung_id}
 
     @staticmethod
     def check_out_and_pay(db: Session, ma_don: str, phuong_thuc: str) -> HoaDon:

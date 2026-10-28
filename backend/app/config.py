@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Lock Expiry
     lock_expiry_minutes: int = 10
     
+    # Referee Service
+    referee_max_per_slot: int = 2
+    referee_default_price: int = 200000
+    
     # AI / Gemini
     gemini_api_key: Optional[str] = None
     gemini_model: str = 'gemini-1.5-flash'

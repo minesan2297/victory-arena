@@ -9,6 +9,7 @@ from app.models.san import San, BangGia
 from app.models.tai_khoan import TaiKhoan
 from app.models.hoa_don import ThanhToan
 from app.models.ai_models import ThongBao
+from app.models.dich_vu import SuDungDichVu, DanhMucDichVu
 from app.schemas.dat_san_schema import DatSanCreate, DoiLichRequest, LichSanResponse, SlotInfo
 from app.config import get_settings
 from app.tasks.lock_expiry import check_and_expire_bookings
@@ -105,6 +106,42 @@ class DatSanService:
         return False
 
     @staticmethod
+    def check_referee_quota(db: Session, ngay_da: date, gio_bat_dau: time, gio_ket_thuc: time, exclude_ma_don: str = None) -> bool:
+        """Kiểm tra số lượng trọng tài khả dụng trong khung giờ thi đấu.
+        
+        Hệ thống giới hạn tối đa referee_max_per_slot (2) trận có trọng tài cùng lúc trên toàn cụm sân.
+        """
+        settings = get_settings()
+        max_quota = settings.referee_max_per_slot
+        
+        query = db.query(DatSan).filter(
+            DatSan.ngay_da == ngay_da,
+            DatSan.gio_bat_dau < gio_ket_thuc,
+            DatSan.gio_ket_thuc > gio_bat_dau,
+            DatSan.trang_thai.in_(['cho_coc', 'da_xac_nhan', 'dang_da'])
+        )
+        if exclude_ma_don:
+            query = query.filter(DatSan.ma_don != exclude_ma_don)
+            
+        overlapping_bookings = query.all()
+        now_utc = get_utc_now()
+        
+        referee_booked_count = 0
+        for b in overlapping_bookings:
+            # Bỏ qua đơn chờ cọc đã quá hạn lock 10 phút
+            if b.trang_thai == 'cho_coc' and b.lock_expires_at and now_utc > b.lock_expires_at:
+                continue
+                
+            has_referee = any(
+                (s.dich_vu and (s.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in s.dich_vu.ten_dich_vu.lower()))
+                for s in b.su_dung_dich_vus
+            )
+            if has_referee:
+                referee_booked_count += 1
+                
+        return referee_booked_count < max_quota
+
+    @staticmethod
     def expire_booking_if_needed(db: Session, booking: DatSan) -> bool:
         """Kiểm tra và tự động hủy đơn giữ chỗ nếu đã quá thời hạn 10 phút.
         
@@ -171,6 +208,16 @@ class DatSanService:
                 detail="Khung giờ này đã có người đặt hoặc đang bảo trì"
             )
             
+        settings = get_settings()
+
+        # Kiểm tra giới hạn số lượng trọng tài nếu khách chọn thuê trọng tài
+        if data.thue_trong_tai:
+            if not DatSanService.check_referee_quota(db, data.ngay_da, data.gio_bat_dau, data.gio_ket_thuc):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Khung giờ này đã đủ tối đa {settings.referee_max_per_slot} trận có trọng tài. Quý khách vui lòng chọn khung giờ khác hoặc bỏ chọn thuê trọng tài."
+                )
+            
         # Tạo mã đơn duy nhất (DS + YYYYMMDD + 4 số ngẫu nhiên)
         date_str = data.ngay_da.strftime("%Y%m%d")
         while True:
@@ -178,8 +225,6 @@ class DatSanService:
             if not db.query(DatSan).filter(DatSan.ma_don == ma_don).first():
                 break
                 
-        settings = get_settings()
-        
         # Kiểm tra vai trò của người đặt đơn
         user = db.query(TaiKhoan).filter(TaiKhoan.tai_khoan_id == current_user_id).first()
         is_staff_or_admin = bool(user and user.vai_tro and user.vai_tro.ten_vai_tro in ['STAFF', 'ADMIN'])
@@ -218,6 +263,32 @@ class DatSanService:
         )
         db.add(new_booking)
         db.flush() # Lấy ID/Mã đơn
+        
+        # Ghi nhận dịch vụ trọng tài vào SuDungDichVu nếu khách chọn thuê trọng tài
+        if data.thue_trong_tai:
+            referee_service = db.query(DanhMucDichVu).filter(
+                DanhMucDichVu.trang_thai == 'active',
+                (DanhMucDichVu.danh_muc == 'TRONG_TAI') | (DanhMucDichVu.ten_dich_vu.ilike('%trọng tài%'))
+            ).first()
+            if not referee_service:
+                referee_service = DanhMucDichVu(
+                    ten_dich_vu="Thuê trọng tài điều khiển trận",
+                    don_vi_tinh="Trận",
+                    don_gia=settings.referee_default_price,
+                    danh_muc="TRONG_TAI",
+                    trang_thai="active"
+                )
+                db.add(referee_service)
+                db.flush()
+                
+            referee_usage = SuDungDichVu(
+                ma_don=ma_don,
+                dich_vu_id=referee_service.dich_vu_id,
+                so_luong=1,
+                don_gia_tai_ban=referee_service.don_gia,
+                thanh_tien=referee_service.don_gia
+            )
+            db.add(referee_usage)
         
         # Thêm vào bảng LichDat
         bat_dau_dt = datetime.combine(data.ngay_da, data.gio_bat_dau)
@@ -357,6 +428,20 @@ class DatSanService:
         if duration_minutes > 240:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thời gian đặt sân tối đa mỗi lượt là 4 tiếng")
             
+        ma_san = data.ma_san_moi or booking.ma_san
+
+        # Nếu đơn này có thuê trọng tài, kiểm tra quota trọng tài ở khung giờ mới
+        has_referee = any(
+            (s.dich_vu and (s.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in s.dich_vu.ten_dich_vu.lower()))
+            for s in booking.su_dung_dich_vus
+        )
+        if has_referee:
+            if not DatSanService.check_referee_quota(db, ngay_da, gio_bat_dau, gio_ket_thuc, exclude_ma_don=booking.ma_don):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Khung giờ mới đã đủ tối đa 2 trận có trọng tài. Không thể đổi lịch cho trận đấu có trọng tài sang khung giờ này."
+                )
+
         # Kiểm tra trùng lịch
         if DatSanService.check_conflict(db, ma_san, ngay_da, gio_bat_dau, gio_ket_thuc, exclude_ma_don=booking.ma_don):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Khung giờ mới đã bị trùng lịch")

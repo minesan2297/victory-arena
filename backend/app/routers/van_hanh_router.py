@@ -41,6 +41,15 @@ def get_service_usages(
 ):
     return HoaDonService.get_service_usages(db, ma_don)
 
+@router.delete("/service-usage/{ma_don}/{su_dung_id}")
+def remove_service_usage(
+    ma_don: str,
+    su_dung_id: int,
+    db: Session = Depends(get_db),
+    current_user: TaiKhoan = Depends(require_staff_or_admin)
+):
+    return HoaDonService.remove_service_usage(db, ma_don, su_dung_id)
+
 @router.post("/check-out", response_model=HoaDonResponse)
 def check_out(
     data: CheckOutRequest,
