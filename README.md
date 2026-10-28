@@ -2,7 +2,7 @@
 
 * **Học phần:** Phân tích Thiết kế và Phát triển Hệ thống Thông tin
 * **Đề tài:** Hệ thống Quản lý Sân thể thao cho thuê có tích hợp AI
-* **Đơn vị thực hiện:** Nhóm 20 — Lớp K23C CNTT, Khoa Công nghệ Thông tin
+* **Nhóm thực hiện:** Nhóm 20 — Lớp K23C CNTT, Khoa Công nghệ Thông tin
 * **Giảng viên hướng dẫn:** TS. Nguyễn Tuấn Anh
 * **Chuẩn mã nguồn:** **Python PEP 8** (Kiến trúc phân tầng Layered Architecture, Type Hints, Pydantic v2)
 * **Công nghệ:** FastAPI + SQLAlchemy 2.0 + SQLite/SQL Server + Pydantic v2 + Google Generative AI (Gemini 1.5 Flash)
