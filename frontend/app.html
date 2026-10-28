@@ -808,6 +808,50 @@
                             </div>
                         </div>
 
+                        <!-- Khối Dịch Vụ & Nước Uống Đặt Kèm (Tùy Chọn) -->
+                        <div id="bk-addon-services-card" class="addon-services-card" style="margin-bottom: 15px; padding: 14px; border-radius: var(--radius-md); background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.92rem; color: var(--text-main);">
+                                    <i class="fa-solid fa-bottle-water text-primary"></i>
+                                    <span>Dịch vụ & Nước uống đặt kèm (Tùy chọn)</span>
+                                </div>
+                                <span id="bk-addon-count-badge" class="badge" style="background: rgba(59, 130, 246, 0.15); color: var(--primary); font-size: 0.78rem; padding: 2px 8px; border-radius: 6px;">0 món</span>
+                            </div>
+                            <div id="bk-addon-services-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px;">
+                                <!-- Danh sách dịch vụ được render tự động qua JS -->
+                            </div>
+                        </div>
+
+                        <!-- Khung Tạm Tính Chi Phí Dự Kiến -->
+                        <div id="bk-price-estimate-box" style="margin-bottom: 15px; padding: 14px; border-radius: var(--radius-md); background: rgba(59, 130, 246, 0.06); border: 1px dashed rgba(59, 130, 246, 0.35);">
+                            <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                                <span><i class="fa-solid fa-calculator text-primary"></i> Tạm Tính Chi Phí Dự Kiến</span>
+                                <span id="bk-est-duration" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">(1.5 giờ)</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;">
+                                <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                                    <span>Tiền sân dự kiến:</span>
+                                    <strong id="bk-est-court-price" style="color: var(--text-main);">525.000 ₫</strong>
+                                </div>
+                                <div id="bk-est-referee-row" style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                                    <span>Phí thuê trọng tài:</span>
+                                    <strong id="bk-est-referee-price" style="color: #38bdf8;">0 ₫</strong>
+                                </div>
+                                <div id="bk-est-services-row" style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                                    <span>Dịch vụ đặt kèm:</span>
+                                    <strong id="bk-est-services-price" style="color: #34d399;">0 ₫</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                                    <span>Tiền cọc giữ chỗ (trả trước):</span>
+                                    <strong id="bk-est-deposit" style="color: #f87171;">-100.000 ₫</strong>
+                                </div>
+                                <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); margin-top: 4px; padding-top: 6px; display: flex; justify-content: space-between; font-weight: 600;">
+                                    <span style="color: var(--text-main);">Dự kiến thanh toán lúc trả sân:</span>
+                                    <strong id="bk-est-remaining-total" style="color: #fbbf24; font-size: 0.98rem;">425.000 ₫</strong>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label>Ghi Chú Đơn Đặt Sân / Tiện Ích Yêu Cầu</label>
                             <textarea id="bk-note" placeholder="Ví dụ: Mượn 14 áo bib, còi trọng tài, chuẩn bị 2 quả bóng số 5..." rows="2"></textarea>

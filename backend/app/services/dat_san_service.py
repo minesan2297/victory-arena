@@ -289,6 +289,49 @@ class DatSanService:
                 thanh_tien=referee_service.don_gia
             )
             db.add(referee_usage)
+
+        # Ghi nhận các dịch vụ đặt kèm khác (nước uống, áo bib, bóng...)
+        if data.dich_vu_kem:
+            grouped_services = {}
+            for item in data.dich_vu_kem:
+                if not item.dich_vu_id:
+                    continue
+                if item.so_luong <= 0 or item.so_luong > 20:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Số lượng mỗi dịch vụ đặt kèm phải từ 1 đến 20 (Dịch vụ ID {item.dich_vu_id} yêu cầu {item.so_luong})"
+                    )
+                grouped_services[item.dich_vu_id] = grouped_services.get(item.dich_vu_id, 0) + item.so_luong
+
+            for dv_id, qty in grouped_services.items():
+                if qty > 20:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Tổng số lượng dịch vụ đặt kèm sau khi gộp tối đa là 20 (Dịch vụ ID {dv_id} yêu cầu {qty})"
+                    )
+                dv_db = db.query(DanhMucDichVu).filter(
+                    DanhMucDichVu.dich_vu_id == dv_id,
+                    DanhMucDichVu.trang_thai == 'active'
+                ).first()
+                if not dv_db:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Dịch vụ ID {dv_id} không tồn tại hoặc đã tạm dừng hoạt động"
+                    )
+                if dv_db.danh_muc == 'TRONG_TAI' or 'trọng tài' in dv_db.ten_dich_vu.lower():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Dịch vụ trọng tài chỉ được chọn qua tùy chọn 'Thuê trọng tài' để kiểm soát giới hạn ca trực."
+                    )
+                
+                usage_item = SuDungDichVu(
+                    ma_don=ma_don,
+                    dich_vu_id=dv_db.dich_vu_id,
+                    so_luong=qty,
+                    don_gia_tai_ban=dv_db.don_gia,
+                    thanh_tien=int(qty * dv_db.don_gia)
+                )
+                db.add(usage_item)
         
         # Thêm vào bảng LichDat
         bat_dau_dt = datetime.combine(data.ngay_da, data.gio_bat_dau)

@@ -1,0 +1,196 @@
+[
+  {
+    "line": 151,
+    "code_snippet": "setTimeout(() => {",
+    "duration_ms": 200,
+    "related_classes": [
+      "modal-anim-leave",
+      "modal-anim-enter"
+    ]
+  },
+  {
+    "line": 209,
+    "code_snippet": "setTimeout(() => {",
+    "duration_ms": 1800,
+    "related_classes": [
+      "is-happy"
+    ]
+  },
+  {
+    "line": 313,
+    "code_snippet": "setTimeout(() => huskyGuard.classList.remove('is-sad'), 800);",
+    "duration_ms": 800,
+    "related_classes": [
+      "is-sad"
+    ]
+  },
+  {
+    "line": 960,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1000))",
+    "duration_ms": 1000,
+    "related_classes": []
+  },
+  {
+    "line": 1080,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1000))",
+    "duration_ms": 1000,
+    "related_classes": []
+  },
+  {
+    "line": 1177,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1000))",
+    "duration_ms": 1000,
+    "related_classes": []
+  },
+  {
+    "line": 1330,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 750))",
+    "duration_ms": 750,
+    "related_classes": []
+  },
+  {
+    "line": 2128,
+    "code_snippet": "const delayPromise = new Promise(resolve => setTimeout(resolve, 820));",
+    "duration_ms": 820,
+    "related_classes": []
+  },
+  {
+    "line": 2198,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1400))",
+    "duration_ms": 1400,
+    "related_classes": []
+  },
+  {
+    "line": 2371,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1000))",
+    "duration_ms": 1000,
+    "related_classes": []
+  },
+  {
+    "line": 2571,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1000))",
+    "duration_ms": 1000,
+    "related_classes": []
+  },
+  {
+    "line": 2801,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 950))",
+    "duration_ms": 950,
+    "related_classes": []
+  },
+  {
+    "line": 2898,
+    "code_snippet": "const minDelayPromise = new Promise(resolve => setTimeout(resolve, 900));",
+    "duration_ms": 900,
+    "related_classes": []
+  },
+  {
+    "line": 2931,
+    "code_snippet": "await new Promise(resolve => setTimeout(resolve, 350));",
+    "duration_ms": 350,
+    "related_classes": []
+  },
+  {
+    "line": 2950,
+    "code_snippet": "setTimeout(() => {",
+    "duration_ms": 300,
+    "related_classes": []
+  },
+  {
+    "line": 3030,
+    "code_snippet": "const t1 = setTimeout(() => {",
+    "duration_ms": 450,
+    "related_classes": []
+  },
+  {
+    "line": 3033,
+    "code_snippet": "const t2 = setTimeout(() => {",
+    "duration_ms": 450,
+    "related_classes": []
+  },
+  {
+    "line": 3036,
+    "code_snippet": "const t3 = setTimeout(() => {",
+    "duration_ms": 900,
+    "related_classes": []
+  },
+  {
+    "line": 3051,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1500))",
+    "duration_ms": 1500,
+    "related_classes": []
+  },
+  {
+    "line": 3380,
+    "code_snippet": "const step1 = setTimeout(() => {",
+    "duration_ms": 450,
+    "related_classes": []
+  },
+  {
+    "line": 3385,
+    "code_snippet": "const step2 = setTimeout(() => {",
+    "duration_ms": 450,
+    "related_classes": []
+  },
+  {
+    "line": 3390,
+    "code_snippet": "const step3 = setTimeout(() => {",
+    "duration_ms": 950,
+    "related_classes": []
+  },
+  {
+    "line": 3409,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 1600))",
+    "duration_ms": 1600,
+    "related_classes": []
+  },
+  {
+    "line": 3553,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 950))",
+    "duration_ms": 950,
+    "related_classes": []
+  },
+  {
+    "line": 3729,
+    "code_snippet": "new Promise(resolve => setTimeout(resolve, 950))",
+    "duration_ms": 950,
+    "related_classes": []
+  },
+  {
+    "line": 4136,
+    "code_snippet": "setTimeout(() => {",
+    "duration_ms": 300,
+    "related_classes": []
+  },
+  {
+    "line": 4138,
+    "code_snippet": "setTimeout(() => toast.remove(), 300);",
+    "duration_ms": 300,
+    "related_classes": []
+  },
+  {
+    "line": 4221,
+    "code_snippet": "setTimeout(() => el.classList.remove('cp-input-shake'), 450);",
+    "duration_ms": 450,
+    "related_classes": [
+      "cp-input-shake"
+    ]
+  },
+  {
+    "line": 4259,
+    "code_snippet": "setTimeout(() => {",
+    "duration_ms": 200,
+    "related_classes": [
+      "modal-anim-leave",
+      "modal-anim-enter"
+    ]
+  },
+  {
+    "line": 4489,
+    "code_snippet": "setTimeout(() => {",
+    "duration_ms": null,
+    "related_classes": [
+      "btn-submit-success-ripple"
+    ]
+  }
+]

@@ -62,3 +62,7 @@ backend/mini_victory.db
 backend/sports_court.db
 mini_victory.db
 sports_court.db
+
+# Audit temp frames
+_audit/frames_burst/
+_audit/*.png

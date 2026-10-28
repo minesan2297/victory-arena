@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
     let courtsList = [];
     let currentSelectedDate = getTodayString();
+    let addonServicesList = [];
+    let selectedAddonServices = {};
     
     // Auth UI Toggle
     const loginScreen = document.getElementById('login-screen');
@@ -671,11 +673,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const bkCourtSelect = document.getElementById('bk-court-id');
         if (bkCourtSelect) {
-            bkCourtSelect.onchange = () => updateBookingCourtCard();
+            bkCourtSelect.onchange = () => {
+                updateBookingCourtCard();
+                updateBookingPriceEstimate();
+            };
         }
         const bkDateInput = document.getElementById('bk-date');
         if (bkDateInput) {
-            bkDateInput.onchange = () => updateBookingCourtCard();
+            bkDateInput.onchange = () => {
+                updateBookingCourtCard();
+                updateBookingPriceEstimate();
+            };
+        }
+        const bkStartTimeInput = document.getElementById('bk-start-time');
+        if (bkStartTimeInput) {
+            bkStartTimeInput.onchange = () => updateBookingPriceEstimate();
+            bkStartTimeInput.oninput = () => updateBookingPriceEstimate();
+        }
+        const bkEndTimeInput = document.getElementById('bk-end-time');
+        if (bkEndTimeInput) {
+            bkEndTimeInput.onchange = () => updateBookingPriceEstimate();
+            bkEndTimeInput.oninput = () => updateBookingPriceEstimate();
+        }
+        const bkRefereeCb = document.getElementById('bk-referee-checkbox');
+        if (bkRefereeCb) {
+            bkRefereeCb.onchange = () => updateBookingPriceEstimate();
         }
 
         const btnRefreshHistory = document.getElementById('btn-refresh-history');
@@ -2129,6 +2151,156 @@ document.addEventListener('DOMContentLoaded', () => {
     let bookingFormTimers = null;
     let lockModalTimers = null;
 
+    function estimateCourtPrice(startTimeStr, endTimeStr) {
+        if (!startTimeStr || !endTimeStr) return 0;
+        const [sh, sm] = startTimeStr.split(':').map(Number);
+        const [eh, em] = endTimeStr.split(':').map(Number);
+        const startMin = sh * 60 + sm;
+        const endMin = eh * 60 + em;
+        if (endMin <= startMin) return 0;
+
+        // Giờ cao điểm cố định 16:00 (960p) - 20:00 (1200p): 350k/h; ngoài cao điểm: 300k/h
+        const peakStart = 16 * 60;
+        const peakEnd = 20 * 60;
+
+        const beforePeakMin = Math.max(0, Math.min(endMin, peakStart) - startMin);
+        const inPeakMin = Math.max(0, Math.min(endMin, peakEnd) - Math.max(startMin, peakStart));
+        const afterPeakMin = Math.max(0, endMin - Math.max(startMin, peakEnd));
+
+        const priceNormal = 300000;
+        const pricePeak = 350000;
+
+        const total = (beforePeakMin / 60) * priceNormal + (inPeakMin / 60) * pricePeak + (afterPeakMin / 60) * priceNormal;
+        return Math.round(total);
+    }
+
+    function updateBookingPriceEstimate() {
+        const startInput = document.getElementById('bk-start-time');
+        const endInput = document.getElementById('bk-end-time');
+        const startTime = startInput ? startInput.value : '';
+        const endTime = endInput ? endInput.value : '';
+
+        let durationHours = 0;
+        if (startTime && endTime) {
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+            const durationMin = (eh * 60 + em) - (sh * 60 + sm);
+            if (durationMin > 0) {
+                durationHours = durationMin / 60;
+            }
+        }
+
+        const durationEl = document.getElementById('bk-est-duration');
+        if (durationEl) {
+            durationEl.textContent = durationHours > 0 ? `(${durationHours.toFixed(1)} giờ)` : '(0 giờ)';
+        }
+
+        const courtPrice = estimateCourtPrice(startTime, endTime);
+        const courtPriceEl = document.getElementById('bk-est-court-price');
+        if (courtPriceEl) {
+            courtPriceEl.textContent = `${courtPrice.toLocaleString('vi-VN')} ₫`;
+        }
+
+        const refCb = document.getElementById('bk-referee-checkbox');
+        const isRef = refCb ? refCb.checked : false;
+        const refereePrice = isRef ? 200000 : 0;
+        const refPriceEl = document.getElementById('bk-est-referee-price');
+        if (refPriceEl) {
+            refPriceEl.textContent = `${refereePrice.toLocaleString('vi-VN')} ₫`;
+        }
+
+        let servicesPrice = 0;
+        for (const [idStr, qty] of Object.entries(selectedAddonServices)) {
+            const dId = parseInt(idStr, 10);
+            const s = addonServicesList.find(item => item.dich_vu_id === dId);
+            if (s && qty > 0) {
+                servicesPrice += (s.don_gia || 0) * qty;
+            }
+        }
+        const sPriceEl = document.getElementById('bk-est-services-price');
+        if (sPriceEl) {
+            sPriceEl.textContent = `${servicesPrice.toLocaleString('vi-VN')} ₫`;
+        }
+
+        const deposit = 100000;
+        const totalEstimated = courtPrice + refereePrice + servicesPrice;
+        const remainingToPay = Math.max(0, totalEstimated - deposit);
+
+        const remainingEl = document.getElementById('bk-est-remaining-total');
+        if (remainingEl) {
+            remainingEl.textContent = `${remainingToPay.toLocaleString('vi-VN')} ₫`;
+        }
+    }
+
+    async function fetchAddonServices() {
+        try {
+            const res = await fetch('/api/dich-vu', {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+            if (!res.ok) return;
+            const allServices = await res.json();
+            // Lọc bỏ TRONG_TAI (đã có checkbox riêng) và các dịch vụ inactive
+            addonServicesList = (allServices || []).filter(s =>
+                s.trang_thai === 'active' &&
+                s.danh_muc !== 'TRONG_TAI' &&
+                !s.ten_dich_vu.toLowerCase().includes('trọng tài')
+            );
+            renderAddonServices();
+        } catch (e) {
+            console.error("Lỗi fetch dịch vụ đặt kèm:", e);
+        }
+    }
+
+    function renderAddonServices() {
+        const container = document.getElementById('bk-addon-services-list');
+        const badge = document.getElementById('bk-addon-count-badge');
+        if (!container) return;
+
+        let totalSelectedTypes = 0;
+        for (const [_, qty] of Object.entries(selectedAddonServices)) {
+            if (qty > 0) totalSelectedTypes++;
+        }
+
+        if (badge) {
+            badge.textContent = totalSelectedTypes > 0 ? `${totalSelectedTypes} món` : '0 món';
+        }
+
+        if (addonServicesList.length === 0) {
+            container.innerHTML = `<div style="grid-column: 1 / -1; font-size: 0.85rem; color: var(--text-muted); font-style: italic;">Chưa có dịch vụ nước giải khát & trang bị khả dụng.</div>`;
+            return;
+        }
+
+        container.innerHTML = addonServicesList.map(s => {
+            const qty = selectedAddonServices[s.dich_vu_id] || 0;
+            const isSelected = qty > 0;
+            return `
+                <div class="addon-service-item ${isSelected ? 'selected' : ''}" data-service-id="${s.dich_vu_id}">
+                    <div class="addon-item-details">
+                        <div class="addon-item-title" title="${s.ten_dich_vu}">${s.ten_dich_vu}</div>
+                        <div class="addon-item-sub">${s.don_gia.toLocaleString('vi-VN')} ₫ / ${s.don_vi_tinh}</div>
+                    </div>
+                    <div class="addon-stepper">
+                        <button type="button" class="addon-btn-step" onclick="window.changeAddonQty(${s.dich_vu_id}, -1)" ${qty <= 0 ? 'disabled' : ''} aria-label="Giảm số lượng">-</button>
+                        <span class="addon-qty-display" id="addon-qty-${s.dich_vu_id}">${qty}</span>
+                        <button type="button" class="addon-btn-step" onclick="window.changeAddonQty(${s.dich_vu_id}, 1)" ${qty >= 20 ? 'disabled' : ''} aria-label="Tăng số lượng">+</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.changeAddonQty = (dichVuId, delta) => {
+        const current = selectedAddonServices[dichVuId] || 0;
+        const next = Math.max(0, Math.min(20, current + delta));
+        if (next === 0) {
+            delete selectedAddonServices[dichVuId];
+        } else {
+            selectedAddonServices[dichVuId] = next;
+        }
+        renderAddonServices();
+        updateBookingPriceEstimate();
+    };
+
     function updateBookingCourtCard() {
         const card = document.getElementById('booking-court-status-card');
         const bkCourt = document.getElementById('bk-court-id');
@@ -2211,9 +2383,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             if (!courtsList || courtsList.length === 0 || options.forceRefresh) {
-                await Promise.all([fetchCourts(), delayPromise]);
+                await Promise.all([fetchCourts(), fetchAddonServices(), delayPromise]);
             } else {
-                await delayPromise;
+                await Promise.all([fetchAddonServices(), delayPromise]);
             }
         } catch (err) {
             console.error("Lỗi khi quét dữ liệu đặt sân:", err);
@@ -2231,6 +2403,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnRefresh.innerHTML = `<i class="fa-solid fa-rotate"></i> Làm mới sân`;
             }
             updateBookingCourtCard();
+            updateBookingPriceEstimate();
         }
     }
     
@@ -2913,7 +3086,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const sSelect = document.getElementById('op-service-id');
             if (sSelect) {
-                sSelect.innerHTML = services.map(s => 
+                const allowedServices = (services || []).filter(s =>
+                    s.trang_thai === 'active' &&
+                    s.danh_muc !== 'TRONG_TAI' &&
+                    !s.ten_dich_vu.toLowerCase().includes('trọng tài')
+                );
+                sSelect.innerHTML = allowedServices.map(s => 
                     `<option value="${s.dich_vu_id}">${s.ten_dich_vu} - ${s.don_gia.toLocaleString()}đ/${s.don_vi_tinh}</option>`
                 ).join('');
             }
@@ -2943,6 +3121,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleCreateBooking(e) {
         e.preventDefault();
         
+        const dichVuKem = [];
+        for (const [idStr, qty] of Object.entries(selectedAddonServices)) {
+            const q = parseInt(qty, 10);
+            if (q > 0) {
+                dichVuKem.push({
+                    dich_vu_id: parseInt(idStr, 10),
+                    so_luong: q
+                });
+            }
+        }
+
         const data = {
             ma_san: document.getElementById('bk-court-id').value,
             ngay_da: document.getElementById('bk-date').value,
@@ -2951,7 +3140,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tien_coc: parseFloat(document.getElementById('bk-deposit').value || 0.0),
             ghi_chu: document.getElementById('bk-note').value || null,
             phuong_thuc_thanh_toan: document.getElementById('bk-payment-method').value,
-            thue_trong_tai: document.getElementById('bk-referee-checkbox')?.checked || false
+            thue_trong_tai: document.getElementById('bk-referee-checkbox')?.checked || false,
+            dich_vu_kem: dichVuKem
         };
 
         const todayStr = new Date().toISOString().split('T')[0];
@@ -3051,6 +3241,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('bk-note').value = "";
             const refCb = document.getElementById('bk-referee-checkbox');
             if (refCb) refCb.checked = false;
+            selectedAddonServices = {};
+            renderAddonServices();
+            updateBookingPriceEstimate();
             
             // Switch tab to Bookings
             document.querySelector('[data-tab="tab-bookings"]').click();

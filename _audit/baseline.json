@@ -1,0 +1,2046 @@
+{
+  "ids": [
+    "adm-c-loai",
+    "adm-c-ma",
+    "adm-c-mota",
+    "adm-c-ten",
+    "adm-c-vitri",
+    "adm-p-end",
+    "adm-p-gia",
+    "adm-p-loai-ngay",
+    "adm-p-san",
+    "adm-p-start",
+    "admin-courts-table-body",
+    "admin-user-search",
+    "admin-users-table-body",
+    "ai-insight-summary",
+    "ai-promotions-list",
+    "ai-slot-alert-modal",
+    "ai-slot-modal-detail",
+    "ai-slot-modal-message",
+    "ai-slot-modal-title",
+    "ai-tactical-text",
+    "ai-zalo-text",
+    "app-interface",
+    "auth-alert",
+    "auth-alert-msg",
+    "badge-active-bookings",
+    "bdetail-client-name",
+    "bdetail-client-phone",
+    "bdetail-court-type",
+    "bdetail-deposit-paid",
+    "bdetail-dynamic-actions",
+    "bdetail-grand-total",
+    "bdetail-madon",
+    "bdetail-match-date",
+    "bdetail-match-time",
+    "bdetail-note",
+    "bdetail-pitch-location",
+    "bdetail-pitch-name",
+    "bdetail-pitch-price",
+    "bdetail-remaining-price",
+    "bdetail-service-count",
+    "bdetail-services-empty",
+    "bdetail-services-tbody",
+    "bdetail-services-tfoot",
+    "bdetail-services-total",
+    "bdetail-status-badge",
+    "bdetail-sub-services-price",
+    "bk-court-id",
+    "bk-date",
+    "bk-deposit",
+    "bk-deposit-rule",
+    "bk-end-time",
+    "bk-note",
+    "bk-payment-method",
+    "bk-start-time",
+    "booking-court-status-card",
+    "booking-lock-radar-modal",
+    "booking-radar-box",
+    "bookings-panel-subtitle",
+    "bookings-panel-title",
+    "bookings-table-body",
+    "btn-cancel-edit-court",
+    "btn-cancel-logout",
+    "btn-chatbot-send",
+    "btn-clear-all-notifs",
+    "btn-close-bdetail-footer",
+    "btn-close-bdetail-modal",
+    "btn-close-doi-mat-khau",
+    "btn-close-edit-court-modal",
+    "btn-close-invoice-modal",
+    "btn-close-notif-action",
+    "btn-close-notif-modal",
+    "btn-close-profile-footer",
+    "btn-close-profile-modal",
+    "btn-close-qr-action",
+    "btn-close-qr-modal",
+    "btn-confirm-logout",
+    "btn-copy-account",
+    "btn-copy-memo",
+    "btn-copy-zalo",
+    "btn-cust-clear-notif",
+    "btn-dash-clear-notif",
+    "btn-done-qr-pay",
+    "btn-door-submit",
+    "btn-invoice-done",
+    "btn-load-ai-insights",
+    "btn-logout",
+    "btn-mark-all-read",
+    "btn-op-addservice",
+    "btn-op-checkin",
+    "btn-op-checkout",
+    "btn-open-doi-mat-khau",
+    "btn-quick-add-service",
+    "btn-rebook-expired-qr",
+    "btn-refresh-admin-courts",
+    "btn-refresh-admin-users",
+    "btn-refresh-booking-form",
+    "btn-refresh-bookings",
+    "btn-refresh-history",
+    "btn-refresh-schedule",
+    "btn-sandbox-qr-pay",
+    "btn-submit-booking",
+    "btn-submit-doi-mat-khau",
+    "btn-tab-login",
+    "btn-tab-register",
+    "btn-theme-toggle",
+    "btn-theme-toggle-login",
+    "btn-toggle-login-pw",
+    "btn-toggle-reg-pw",
+    "chatbot-close-btn",
+    "chatbot-container",
+    "chatbot-messages",
+    "chatbot-trigger",
+    "chatbot-user-input",
+    "chatbot-widget",
+    "cp-confirm",
+    "cp-current",
+    "cp-new",
+    "cp-strength-bar",
+    "cp-strength-label",
+    "cp-strength-wrap",
+    "cust-greeting-name",
+    "cust-my-bookings-list",
+    "cust-my-count",
+    "cust-notif-count",
+    "cust-notif-list",
+    "cust-stat-available-courts",
+    "cust-stat-deposit-paid",
+    "cust-stat-my-bookings",
+    "cust-stat-reputation",
+    "dash-greeting-name",
+    "dash-notif-count",
+    "dash-notif-list",
+    "dash-today-count",
+    "dash-upcoming-list",
+    "dash-view-admin",
+    "dash-view-customer",
+    "dash-view-staff",
+    "doi-mat-khau-error",
+    "doi-mat-khau-error-text",
+    "doi-mat-khau-success",
+    "edit-c-loai",
+    "edit-c-ma",
+    "edit-c-mota",
+    "edit-c-ten",
+    "edit-c-trang-thai",
+    "edit-c-vitri",
+    "err-cp-confirm",
+    "err-cp-current",
+    "err-cp-new",
+    "err-login-password",
+    "err-login-username",
+    "err-reg-confirm-password",
+    "err-reg-fullname",
+    "err-reg-password",
+    "err-reg-phone",
+    "err-reg-username",
+    "filter-court-select",
+    "form-admin-add-pricing",
+    "form-admin-create-court",
+    "form-create-booking",
+    "form-doi-mat-khau",
+    "form-edit-court",
+    "form-login",
+    "form-register",
+    "history-search-input",
+    "history-table-body",
+    "husky-guard",
+    "husky-mouth",
+    "husky-paws",
+    "huskyEarGrad",
+    "huskyGlow",
+    "icon-login-pw",
+    "icon-reg-pw",
+    "invoice-details-content",
+    "leg-left",
+    "leg-right",
+    "lock-prev-court",
+    "lock-prev-deposit",
+    "lock-prev-time",
+    "lock-radar-info-box",
+    "lock-radar-progress",
+    "lock-radar-step-text",
+    "login-password",
+    "login-screen",
+    "login-theme-toggle-icon",
+    "login-theme-toggle-text",
+    "login-username",
+    "logout-target-name",
+    "logout-transition-desc",
+    "logout-transition-overlay",
+    "logout-transition-title",
+    "main-login-card",
+    "mascot-status-text",
+    "modal-ai-notification",
+    "modal-booking-detail",
+    "modal-confirm-logout",
+    "modal-confirm-logout-card",
+    "modal-doi-mat-khau",
+    "modal-doi-mat-khau-card",
+    "modal-edit-court",
+    "modal-invoice",
+    "modal-qr-payment",
+    "modal-user-profile",
+    "nav-admin",
+    "nav-bookings",
+    "nav-bookings-label",
+    "nav-history",
+    "nav-insights",
+    "nav-operations",
+    "notif-dropdown-list",
+    "notif-unread-tag",
+    "notification-dropdown",
+    "op-checkin-madon",
+    "op-checkin-note",
+    "op-checkout-madon",
+    "op-checkout-method",
+    "op-service-id",
+    "op-service-madon",
+    "op-service-quantity",
+    "operations-radar-box",
+    "page-subtitle",
+    "page-title",
+    "paw-left",
+    "paw-right",
+    "pupil-left",
+    "pupil-right",
+    "pw-strength-fill",
+    "qr-badge-method",
+    "qr-countdown",
+    "qr-display-account",
+    "qr-display-amount",
+    "qr-display-bank",
+    "qr-display-container",
+    "qr-display-memo",
+    "qr-display-name",
+    "qr-expired-overlay",
+    "qr-image-display",
+    "qr-modal-title",
+    "qr-timer-box",
+    "query-date-input",
+    "reg-confirm-password",
+    "reg-email",
+    "reg-fullname",
+    "reg-password",
+    "reg-phone",
+    "reg-username",
+    "remember-me-check",
+    "schedule-matrix",
+    "service-usage-body",
+    "service-usage-preview",
+    "sidebar-user-panel",
+    "staff-greeting-name",
+    "staff-notif-list",
+    "staff-stat-completed",
+    "staff-stat-pending",
+    "staff-stat-playing",
+    "staff-stat-services",
+    "staff-today-count",
+    "staff-upcoming-list",
+    "stat-active-courts",
+    "stat-booking-progress",
+    "stat-total-bookings",
+    "stat-total-courts",
+    "stat-total-revenue",
+    "tab-admin",
+    "tab-booking-form",
+    "tab-booking-history",
+    "tab-bookings",
+    "tab-dashboard",
+    "tab-insights",
+    "tab-operations",
+    "tab-qr-momo",
+    "tab-qr-vietqr",
+    "tab-qr-vnpay",
+    "tab-schedule",
+    "theme-toggle-icon",
+    "theme-toggle-text",
+    "toast-container",
+    "topbar-notif-badge",
+    "topbar-notif-btn",
+    "topbar-user-btn",
+    "topbar-user-icon",
+    "topbar-user-name",
+    "uprofile-avatar-box",
+    "uprofile-avatar-icon",
+    "uprofile-btn-logout",
+    "uprofile-email",
+    "uprofile-fullname",
+    "uprofile-id",
+    "uprofile-phone",
+    "uprofile-reputation",
+    "uprofile-role-badge",
+    "uprofile-role-desc",
+    "uprofile-status",
+    "uprofile-username",
+    "user-display-name",
+    "user-display-role",
+    "user-icon"
+  ],
+  "names": [
+    "mat_khau_hien_tai",
+    "mat_khau_moi",
+    "viewport",
+    "xac_nhan_mat_khau_moi"
+  ],
+  "data_tabs": [
+    "tab-admin",
+    "tab-booking-form",
+    "tab-booking-history",
+    "tab-bookings",
+    "tab-dashboard",
+    "tab-insights",
+    "tab-operations",
+    "tab-schedule"
+  ],
+  "data_views": [],
+  "data_sports": [],
+  "data_statuses": [],
+  "data_prompts": [],
+  "onclick_count": 11,
+  "onclicks": [
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.getElementById('auth-alert').style.display='none'"
+    },
+    {
+      "id": null,
+      "tag": "a",
+      "onclick": "showToast('Vui lòng liên hệ Admin để khôi phục mật khẩu!', 'warning')"
+    },
+    {
+      "id": "btn-logout",
+      "tag": "button",
+      "onclick": "event.stopPropagation()"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.querySelector('[data-tab=tab-booking-form]').click()"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.getElementById('chatbot-trigger').click()"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.querySelector('[data-tab=tab-operations]').click()"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.querySelector('[data-tab=tab-operations]').click()"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.querySelector('[data-tab=tab-insights]').click()"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.querySelector('[data-tab=tab-admin]').click()"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.getElementById('ai-slot-alert-modal').style.display='none'"
+    },
+    {
+      "id": null,
+      "tag": "button",
+      "onclick": "document.getElementById('ai-slot-alert-modal').style.display='none'"
+    }
+  ],
+  "display_none_elements": [
+    {
+      "tag": "div",
+      "id": "auth-alert",
+      "class": "auth-alert",
+      "style": "display: none;"
+    },
+    {
+      "tag": "form",
+      "id": "form-register",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "app-interface",
+      "class": "app-container",
+      "style": "display: none;"
+    },
+    {
+      "tag": "span",
+      "id": "badge-active-bookings",
+      "class": "badge badge-primary",
+      "style": "margin-left: auto; font-size: 11px; padding: 2px 7px; border-radius: 10px; display: none;"
+    },
+    {
+      "tag": "span",
+      "id": "topbar-notif-badge",
+      "class": "notification-badge",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "notification-dropdown",
+      "class": "notification-dropdown",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "dash-view-customer",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "dash-view-staff",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "dash-view-admin",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "booking-court-status-card",
+      "class": "court-status-banner",
+      "style": "display: none; margin-bottom: 20px;"
+    },
+    {
+      "tag": "div",
+      "id": "service-usage-preview",
+      "class": "",
+      "style": "margin-top: 15px; display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "qr-expired-overlay",
+      "class": "qr-expired-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-edit-court",
+      "class": "modal-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "bdetail-services-empty",
+      "class": "",
+      "style": "display: none; padding: 24px; text-align: center; color: var(--text-muted);"
+    },
+    {
+      "tag": "div",
+      "id": "modal-user-profile",
+      "class": "modal-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "booking-lock-radar-modal",
+      "class": "modal-overlay",
+      "style": "display: none; z-index: 100000; align-items: center; justify-content: center;"
+    },
+    {
+      "tag": "div",
+      "id": "ai-slot-alert-modal",
+      "class": "modal-overlay",
+      "style": "display: none; z-index: 100000; align-items: center; justify-content: center;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-confirm-logout",
+      "class": "modal-overlay",
+      "style": "display: none; z-index: 100000; align-items: center; justify-content: center;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-doi-mat-khau",
+      "class": "modal-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "doi-mat-khau-error",
+      "class": "",
+      "style": "display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; color: #f87171; font-size: 0.84rem; margin-bottom: 18px;"
+    },
+    {
+      "tag": "div",
+      "id": "doi-mat-khau-success",
+      "class": "",
+      "style": "display: none; padding: 14px 16px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; color: #34d399; font-size: 0.88rem; margin-bottom: 18px;"
+    },
+    {
+      "tag": "div",
+      "id": "err-cp-current",
+      "class": "cp-field-error",
+      "style": "display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"
+    },
+    {
+      "tag": "div",
+      "id": "cp-strength-wrap",
+      "class": "cp-strength-wrapper",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "err-cp-new",
+      "class": "cp-field-error",
+      "style": "display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"
+    },
+    {
+      "tag": "div",
+      "id": "err-cp-confirm",
+      "class": "cp-field-error",
+      "style": "display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"
+    }
+  ],
+  "all_elements_with_style": [
+    {
+      "tag": "div",
+      "id": "auth-alert",
+      "class": "auth-alert",
+      "style": "display: none;"
+    },
+    {
+      "tag": "form",
+      "id": "form-register",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "button",
+      "id": null,
+      "class": "btn btn-primary btn-block",
+      "style": "margin-top: 10px;"
+    },
+    {
+      "tag": "div",
+      "id": "app-interface",
+      "class": "app-container",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "sidebar-user-panel",
+      "class": "user-panel",
+      "style": "cursor: pointer;"
+    },
+    {
+      "tag": "span",
+      "id": "badge-active-bookings",
+      "class": "badge badge-primary",
+      "style": "margin-left: auto; font-size: 11px; padding: 2px 7px; border-radius: 10px; display: none;"
+    },
+    {
+      "tag": "span",
+      "id": "topbar-notif-badge",
+      "class": "notification-badge",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "notification-dropdown",
+      "class": "notification-dropdown",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "placeholder-text",
+      "style": "padding: 20px; text-align: center;"
+    },
+    {
+      "tag": "div",
+      "id": "topbar-user-btn",
+      "class": "topbar-user-profile",
+      "style": "cursor: pointer;"
+    },
+    {
+      "tag": "div",
+      "id": "dash-view-customer",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill fill-green",
+      "style": "width: 100%;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill",
+      "style": "width: 100%;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill fill-gold",
+      "style": "width: 50%;"
+    },
+    {
+      "tag": "div",
+      "id": "dash-view-staff",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill fill-green",
+      "style": "width: 50%;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill",
+      "style": "width: 40%;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill fill-gold",
+      "style": "width: 65%;"
+    },
+    {
+      "tag": "div",
+      "id": "dash-view-admin",
+      "class": "",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "stat-booking-progress",
+      "class": "hud-progress-fill",
+      "style": "width: 30%;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill fill-gold",
+      "style": "width: 60%;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "hud-progress-fill fill-green",
+      "style": "width: 100%;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "panel-header",
+      "style": "display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": "booking-court-status-card",
+      "class": "court-status-banner",
+      "style": "display: none; margin-bottom: 20px;"
+    },
+    {
+      "tag": "form",
+      "id": "form-create-booking",
+      "class": "",
+      "style": "transition: opacity 0.3s ease;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-bottom: 15px; font-size: 0.85rem; padding: 10px 14px; border-radius: var(--radius-md); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); color: #93c5fd;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; gap: 8px; align-items: center;"
+    },
+    {
+      "tag": "input",
+      "id": "history-search-input",
+      "class": "table-search-input",
+      "style": "padding: 7px 12px; font-size: 0.85rem; border-radius: var(--radius-md); background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);"
+    },
+    {
+      "tag": "input",
+      "id": "op-service-quantity",
+      "class": "",
+      "style": "width: 70px;"
+    },
+    {
+      "tag": "div",
+      "id": "service-usage-preview",
+      "class": "",
+      "style": "margin-top: 15px; display: none;"
+    },
+    {
+      "tag": "h4",
+      "id": null,
+      "class": "",
+      "style": "margin-top: 24px; margin-bottom: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-top: 30px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "panel-header",
+      "style": "padding: 0 0 12px 0;"
+    },
+    {
+      "tag": "th",
+      "id": null,
+      "class": "",
+      "style": "text-align: center;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-top: 30px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "panel-header",
+      "style": "padding: 0 0 12px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; gap: 8px; align-items: center;"
+    },
+    {
+      "tag": "input",
+      "id": "admin-user-search",
+      "class": "table-search-input",
+      "style": "padding: 6px 12px; font-size: 0.85rem; border-radius: var(--radius-md); background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-robot text-primary",
+      "style": "font-size: 1.2rem;"
+    },
+    {
+      "tag": "h4",
+      "id": null,
+      "class": "",
+      "style": "margin: 0; font-size: 0.9rem;"
+    },
+    {
+      "tag": "div",
+      "id": "ai-zalo-text",
+      "class": "code-box",
+      "style": "white-space: pre-wrap; font-family: inherit;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-card",
+      "style": "max-width: 580px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-body",
+      "style": "padding-top: 15px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "qr-method-tabs",
+      "style": "display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"
+    },
+    {
+      "tag": "div",
+      "id": "qr-timer-box",
+      "class": "",
+      "style": "background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 8px 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.85rem; color: #fca5a5;"
+    },
+    {
+      "tag": "strong",
+      "id": "qr-countdown",
+      "class": "",
+      "style": "font-size: 1.1rem; color: #ef4444; font-family: monospace;"
+    },
+    {
+      "tag": "img",
+      "id": "qr-image-display",
+      "class": "",
+      "style": "width: 240px; height: 240px; object-fit: contain; display: block; border-radius: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": "qr-badge-method",
+      "class": "",
+      "style": "margin-top: 8px; font-size: 0.78rem; font-weight: 700; color: #1e293b; background: #e2e8f0; padding: 4px 10px; border-radius: 20px;"
+    },
+    {
+      "tag": "div",
+      "id": "qr-expired-overlay",
+      "class": "qr-expired-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "qr-details",
+      "style": "background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; align-items: center;"
+    },
+    {
+      "tag": "strong",
+      "id": "qr-display-amount",
+      "class": "text-primary",
+      "style": "font-size: 1.25rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; align-items: center;"
+    },
+    {
+      "tag": "span",
+      "id": "qr-display-bank",
+      "class": "",
+      "style": "font-weight: 600;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; align-items: center;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 6px;"
+    },
+    {
+      "tag": "strong",
+      "id": "qr-display-account",
+      "class": "",
+      "style": "font-family: monospace; letter-spacing: 1px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; align-items: center;"
+    },
+    {
+      "tag": "span",
+      "id": "qr-display-name",
+      "class": "",
+      "style": "font-weight: 600;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; align-items: center;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 6px;"
+    },
+    {
+      "tag": "strong",
+      "id": "qr-display-memo",
+      "class": "text-warning",
+      "style": "font-family: monospace; font-size: 1rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-footer",
+      "style": "display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; gap: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-edit-court",
+      "class": "modal-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-card",
+      "style": "max-width: 550px;"
+    },
+    {
+      "tag": "input",
+      "id": "edit-c-ma",
+      "class": "",
+      "style": "background: rgba(255,255,255,0.05); color: #94a3b8; cursor: not-allowed;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-footer",
+      "style": "display: flex; justify-content: flex-end; gap: 10px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-card modal-lg",
+      "style": "max-width: 820px; max-height: 90vh; overflow-y: auto;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-header",
+      "style": "border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-icon-badge",
+      "style": "width: 42px; height: 42px; border-radius: 12px; background: rgba(0, 240, 255, 0.15); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;"
+    },
+    {
+      "tag": "h3",
+      "id": "bdetail-pitch-name",
+      "class": "",
+      "style": "margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-bright);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; gap: 10px; align-items: center; margin-top: 4px;"
+    },
+    {
+      "tag": "span",
+      "id": "bdetail-madon",
+      "class": "fixture-code",
+      "style": "font-size: 0.8rem; letter-spacing: 0.5px; color: var(--primary);"
+    },
+    {
+      "tag": "span",
+      "id": "bdetail-status-badge",
+      "class": "fixture-status-badge",
+      "style": "font-size: 0.75rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-body",
+      "style": "padding: 20px 0;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-info-card",
+      "style": "border-radius: 12px; padding: 16px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-court-type",
+      "class": "",
+      "style": "color: var(--text-bright);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-pitch-location",
+      "class": "",
+      "style": "color: var(--text-bright);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-match-date",
+      "class": "",
+      "style": "color: var(--text-bright);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-match-time",
+      "class": "",
+      "style": "color: var(--neon-green); font-size: 0.95rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; font-size: 0.9rem;"
+    },
+    {
+      "tag": "span",
+      "id": "bdetail-note",
+      "class": "",
+      "style": "color: var(--text-main); font-style: italic; max-width: 60%; text-align: right;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-info-card",
+      "style": "border-radius: 12px; padding: 16px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-client-name",
+      "class": "",
+      "style": "color: var(--text-bright);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-client-phone",
+      "class": "",
+      "style": "color: var(--text-bright);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-pitch-price",
+      "class": "",
+      "style": "color: var(--text-bright);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-deposit-paid",
+      "class": "",
+      "style": "color: var(--neon-cyan);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-sub-services-price",
+      "class": "",
+      "style": "color: var(--primary);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-row",
+      "style": "display: flex; justify-content: space-between; font-size: 0.9rem;"
+    },
+    {
+      "tag": "strong",
+      "id": "bdetail-remaining-price",
+      "class": "",
+      "style": "color: #ffb800; font-size: 1rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "detail-services-section",
+      "style": "border-radius: 12px; padding: 18px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.85rem; font-weight: 700; color: var(--text-bright); text-transform: uppercase; display: flex; align-items: center; gap: 8px;"
+    },
+    {
+      "tag": "span",
+      "id": "bdetail-service-count",
+      "class": "badge badge-primary",
+      "style": "font-size: 0.72rem; padding: 2px 8px; border-radius: 10px;"
+    },
+    {
+      "tag": "button",
+      "id": "btn-quick-add-service",
+      "class": "btn btn-xs btn-outline-cyan",
+      "style": "display: flex; align-items: center; gap: 6px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "overflow-x: auto;"
+    },
+    {
+      "tag": "table",
+      "id": null,
+      "class": "esports-table",
+      "style": "width: 100%; font-size: 0.88rem; margin: 0;"
+    },
+    {
+      "tag": "th",
+      "id": null,
+      "class": "",
+      "style": "width: 50px;"
+    },
+    {
+      "tag": "th",
+      "id": null,
+      "class": "",
+      "style": "text-align: right;"
+    },
+    {
+      "tag": "th",
+      "id": null,
+      "class": "",
+      "style": "text-align: center;"
+    },
+    {
+      "tag": "th",
+      "id": null,
+      "class": "",
+      "style": "text-align: right;"
+    },
+    {
+      "tag": "tr",
+      "id": null,
+      "class": "",
+      "style": "background: rgba(0, 240, 255, 0.05); font-weight: 700;"
+    },
+    {
+      "tag": "td",
+      "id": null,
+      "class": "",
+      "style": "text-align: right; color: var(--text-bright);"
+    },
+    {
+      "tag": "td",
+      "id": "bdetail-services-total",
+      "class": "",
+      "style": "text-align: right; color: var(--primary); font-size: 0.95rem;"
+    },
+    {
+      "tag": "div",
+      "id": "bdetail-services-empty",
+      "class": "",
+      "style": "display: none; padding: 24px; text-align: center; color: var(--text-muted);"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-mug-hot",
+      "style": "font-size: 1.8rem; margin-bottom: 8px; opacity: 0.4;"
+    },
+    {
+      "tag": "p",
+      "id": null,
+      "class": "",
+      "style": "margin: 0; font-size: 0.88rem;"
+    },
+    {
+      "tag": "p",
+      "id": null,
+      "class": "",
+      "style": "margin: 4px 0 0; font-size: 0.78rem; opacity: 0.7;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-top: 16px; background: rgba(0, 240, 255, 0.06); border: 1px dashed rgba(0, 240, 255, 0.3); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.85rem; color: var(--text-muted);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.78rem; color: var(--text-muted); opacity: 0.8;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "text-align: right;"
+    },
+    {
+      "tag": "span",
+      "id": "bdetail-grand-total",
+      "class": "",
+      "style": "font-size: 1.25rem; font-weight: 800; color: var(--primary);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-footer",
+      "style": "border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;"
+    },
+    {
+      "tag": "div",
+      "id": "bdetail-dynamic-actions",
+      "class": "",
+      "style": "display: flex; gap: 8px; flex-wrap: wrap;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-user-profile",
+      "class": "modal-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-card modal-profile-card",
+      "style": "max-width: 520px; border-radius: 18px; overflow: hidden;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "height: 100px; background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(139, 92, 246, 0.35) 50%, rgba(16, 185, 129, 0.25) 100%); position: relative; display: flex; align-items: flex-end; padding: 0 24px;"
+    },
+    {
+      "tag": "button",
+      "id": "btn-close-profile-modal",
+      "class": "modal-close",
+      "style": "position: absolute; top: 12px; right: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;"
+    },
+    {
+      "tag": "div",
+      "id": "uprofile-avatar-box",
+      "class": "",
+      "style": "width: 76px; height: 76px; border-radius: 50%; background: var(--bg-card); border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 2rem; transform: translateY(30px); box-shadow: 0 10px 25px rgba(0, 240, 255, 0.3); z-index: 2;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "padding: 38px 24px 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start;"
+    },
+    {
+      "tag": "h3",
+      "id": "uprofile-fullname",
+      "class": "",
+      "style": "margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--text-main); letter-spacing: 0.3px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 8px; margin-top: 5px;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.85rem; color: var(--text-muted);"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--border-color);"
+    },
+    {
+      "tag": "span",
+      "id": "uprofile-role-badge",
+      "class": "user-role-badge",
+      "style": "font-size: 0.72rem; padding: 2px 10px; border-radius: 12px; background: rgba(0, 240, 255, 0.15); color: var(--primary); border: 1px solid rgba(0, 240, 255, 0.3); font-weight: 700;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "text-align: right;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: 0.5px;"
+    },
+    {
+      "tag": "span",
+      "id": "uprofile-status",
+      "class": "",
+      "style": "font-size: 0.82rem; font-weight: 700; color: #10b981; display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-body",
+      "style": "padding: 20px 24px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; flex-direction: column; gap: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "uprofile-info-row",
+      "style": "display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "width: 36px; height: 36px; border-radius: 10px; background: rgba(0, 240, 255, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.95rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.75rem; color: var(--text-muted);"
+    },
+    {
+      "tag": "div",
+      "id": "uprofile-phone",
+      "class": "",
+      "style": "font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 2px;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.72rem; color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 2px 8px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "uprofile-info-row",
+      "style": "display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "width: 36px; height: 36px; border-radius: 10px; background: rgba(139, 92, 246, 0.1); color: #a78bfa; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.75rem; color: var(--text-muted);"
+    },
+    {
+      "tag": "div",
+      "id": "uprofile-email",
+      "class": "",
+      "style": "font-size: 0.92rem; font-weight: 600; color: var(--text-main); margin-top: 2px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "uprofile-info-row",
+      "style": "padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-star text-neon-yellow",
+      "style": "color: #fbbf24; font-size: 0.9rem;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.75rem; color: var(--text-muted);"
+    },
+    {
+      "tag": "div",
+      "id": "uprofile-reputation",
+      "class": "",
+      "style": "font-size: 1.15rem; font-weight: 800; color: #fbbf24;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "uprofile-info-row",
+      "style": "padding: 12px 16px; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-id-badge text-neon",
+      "style": "color: var(--primary); font-size: 0.9rem;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.75rem; color: var(--text-muted);"
+    },
+    {
+      "tag": "div",
+      "id": "uprofile-id",
+      "class": "",
+      "style": "font-size: 1.15rem; font-weight: 800; color: var(--text-main);"
+    },
+    {
+      "tag": "div",
+      "id": "uprofile-role-desc",
+      "class": "",
+      "style": "font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-top: 16px;"
+    },
+    {
+      "tag": "button",
+      "id": "btn-open-doi-mat-khau",
+      "class": "",
+      "style": "width: 100%; padding: 11px 16px; background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(139, 92, 246, 0.12) 100%); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 12px; color: var(--primary); font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; letter-spacing: 0.3px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-footer",
+      "style": "display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-top: 1px solid rgba(255, 255, 255, 0.08);"
+    },
+    {
+      "tag": "button",
+      "id": "uprofile-btn-logout",
+      "class": "btn btn-outline-danger",
+      "style": "border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+    },
+    {
+      "tag": "button",
+      "id": "btn-close-profile-footer",
+      "class": "btn btn-secondary",
+      "style": "padding: 8px 20px; font-size: 0.88rem;"
+    },
+    {
+      "tag": "div",
+      "id": "booking-lock-radar-modal",
+      "class": "modal-overlay",
+      "style": "display: none; z-index: 100000; align-items: center; justify-content: center;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-card",
+      "style": "max-width: 480px; width: 92%; text-align: center; padding: 30px 24px; border-radius: var(--radius-lg);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "radar-visual-header",
+      "style": "justify-content: center; margin-bottom: 18px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "radar-scan-ball-wrap",
+      "style": "width: 64px; height: 64px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "radar-ring-outer",
+      "style": "border-top-color: #00f0ff; border-right-color: #10b981;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "radar-ring-inner",
+      "style": "border-bottom-color: #3b82f6;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "radar-ball-core",
+      "style": "font-size: 1.6rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "radar-meta",
+      "style": "text-align: left;"
+    },
+    {
+      "tag": "h4",
+      "id": null,
+      "class": "",
+      "style": "margin: 0; font-size: 1.1rem; color: var(--text-main);"
+    },
+    {
+      "tag": "div",
+      "id": "lock-radar-step-text",
+      "class": "radar-status-msg",
+      "style": "font-size: 0.85rem; color: #38bdf8; margin-top: 5px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "radar-progress-bar-wrap",
+      "style": "width: 230px; height: 6px; margin-top: 6px;"
+    },
+    {
+      "tag": "div",
+      "id": "lock-radar-progress",
+      "class": "radar-progress-bar",
+      "style": "width: 25%;"
+    },
+    {
+      "tag": "div",
+      "id": "lock-radar-info-box",
+      "class": "",
+      "style": "background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; margin: 16px 0; text-align: left; font-size: 0.88rem;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 6px;"
+    },
+    {
+      "tag": "strong",
+      "id": "lock-prev-court",
+      "class": "",
+      "style": "color: #38bdf8;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between; margin-bottom: 6px;"
+    },
+    {
+      "tag": "strong",
+      "id": "lock-prev-time",
+      "class": "",
+      "style": "color: var(--text-main);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; justify-content: space-between;"
+    },
+    {
+      "tag": "strong",
+      "id": "lock-prev-deposit",
+      "class": "",
+      "style": "color: #10b981;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.8rem; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 8px;"
+    },
+    {
+      "tag": "div",
+      "id": "ai-slot-alert-modal",
+      "class": "modal-overlay",
+      "style": "display: none; z-index: 100000; align-items: center; justify-content: center;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-card",
+      "style": "max-width: 480px; width: 92%; padding: 28px 24px; border: 1px solid rgba(239, 68, 68, 0.45); border-radius: var(--radius-lg); text-align: center;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: inline-flex; align-items: center; justify-content: center; width: 62px; height: 62px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); border: 2px solid rgba(239, 68, 68, 0.4); color: #f87171; font-size: 1.8rem; margin-bottom: 12px; box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "badge",
+      "style": "display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 240, 255, 0.12); color: #38bdf8; border: 1px solid rgba(0, 240, 255, 0.3); font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase;"
+    },
+    {
+      "tag": "span",
+      "id": null,
+      "class": "radar-dot",
+      "style": "background: #38bdf8; box-shadow: 0 0 8px #38bdf8;"
+    },
+    {
+      "tag": "h4",
+      "id": "ai-slot-modal-title",
+      "class": "",
+      "style": "margin: 14px 0 10px 0; color: #fff; font-size: 1.15rem; font-weight: 800;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-left: 4px solid #ef4444; border-radius: var(--radius-md); padding: 14px 16px; margin: 12px 0 16px 0; text-align: left;"
+    },
+    {
+      "tag": "p",
+      "id": "ai-slot-modal-message",
+      "class": "",
+      "style": "margin: 0; font-size: 0.95rem; color: #f1f5f9; line-height: 1.55;"
+    },
+    {
+      "tag": "div",
+      "id": "ai-slot-modal-detail",
+      "class": "",
+      "style": "margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; gap: 10px; justify-content: center;"
+    },
+    {
+      "tag": "button",
+      "id": null,
+      "class": "btn btn-secondary btn-sm",
+      "style": "padding: 8px 22px; font-weight: 600;"
+    },
+    {
+      "tag": "button",
+      "id": null,
+      "class": "btn btn-primary btn-sm",
+      "style": "padding: 8px 20px; font-weight: 600;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-confirm-logout",
+      "class": "modal-overlay",
+      "style": "display: none; z-index: 100000; align-items: center; justify-content: center;"
+    },
+    {
+      "tag": "h3",
+      "id": null,
+      "class": "",
+      "style": "margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 800; color: #fff;"
+    },
+    {
+      "tag": "p",
+      "id": null,
+      "class": "",
+      "style": "margin: 0 0 22px 0; font-size: 0.88rem; color: #94a3b8; line-height: 1.55;"
+    },
+    {
+      "tag": "strong",
+      "id": "logout-target-name",
+      "class": "",
+      "style": "color: #38bdf8;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; gap: 12px; justify-content: center;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-shield-halved",
+      "style": "color: #10b981;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-doi-mat-khau",
+      "class": "modal-overlay",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "modal-doi-mat-khau-card",
+      "class": "modal-card",
+      "style": "max-width: 460px; width: 95%; border-radius: 18px; overflow: hidden;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "padding: 20px 24px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 12px;"
+    },
+    {
+      "tag": "h3",
+      "id": null,
+      "class": "",
+      "style": "margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.75rem; color: var(--text-muted); margin-top: 1px;"
+    },
+    {
+      "tag": "button",
+      "id": "btn-close-doi-mat-khau",
+      "class": "",
+      "style": "background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "modal-body",
+      "style": "padding: 22px 24px;"
+    },
+    {
+      "tag": "div",
+      "id": "doi-mat-khau-error",
+      "class": "",
+      "style": "display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; color: #f87171; font-size: 0.84rem; margin-bottom: 18px;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-circle-exclamation",
+      "style": "margin-right: 6px;"
+    },
+    {
+      "tag": "div",
+      "id": "doi-mat-khau-success",
+      "class": "",
+      "style": "display: none; padding: 14px 16px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; color: #34d399; font-size: 0.88rem; margin-bottom: 18px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "display: flex; align-items: center; gap: 10px; font-weight: 700;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-circle-check",
+      "style": "font-size: 1.25rem; color: #10b981;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "font-size: 0.78rem; color: #a7f3d0; margin-top: 4px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-bottom: 16px;"
+    },
+    {
+      "tag": "label",
+      "id": null,
+      "class": "",
+      "style": "display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-lock",
+      "style": "margin-right: 5px; color: var(--primary);"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "position: relative;"
+    },
+    {
+      "tag": "input",
+      "id": "cp-current",
+      "class": "cp-input",
+      "style": "width: 100%; padding: 11px 42px 11px 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.92rem; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
+    },
+    {
+      "tag": "button",
+      "id": null,
+      "class": "cp-toggle-pw",
+      "style": "position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0;"
+    },
+    {
+      "tag": "div",
+      "id": "err-cp-current",
+      "class": "cp-field-error",
+      "style": "display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-bottom: 16px;"
+    },
+    {
+      "tag": "label",
+      "id": null,
+      "class": "",
+      "style": "display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-lock-open",
+      "style": "margin-right: 5px; color: #a78bfa;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "position: relative;"
+    },
+    {
+      "tag": "input",
+      "id": "cp-new",
+      "class": "cp-input",
+      "style": "width: 100%; padding: 11px 42px 11px 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.92rem; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
+    },
+    {
+      "tag": "button",
+      "id": null,
+      "class": "cp-toggle-pw",
+      "style": "position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0;"
+    },
+    {
+      "tag": "div",
+      "id": "cp-strength-wrap",
+      "class": "cp-strength-wrapper",
+      "style": "display: none;"
+    },
+    {
+      "tag": "div",
+      "id": "err-cp-new",
+      "class": "cp-field-error",
+      "style": "display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "margin-bottom: 22px;"
+    },
+    {
+      "tag": "label",
+      "id": null,
+      "class": "",
+      "style": "display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px;"
+    },
+    {
+      "tag": "i",
+      "id": null,
+      "class": "fa-solid fa-shield-check",
+      "style": "margin-right: 5px; color: #10b981;"
+    },
+    {
+      "tag": "div",
+      "id": null,
+      "class": "",
+      "style": "position: relative;"
+    },
+    {
+      "tag": "input",
+      "id": "cp-confirm",
+      "class": "cp-input",
+      "style": "width: 100%; padding: 11px 42px 11px 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.92rem; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
+    },
+    {
+      "tag": "button",
+      "id": null,
+      "class": "cp-toggle-pw",
+      "style": "position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0;"
+    },
+    {
+      "tag": "div",
+      "id": "err-cp-confirm",
+      "class": "cp-field-error",
+      "style": "display: none; font-size: 0.75rem; color: #f87171; margin-top: 5px;"
+    },
+    {
+      "tag": "button",
+      "id": "btn-submit-doi-mat-khau",
+      "class": "",
+      "style": "width: 100%; padding: 13px; background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); border: none; border-radius: 10px; color: #000; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px; transition: all 0.25s ease;"
+    }
+  ]
+}

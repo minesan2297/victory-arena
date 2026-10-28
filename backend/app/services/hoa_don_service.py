@@ -129,6 +129,12 @@ class HoaDonService:
         service = db.query(DanhMucDichVu).filter(DanhMucDichVu.dich_vu_id == dich_vu_id).first()
         if not service or service.trang_thai != 'active':
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Dịch vụ không tồn tại hoặc đã dừng kinh doanh")
+
+        if service.danh_muc == 'TRONG_TAI' or 'trọng tài' in service.ten_dich_vu.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể thêm dịch vụ trọng tài trong ca thi đấu (Trọng tài cần đặt trước từ lúc giữ chỗ để đảm bảo hạn ngạch ca trực)."
+            )
             
         # Kiểm tra xem đã sử dụng dịch vụ này chưa
         usage = db.query(SuDungDichVu).filter(

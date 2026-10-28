@@ -5403,3 +5403,148 @@ html[data-theme="light"] .chatbot-message.ai .msg-text {
     color: #0f172a;
     border: 1px solid #e2e8f0;
 }
+
+/* Addon Services & Price Estimate */
+.addon-services-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+html[data-theme="light"] .addon-services-card {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.addon-service-item {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm, 8px);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.addon-service-item.selected {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+html[data-theme="light"] .addon-service-item {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a;
+}
+
+html[data-theme="light"] .addon-service-item.selected {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+}
+
+.addon-item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.addon-item-title {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-main, #f8fafc);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+html[data-theme="light"] .addon-item-title {
+    color: #0f172a !important;
+}
+
+.addon-item-sub {
+    font-size: 0.76rem;
+    color: var(--text-muted, #94a3b8);
+    margin-top: 2px;
+}
+
+html[data-theme="light"] .addon-item-sub {
+    color: #64748b !important;
+}
+
+.addon-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.addon-btn-step {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main, #f8fafc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.addon-btn-step:hover:not(:disabled) {
+    background: var(--primary, #3b82f6);
+    color: #ffffff;
+    border-color: var(--primary, #3b82f6);
+}
+
+.addon-btn-step:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+html[data-theme="light"] .addon-btn-step {
+    border: 1px solid #cbd5e1 !important;
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+}
+
+html[data-theme="light"] .addon-btn-step:hover:not(:disabled) {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+}
+
+.addon-qty-display {
+    min-width: 20px;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-main, #f8fafc);
+}
+
+html[data-theme="light"] .addon-qty-display {
+    color: #0f172a !important;
+}
+
+/* Light mode for price estimate box */
+html[data-theme="light"] #bk-price-estimate-box {
+    background: #f0fdf4 !important;
+    border: 1px dashed #86efac !important;
+}
+
+html[data-theme="light"] #bk-price-estimate-box span {
+    color: #334155 !important;
+}
+
+html[data-theme="light"] #bk-est-court-price {
+    color: #0f172a !important;
+}
+

@@ -3,6 +3,10 @@ from datetime import date, time, datetime
 from typing import Optional, List
 from .san_schema import SanResponse
 
+class DichVuKemItem(BaseModel):
+    dich_vu_id: int
+    so_luong: int = 1
+
 class DatSanCreate(BaseModel):
     ma_san: str
     ngay_da: date
@@ -12,6 +16,7 @@ class DatSanCreate(BaseModel):
     ghi_chu: Optional[str] = None
     phuong_thuc_thanh_toan: str = 'tien_mat'
     thue_trong_tai: bool = False
+    dich_vu_kem: Optional[List[DichVuKemItem]] = Field(default_factory=list)
 
 class DatSanResponse(BaseModel):
     ma_don: str
