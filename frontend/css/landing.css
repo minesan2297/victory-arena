@@ -79,53 +79,53 @@
 
 /* ==========================================================================
    LIGHT THEME OVERRIDES (html[data-theme="light"])
-   WCAG AA Compliant: High contrast, clean pearl glass & emerald accents
+   WCAG AA Compliant: High contrast, clean pearl glass & sky-blue accents
    ========================================================================== */
 html[data-theme="light"] {
     color-scheme: light;
 
-    --brand-primary: #059669;        /* Emerald 600 */
-    --brand-primary-hover: #047857;  /* Emerald 700 */
-    --brand-primary-active: #065f46; /* Emerald 800 */
-    --brand-primary-glow: rgba(5, 150, 105, 0.18);
-    --brand-primary-subtle: rgba(5, 150, 105, 0.09);
+    --brand-primary: #0ea5e9;        /* Sky 500 */
+    --brand-primary-hover: #0284c7;  /* Sky 600 */
+    --brand-primary-active: #0369a1; /* Sky 700 */
+    --brand-primary-glow: rgba(14, 165, 233, 0.2);
+    --brand-primary-subtle: rgba(14, 165, 233, 0.1);
 
-    --brand-cyan: #0891b2;           /* Cyan 600 */
-    --brand-cyan-hover: #0e7490;
-    --brand-cyan-glow: rgba(8, 145, 178, 0.16);
-    --brand-cyan-subtle: rgba(8, 145, 178, 0.08);
+    --brand-cyan: #06b6d4;           /* Cyan 500 */
+    --brand-cyan-hover: #0891b2;
+    --brand-cyan-glow: rgba(6, 182, 212, 0.16);
+    --brand-cyan-subtle: rgba(6, 182, 212, 0.08);
 
     /* Surfaces - Light */
-    --bg-page: #f1f5f9;
-    --bg-page-gradient: radial-gradient(circle at 20% 15%, rgba(5, 150, 105, 0.05) 0%, transparent 45%),
-                        radial-gradient(circle at 80% 25%, rgba(8, 145, 178, 0.05) 0%, transparent 50%),
-                        linear-gradient(180deg, #f1f5f9 0%, #f8fafc 50%, #f1f5f9 100%);
+    --bg-page: #f0f9ff;
+    --bg-page-gradient: radial-gradient(circle at 20% 15%, rgba(14, 165, 233, 0.06) 0%, transparent 45%),
+                        radial-gradient(circle at 80% 25%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+                        linear-gradient(180deg, #f0f9ff 0%, #ffffff 50%, #f0f9ff 100%);
     
-    --bg-card: rgba(255, 255, 255, 0.94);
+    --bg-card: rgba(255, 255, 255, 0.95);
     --bg-card-solid: #ffffff;
-    --bg-card-hover: #f8fafc;
+    --bg-card-hover: #f0f9ff;
     --bg-card-inner: #f8fafc;
-    --bg-glass-nav: rgba(248, 250, 252, 0.88);
+    --bg-glass-nav: rgba(255, 255, 255, 0.92);
 
     /* Text - Light */
     --text-primary: #0f172a;         /* Slate 900 */
     --text-secondary: #334155;       /* Slate 700 */
     --text-muted: #64748b;           /* Slate 500 */
-    --text-accent: #047857;          /* Emerald 700 (High contrast) */
+    --text-accent: #0284c7;          /* Sky 600 (High contrast) */
     --text-cyan: #0369a1;            /* Sky 700 */
 
     /* Borders - Light */
-    --border-subtle: rgba(15, 23, 42, 0.09);
-    --border-light: rgba(15, 23, 42, 0.16);
-    --border-accent: rgba(5, 150, 105, 0.4);
-    --border-cyan: rgba(8, 145, 178, 0.4);
+    --border-subtle: rgba(14, 165, 233, 0.1);
+    --border-light: rgba(14, 165, 233, 0.18);
+    --border-accent: rgba(14, 165, 233, 0.4);
+    --border-cyan: rgba(6, 182, 212, 0.4);
 
     /* Shadows - Light */
-    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-    --shadow-md: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
-    --shadow-lg: 0 20px 35px -6px rgba(15, 23, 42, 0.1);
-    --shadow-glow-emerald: 0 0 25px rgba(5, 150, 105, 0.14);
-    --shadow-glow-cyan: 0 0 25px rgba(8, 145, 178, 0.14);
+    --shadow-sm: 0 1px 3px rgba(14, 165, 233, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 10px 25px -4px rgba(14, 165, 233, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 20px 35px -6px rgba(14, 165, 233, 0.1);
+    --shadow-glow-emerald: 0 0 25px rgba(14, 165, 233, 0.16);
+    --shadow-glow-cyan: 0 0 25px rgba(6, 182, 212, 0.16);
 }
 
 /* ==========================================================================
