@@ -192,13 +192,19 @@ def get_booking_detail(
     if current_user.vai_tro.ten_vai_tro == "CUSTOMER" and booking.ma_khach_hang != current_user.tai_khoan_id:
         raise HTTPException(status_code=403, detail="Bạn không có quyền xem thông tin đơn này")
     
-    # 1. Tính toán danh sách dịch vụ và tổng tiền dịch vụ thực tế
+    # 1. Tính toán danh sách dịch vụ và phân loại (trọng tài vs dịch vụ phát sinh khác)
     dich_vus = []
-    tong_dich_vu_thuc_te = 0
+    tong_dich_vu_khac = 0
+    tien_trong_tai = 0
     for s in booking.su_dung_dich_vus:
         item_don_gia = int(s.don_gia_tai_ban if s.don_gia_tai_ban is not None else (s.dich_vu.don_gia if s.dich_vu else 0))
         item_thanh_tien = int(s.thanh_tien if s.thanh_tien is not None else (item_don_gia * s.so_luong))
-        tong_dich_vu_thuc_te += item_thanh_tien
+        is_ref = bool(s.dich_vu and (s.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in s.dich_vu.ten_dich_vu.lower()))
+        if is_ref:
+            tien_trong_tai += item_thanh_tien
+        else:
+            tong_dich_vu_khac += item_thanh_tien
+
         dich_vus.append(DichVuItemDetail(
             su_dung_id=s.su_dung_id,
             dich_vu_id=s.dich_vu_id,
@@ -213,7 +219,7 @@ def get_booking_detail(
 
     # 2. Lấy thông tin hóa đơn / tính tiền thực tế
     tien_san = 0
-    tong_dich_vu = tong_dich_vu_thuc_te
+    tong_dich_vu = tong_dich_vu_khac
     tien_coc_da_tru = booking.tien_coc
     tong_thanh_toan = 0
     check_in_thuc_te = None
@@ -221,14 +227,15 @@ def get_booking_detail(
     
     if booking.hoa_don:
         tien_san = booking.hoa_don.tien_san
-        if booking.hoa_don.tong_dich_vu and booking.hoa_don.tong_dich_vu > 0:
-            tong_dich_vu = booking.hoa_don.tong_dich_vu
+        tong_dich_vu = booking.hoa_don.tong_dich_vu
         tien_coc_da_tru = booking.hoa_don.tien_coc_da_tru
         tong_thanh_toan = booking.hoa_don.tong_thanh_toan
         check_in_thuc_te = booking.hoa_don.check_in_thuc_te
         check_out_thuc_te = booking.hoa_don.check_out_thuc_te
     else:
-        tien_san = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
+        tien_san_base = DatSanService.calculate_price(db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc)
+        # Nếu có thuê trọng tài thì cộng tiền thuê trọng tài vào tiền thuê sân
+        tien_san = tien_san_base + tien_trong_tai
         tong_thanh_toan = max(0, tien_san + tong_dich_vu - booking.tien_coc)
         
     # Lấy phương thức cọc & kiểm tra hoàn cọc nếu đơn hủy

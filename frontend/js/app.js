@@ -1409,21 +1409,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const tienSan = Number(data.tien_san || 0);
             const tienCoc = Number(data.tien_coc || 0);
             
-            // Calculate total services accurately from items
+            // Calculate total services accurately from items (chỉ tính dịch vụ khác ngoài trọng tài, vì trọng tài đã cộng vào tiền thuê sân)
             const services = data.dich_vus || [];
             let sumServices = 0;
+            let tienTrongTai = 0;
             services.forEach(s => {
+                const isRef = (s.danh_muc === 'TRONG_TAI' || (s.ten_dich_vu && s.ten_dich_vu.toLowerCase().includes('trọng tài')));
                 const sDonGia = Number((s.don_gia !== undefined && s.don_gia !== null) ? s.don_gia : (s.don_gia_tai_ban || 0));
                 const sThanhTien = Number((s.thanh_tien !== undefined && s.thanh_tien !== null) ? s.thanh_tien : (sDonGia * (s.so_luong || 1)));
-                sumServices += sThanhTien;
+                if (isRef) {
+                    tienTrongTai += sThanhTien;
+                } else {
+                    sumServices += sThanhTien;
+                }
             });
-            const tongDichVu = (data.tong_dich_vu !== undefined && data.tong_dich_vu > 0) ? Number(data.tong_dich_vu) : sumServices;
+            const tongDichVu = (data.tong_dich_vu !== undefined) ? Number(data.tong_dich_vu) : sumServices;
             
-            // Total remaining to pay = Sân + Dịch vụ - Cọc đã trả (Nếu đơn đã hủy thì bằng 0đ)
+            // Total remaining to pay = Sân (đã gồm trọng tài nếu có) + Dịch vụ khác - Cọc đã trả (Nếu đơn đã hủy thì bằng 0đ)
             const remainingToPay = (data.trang_thai === 'da_huy') ? 0 : Math.max(0, tienSan + tongDichVu - tienCoc);
 
             const elPitchPrice = document.getElementById('bdetail-pitch-price');
-            if (elPitchPrice) elPitchPrice.textContent = `${tienSan.toLocaleString()}đ`;
+            if (elPitchPrice) {
+                if (tienTrongTai > 0) {
+                    elPitchPrice.innerHTML = `${tienSan.toLocaleString()}đ <span class="badge" style="background: rgba(14,165,233,0.15); color: var(--primary); font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; margin-left: 4px;" title="Đã cộng ${tienTrongTai.toLocaleString()}đ tiền thuê trọng tài">⚽ Đã gồm trọng tài</span>`;
+                } else {
+                    elPitchPrice.textContent = `${tienSan.toLocaleString()}đ`;
+                }
+            }
 
             const elSubServices = document.getElementById('bdetail-sub-services-price');
             if (elSubServices) elSubServices.textContent = `${tongDichVu.toLocaleString()}đ`;
@@ -1479,14 +1491,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (elTbody) {
                     elTbody.innerHTML = services.map((s, idx) => {
+                        const isRef = (s.danh_muc === 'TRONG_TAI' || (s.ten_dich_vu && s.ten_dich_vu.toLowerCase().includes('trọng tài')));
                         const catBadge = categoryLabels[s.danh_muc] || `<span class="badge badge-xs">${s.danh_muc || 'Dịch vụ'}</span>`;
                         const donGia = Number((s.don_gia !== undefined && s.don_gia !== null) ? s.don_gia : (s.don_gia_tai_ban || 0));
                         const thanhTien = Number((s.thanh_tien !== undefined && s.thanh_tien !== null) ? s.thanh_tien : (donGia * (s.so_luong || 1)));
                         const removeBtn = (canEditService && s.su_dung_id) ? `<button class="btn btn-xs btn-outline-danger" onclick="window.removeBookingService('${data.ma_don}', ${s.su_dung_id})" title="Gỡ dịch vụ này" style="margin-left: 6px; padding: 1px 5px; border-radius: 4px; font-size: 0.72rem; line-height: 1;"><i class="fa-solid fa-trash"></i></button>` : '';
+                        const refNote = isRef ? ` <span style="font-size: 0.75rem; color: var(--primary); font-weight: 500;">(Đã cộng vào tiền thuê sân)</span>` : '';
                         return `
                             <tr>
                                 <td style="text-align: center; color: var(--text-muted); font-weight: 600;">${idx + 1}</td>
-                                <td><strong style="color: var(--text-bright);">${s.ten_dich_vu}</strong> ${removeBtn}</td>
+                                <td><strong style="color: var(--text-bright);">${s.ten_dich_vu}</strong>${refNote} ${removeBtn}</td>
                                 <td>${catBadge}</td>
                                 <td style="color: var(--text-muted);">${s.don_vi_tinh || 'Lượt'}</td>
                                 <td style="text-align: right; color: var(--text-main); font-weight: 600;">${donGia.toLocaleString()}đ</td>
@@ -1499,7 +1513,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const elTotalServices = document.getElementById('bdetail-services-total');
-            if (elTotalServices) elTotalServices.textContent = `${tongDichVu.toLocaleString()}đ`;
+            if (elTotalServices) {
+                if (tienTrongTai > 0 && tongDichVu === 0) {
+                    elTotalServices.innerHTML = `0đ <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Trọng tài ${tienTrongTai.toLocaleString()}đ đã tính vào tiền thuê sân)</span>`;
+                } else {
+                    elTotalServices.textContent = `${tongDichVu.toLocaleString()}đ`;
+                }
+            }
             const elGrandTotal = document.getElementById('bdetail-grand-total');
             if (elGrandTotal) elGrandTotal.textContent = `${remainingToPay.toLocaleString()}đ`;
 

@@ -41,10 +41,22 @@ class HoaDonService:
         )
         db.add(new_checkin)
         
-        # Tính tiền sân tạm tính
-        tien_san = DatSanService.calculate_price(
+        # Tính tiền sân tạm tính (nếu có thuê trọng tài thì cộng tiền thuê trọng tài vào tiền thuê sân)
+        tien_san_base = DatSanService.calculate_price(
             db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc
         )
+        usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
+        referee_fee = sum(
+            u.thanh_tien for u in usages
+            if (u.dich_vu and (u.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in u.dich_vu.ten_dich_vu.lower()))
+        )
+        tien_san = tien_san_base + referee_fee
+        
+        # Tiền dịch vụ kèm chỉ tính các dịch vụ phát sinh khác ngoài trọng tài (nước uống, áo, bóng...)
+        tong_dich_vu = int(sum(
+            u.thanh_tien for u in usages
+            if not (u.dich_vu and (u.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in u.dich_vu.ten_dich_vu.lower()))
+        ))
         
         # Tạo mã hóa đơn duy nhất
         date_str = now.strftime("%Y%m%d")
@@ -60,10 +72,6 @@ class HoaDonService:
             ThanhToan.trang_thai == 'thanh_cong'
         ).scalar() or 0
         tien_coc_da_tru = int(tong_coc_thuc_te)
-        
-        # Vá lỗ hổng: Tính tổng các dịch vụ đã đặt trước (ví dụ: Thuê trọng tài)
-        usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
-        tong_dich_vu = int(sum(u.thanh_tien for u in usages))
         
         # Tạo HoaDon
         new_invoice = HoaDon(
@@ -144,13 +152,15 @@ class HoaDonService:
         db.commit()
         db.refresh(usage)
         
-        # Cập nhật tổng dịch vụ trong hóa đơn
+        # Cập nhật tổng dịch vụ trong hóa đơn (chỉ các dịch vụ khác ngoài trọng tài)
         invoice = db.query(HoaDon).filter(HoaDon.ma_don == ma_don).first()
         if invoice:
-            # Tính lại tổng dịch vụ
             usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
-            invoice.tong_dich_vu = sum(u.thanh_tien for u in usages)
-            invoice.tong_thanh_toan = max(0.0, invoice.tien_san + invoice.tong_dich_vu - invoice.tien_coc_da_tru)
+            invoice.tong_dich_vu = int(sum(
+                u.thanh_tien for u in usages
+                if not (u.dich_vu and (u.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in u.dich_vu.ten_dich_vu.lower()))
+            ))
+            invoice.tong_thanh_toan = max(0, int(invoice.tien_san + invoice.tong_dich_vu - invoice.tien_coc_da_tru))
             db.commit()
             
         return usage
@@ -185,11 +195,23 @@ class HoaDonService:
         db.delete(usage)
         db.commit()
 
-        # Cập nhật lại tổng dịch vụ trong hóa đơn (nếu đã tạo hóa đơn tạm tính)
+        # Cập nhật lại hóa đơn (nếu đã tạo hóa đơn tạm tính)
         invoice = db.query(HoaDon).filter(HoaDon.ma_don == ma_don).first()
         if invoice:
             usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
-            invoice.tong_dich_vu = int(sum(u.thanh_tien for u in usages))
+            # Cập nhật lại tiền thuê sân nếu dịch vụ vừa gỡ là trọng tài
+            tien_san_base = DatSanService.calculate_price(
+                db, booking.ma_san, booking.ngay_da, booking.gio_bat_dau, booking.gio_ket_thuc
+            )
+            referee_fee = sum(
+                u.thanh_tien for u in usages
+                if (u.dich_vu and (u.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in u.dich_vu.ten_dich_vu.lower()))
+            )
+            invoice.tien_san = tien_san_base + referee_fee
+            invoice.tong_dich_vu = int(sum(
+                u.thanh_tien for u in usages
+                if not (u.dich_vu and (u.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in u.dich_vu.ten_dich_vu.lower()))
+            ))
             invoice.tong_thanh_toan = max(0, int(invoice.tien_san + invoice.tong_dich_vu - invoice.tien_coc_da_tru))
             db.commit()
 
@@ -215,9 +237,12 @@ class HoaDonService:
         # Cập nhật hóa đơn chính thức
         invoice.check_out_thuc_te = now
         
-        # Tính toán lại tổng lần cuối
+        # Tính toán lại tổng lần cuối (chỉ các dịch vụ phát sinh khác ngoài trọng tài)
         usages = db.query(SuDungDichVu).filter(SuDungDichVu.ma_don == ma_don).all()
-        invoice.tong_dich_vu = int(sum(u.thanh_tien for u in usages))
+        invoice.tong_dich_vu = int(sum(
+            u.thanh_tien for u in usages
+            if not (u.dich_vu and (u.dich_vu.danh_muc == 'TRONG_TAI' or 'trọng tài' in u.dich_vu.ten_dich_vu.lower()))
+        ))
         invoice.tong_thanh_toan = max(0, int(invoice.tien_san + invoice.tong_dich_vu - invoice.tien_coc_da_tru))
         invoice.trang_thai = 'da_thanh_toan'
         

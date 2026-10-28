@@ -68,7 +68,11 @@ def test_booking_with_referee_creates_service(client_and_db, authenticated_clien
     assert "trọng tài" in referee_item["ten_dich_vu"].lower()
     assert referee_item["don_gia"] == 200000
     assert referee_item["thanh_tien"] == 200000
-    assert detail["tong_dich_vu"] == 200000
+    # Tiền thuê sân đã cộng 200k tiền thuê trọng tài: 525.000 + 200.000 = 725.000đ
+    assert detail["tien_san"] == 725000
+    # Dịch vụ phát sinh ngoài trọng tài là 0
+    assert detail["tong_dich_vu"] == 0
+    assert detail["tong_thanh_toan"] == 625000
 
 
 def test_booking_without_referee_no_service(client_and_db, authenticated_client):
@@ -185,11 +189,11 @@ def test_checkin_preserves_referee_service_on_invoice(client_and_db, authenticat
     assert res_ci.status_code == 200
     invoice_data = res_ci.json()
 
-    # VÁ LỖ HỔNG: tong_dich_vu phải bằng 200.000đ, không được là 0!
-    assert invoice_data["tien_san"] == 525000  # 1.5h giờ cao điểm (350k/h)
-    assert invoice_data["tong_dich_vu"] == 200000
+    # VÁ LỖ HỔNG & TÍNH ĐÚNG: tien_san đã cộng 200.000đ tiền thuê trọng tài!
+    assert invoice_data["tien_san"] == 725000  # 1.5h giờ cao điểm (525k) + trọng tài (200k)
+    assert invoice_data["tong_dich_vu"] == 0   # Chỉ có trọng tài (đã cộng vào tiền sân), chưa mua dịch vụ khác
     assert invoice_data["tien_coc_da_tru"] == 100000
-    # Tổng thanh toán = 525k (sân) + 200k (trọng tài) - 100k (cọc) = 625.000đ
+    # Tổng thanh toán = 725k (sân + trọng tài) + 0 (dịch vụ khác) - 100k (cọc) = 625.000đ
     assert invoice_data["tong_thanh_toan"] == 625000
 
     # 4. Check-out quyết toán
@@ -198,8 +202,9 @@ def test_checkin_preserves_referee_service_on_invoice(client_and_db, authenticat
     })
     assert res_co.status_code == 200
     final_inv = res_co.json()
+    assert final_inv["tien_san"] == 725000
     assert final_inv["tong_thanh_toan"] == 625000
-    assert final_inv["tong_dich_vu"] == 200000
+    assert final_inv["tong_dich_vu"] == 0
 
 
 def test_staff_can_remove_service(client_and_db, authenticated_client, staff_client):
@@ -231,9 +236,10 @@ def test_staff_can_remove_service(client_and_db, authenticated_client, staff_cli
     assert res_del.status_code == 200
     assert res_del.json()["success"] is True
 
-    # Kiểm tra lại chi tiết đơn: danh sách dịch vụ trống
+    # Kiểm tra lại chi tiết đơn: danh sách dịch vụ trống và tiền sân trở về giá gốc 525.000đ (bỏ 200k trọng tài)
     res_detail2 = client.get(f"/api/dat-san/booking/{ma_don}/detail", headers=cust_headers)
     assert len(res_detail2.json()["dich_vus"]) == 0
+    assert res_detail2.json()["tien_san"] == 525000
     assert res_detail2.json()["tong_dich_vu"] == 0
 
 
